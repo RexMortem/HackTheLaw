@@ -917,6 +917,46 @@
     }
 
     /* ------------------------------------------------------------------ */
+    /* Case summary (bottom)                                                */
+    /* ------------------------------------------------------------------ */
+    .case-summary {
+      margin-top: 2.5rem;
+      padding: 1.5rem 1.75rem;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--navy);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .case-summary-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--slate-2);
+      margin-bottom: 0.5rem;
+    }
+
+    .case-summary-headline {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--navy);
+      letter-spacing: -0.01em;
+      margin-bottom: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .case-summary-body p {
+      font-size: 0.9rem;
+      color: #334155;
+      line-height: 1.65;
+      margin-bottom: 0.6rem;
+    }
+
+    .case-summary-body p:last-child { margin-bottom: 0; }
+
+    /* ------------------------------------------------------------------ */
     /* Skeleton loading                                                     */
     /* ------------------------------------------------------------------ */
     @keyframes shimmer {
@@ -1166,6 +1206,13 @@ python build_matrix.py</pre>
       <div class="card-list" id="risk-list"></div>
     </div>
 
+    <!-- Case summary (bottom) -->
+    <section class="case-summary" id="case-summary" style="display:none">
+      <div class="case-summary-label">Case Summary</div>
+      <h2 class="case-summary-headline" id="case-summary-headline"></h2>
+      <div class="case-summary-body" id="case-summary-body"></div>
+    </section>
+
   </div><!-- /content -->
 </section>
 
@@ -1228,10 +1275,11 @@ python build_matrix.py</pre>
     // Kick off matrix preload immediately so it's ready when the user
     // finishes typing their first goal.
     loadMatrix();
+    loadSummary();
 
     let savedGoals = [];
     try {
-      const resp = await fetch("/api/goals");
+      const resp = await fetch("api/goals");
       const data = await resp.json();
       if (data.ok && data.has_goals && data.goals && data.goals.goals) {
         savedGoals = data.goals.goals;
@@ -1308,7 +1356,7 @@ python build_matrix.py</pre>
   async function saveGoalsNow() {
     if (_goals.length === 0) return;
     try {
-      await fetch("/api/goals", {
+      await fetch("api/goals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ goals: _goals }),
@@ -1479,7 +1527,7 @@ python build_matrix.py</pre>
   // ------------------------------------------------------------------
   async function loadMatrix() {
     try {
-      const resp = await fetch("/api/matrix");
+      const resp = await fetch("api/matrix");
       const data = await resp.json();
       if (!data.ok) {
         showError(data.error || "Unknown error from server.");
@@ -1489,6 +1537,27 @@ python build_matrix.py</pre>
     } catch (e) {
       showError("Could not reach the server. Is case_ui/app.py running on port 8001?");
     }
+  }
+
+  // ------------------------------------------------------------------
+  // Case summary (bottom) — cacheable endpoint; the browser honours the
+  // ETag / Cache-Control headers, so repeat loads hit the HTTP cache.
+  // ------------------------------------------------------------------
+  async function loadSummary() {
+    try {
+      const resp = await fetch("api/summary");
+      const data = await resp.json();
+      if (!data.ok) return;
+      document.getElementById("case-summary-headline").textContent = data.headline || "";
+      const body = document.getElementById("case-summary-body");
+      body.innerHTML = "";
+      (data.paragraphs || []).forEach(text => {
+        const p = document.createElement("p");
+        p.textContent = text;
+        body.appendChild(p);
+      });
+      document.getElementById("case-summary").style.display = "block";
+    } catch (_) { /* summary is non-essential — fail quietly */ }
   }
 
   // ------------------------------------------------------------------

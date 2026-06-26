@@ -1,0 +1,23 @@
+# Render blueprint — https://render.com/docs/blueprint-spec
+# Deploys the Proof Matrix UI + API (case_ui/app.py, pure-stdlib HTTP server).
+# First deploy: in the Render dashboard create a Blueprint from this repo,
+# then set the ANTHROPIC_API_KEY secret (it is intentionally not stored here).
+services:
+  - type: web
+    name: proof-matrix
+    runtime: python
+    plan: free
+    # Render injects $PORT; app.py reads it. Binds 0.0.0.0 already.
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python case_ui/app.py"
+    healthCheckPath: /api/status
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      # Secret — set in the Render dashboard, never committed.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Only needed if you enable embeddings/hybrid retrieval.
+      - key: VOYAGE_API_KEY
+        sync: false

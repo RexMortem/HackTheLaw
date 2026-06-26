@@ -14,7 +14,9 @@ Goals file written to:
     case_ui/data/goals.json
 """
 
+import hashlib
 import json
+import os
 import pathlib
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -23,7 +25,8 @@ from urllib.parse import urlparse
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-PORT = 8001
+# Hosts (e.g. Render) inject the port to bind via $PORT; default for local dev.
+PORT = int(os.environ.get("PORT", "8001"))
 
 # Resolve paths relative to the repo root (parent of this file's directory).
 _HERE = pathlib.Path(__file__).parent
@@ -46,16 +49,97 @@ def _out(name: str) -> pathlib.Path:
 # Data loading helpers
 # ---------------------------------------------------------------------------
 def _load_matrix() -> tuple[list, str | None]:
-    """Returns (matrix_list, error_string)."""
+    """Returns (matrix_list, error_string).
+
+    Prefers the live pipeline output (out/matrix.json). That directory is
+    gitignored and absent on deploy hosts, so fall back to the committed
+    snapshot at case_ui/data/matrix.json (refresh via snapshot_data.py).
+    """
     path = _out("matrix.json")
     if not path.exists():
+        path = DATA_DIR / "matrix.json"
+    if not path.exists():
         return [], (
-            "out/matrix.json not found. Run the pipeline first:\n"
+            "matrix.json not found. Run the pipeline first:\n"
             "  python extract.py\n"
-            "  python build_matrix.py"
+            "  python build_matrix.py\n"
+            "Then snapshot it for deploy:\n"
+            "  python case_ui/snapshot_data.py"
         )
     with open(path, encoding="utf-8") as fh:
         return json.load(fh), None
+
+
+def _build_summary(matrix: list) -> dict:
+    """Compute a quick, deterministic narrative summary of the case from the matrix.
+
+    Pure derivation from the matrix data (no LLM call) so the result is stable
+    and cacheable. Returns a dict with a headline, a few narrative paragraphs,
+    and the raw stats used to build them.
+    """
+    counts = {"supported": 0, "contested": 0, "undermined": 0, "MISSING": 0}
+    parties: dict[str, int] = {}
+    types: dict[str, int] = {}
+    for row in matrix:
+        s = row.get("status", "MISSING")
+        counts[s] = counts.get(s, 0) + 1
+        p = row.get("proposition", {})
+        party = p.get("party") or "Unspecified"
+        ptype = p.get("type") or "proposition"
+        parties[party] = parties.get(party, 0) + 1
+        types[ptype] = types.get(ptype, 0) + 1
+
+    total = sum(counts.values())
+    denom = total or 1
+    readiness = round(
+        (counts["supported"] * 1.0 + counts["contested"] * 0.5) / denom * 100, 1
+    )
+
+    def _phrase(mapping: dict[str, int]) -> str:
+        items = sorted(mapping.items(), key=lambda kv: -kv[1])
+        return ", ".join(f"{n} {k.lower()}" if k != "Unspecified" else f"{n} unspecified"
+                         for k, n in items)
+
+    type_phrase = _phrase(types)
+    party_phrase = _phrase(parties)
+
+    at_risk = counts["MISSING"] + counts["undermined"]
+    headline = (
+        f"{total} pleaded proposition{'' if total == 1 else 's'} analysed — "
+        f"trial readiness {readiness}%."
+    )
+
+    paragraphs = [
+        f"The bundle yields {total} pleaded proposition{'' if total == 1 else 's'} "
+        f"({type_phrase}), split across {party_phrase}.",
+        f"Of these, {counts['supported']} are supported by the evidence, "
+        f"{counts['contested']} are contested, {counts['undermined']} are undermined "
+        f"by adverse material, and {counts['MISSING']} have no supporting evidence at all.",
+    ]
+    if at_risk:
+        paragraphs.append(
+            f"{at_risk} proposition{'' if at_risk == 1 else 's'} "
+            f"({counts['MISSING']} missing, {counts['undermined']} undermined) "
+            "carry the most litigation risk and should be prioritised for further "
+            "witness, expert or documentary support before trial or settlement."
+        )
+    else:
+        paragraphs.append(
+            "No propositions are missing or undermined — the pleaded case is, on its "
+            "face, evidenced throughout, though contested points still warrant review."
+        )
+
+    return {
+        "headline": headline,
+        "paragraphs": paragraphs,
+        "stats": {
+            "total": total,
+            "counts": counts,
+            "by_party": parties,
+            "by_type": types,
+            "trial_readiness": readiness,
+        },
+    }
 
 
 def _load_goals() -> dict:
@@ -99,6 +183,8 @@ class Handler(BaseHTTPRequestHandler):
             self._serve_file(STATIC_DIR / "index.html", "text/html; charset=utf-8")
         elif path == "/api/matrix":
             self._api_matrix()
+        elif path == "/api/summary":
+            self._api_summary()
         elif path == "/api/status":
             self._api_status()
         elif path == "/api/goals":
@@ -166,11 +252,25 @@ class Handler(BaseHTTPRequestHandler):
             "matrix": matrix,
         }))
 
+    def _api_summary(self):
+        """GET /api/summary — quick narrative case summary.
+
+        Cacheable: the summary is a pure function of the matrix, so we send a
+        content ETag plus a short max-age and honour conditional requests.
+        """
+        matrix, err = _load_matrix()
+        if err:
+            self._json_response(503, json.dumps({"ok": False, "error": err}))
+            return
+        payload = json.dumps({"ok": True, **_build_summary(matrix)})
+        self._json_cacheable(payload, max_age=300)
+
     def _api_status(self):
         """GET /api/status — lightweight health check."""
         self._json_response(200, json.dumps({
             "ok": True,
-            "matrix_json_exists": _out("matrix.json").exists(),
+            "matrix_json_exists": _out("matrix.json").exists()
+            or (DATA_DIR / "matrix.json").exists(),
             "goals_exist": GOALS_FILE.exists(),
         }))
 
@@ -233,6 +333,29 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(data)))
+        self._cors_headers()
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _json_cacheable(self, payload: str, max_age: int = 300):
+        """Send JSON with caching headers (ETag + Cache-Control), honouring
+        If-None-Match with a 304 so unchanged content isn't re-sent."""
+        data = payload.encode("utf-8")
+        etag = '"%s"' % hashlib.sha256(data).hexdigest()[:16]
+
+        if self.headers.get("If-None-Match") == etag:
+            self.send_response(304)
+            self.send_header("ETag", etag)
+            self.send_header("Cache-Control", f"public, max-age={max_age}")
+            self._cors_headers()
+            self.end_headers()
+            return
+
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("ETag", etag)
+        self.send_header("Cache-Control", f"public, max-age={max_age}")
         self._cors_headers()
         self.end_headers()
         self.wfile.write(data)
