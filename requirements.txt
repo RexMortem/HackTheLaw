@@ -1,0 +1,11 @@
+# PDF -> Markdown conversion (convert_pdfs.py)
+pdfplumber>=0.11
+
+# Pleading-to-proof pipeline (extract.py, build_matrix.py)
+anthropic>=0.69
+# BM25 retrieval is pure-Python in caselib.py — no extra deps.
+
+# Optional: embeddings / hybrid retrieval in build_matrix.py
+#   --retriever embeddings|hybrid  (needs VOYAGE_API_KEY)
+voyageai>=0.3
+numpy>=1.26   # already present; used for the dense cosine search

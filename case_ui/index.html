@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proof Matrix</title>
+  <style>
+    /* ------------------------------------------------------------------ */
+    /* Reset & base                                                         */
+    /* ------------------------------------------------------------------ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #0f1f3d;
+      --navy-2:  #1a2f52;
+      --navy-3:  #253a63;
+      --slate:   #64748b;
+      --slate-2: #94a3b8;
+      --border:  #e2e8f0;
+      --bg:      #f8fafc;
+      --white:   #ffffff;
+
+      --supported:         #16a34a;
+      --supported-bg:      #f0fdf4;
+      --supported-border:  #bbf7d0;
+
+      --contested:         #d97706;
+      --contested-bg:      #fffbeb;
+      --contested-border:  #fde68a;
+
+      --undermined:        #dc2626;
+      --undermined-bg:     #fef2f2;
+      --undermined-border: #fecaca;
+
+      --missing:           #6b7280;
+      --missing-bg:        #f9fafb;
+      --missing-border:    #e5e7eb;
+
+      --radius:    8px;
+      --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
+    }
+
+    html { font-size: 15px; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: #1e293b;
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Header                                                              */
+    /* ------------------------------------------------------------------ */
+    .app-header {
+      background: var(--navy);
+      color: #fff;
+      padding: 0 2rem;
+      border-bottom: 3px solid var(--navy-3);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      padding: 1.25rem 0;
+    }
+
+    .header-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .header-brand .label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--slate-2);
+    }
+
+    .header-brand .case-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #fff;
+    }
+
+    .header-stats {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.82rem;
+    }
+
+    .stat-pill .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .stat-pill .count { font-weight: 700; font-size: 0.88rem; color: #fff; }
+    .stat-pill .lbl   { color: var(--slate-2); }
+
+    .readiness-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+      min-width: 140px;
+    }
+
+    .readiness-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--slate-2);
+    }
+
+    .readiness-row { display: flex; align-items: center; gap: 0.6rem; }
+
+    .readiness-score {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .readiness-bar {
+      width: 100px; height: 6px;
+      background: rgba(255,255,255,.15);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .readiness-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #22d3ee, #34d399);
+      transition: width .6s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Error / empty state                                                  */
+    /* ------------------------------------------------------------------ */
+    .empty-state {
+      max-width: 640px;
+      margin: 5rem auto;
+      text-align: center;
+      padding: 0 1rem;
+    }
+
+    .empty-state .icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 1.25rem;
+      background: var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-state h2 { font-size: 1.25rem; font-weight: 700; color: var(--navy); margin-bottom: 0.6rem; }
+    .empty-state p  { color: var(--slate); line-height: 1.65; margin-bottom: 0.5rem; }
+
+    .empty-state code {
+      display: inline-block;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.1rem 0.4rem;
+      font-size: 0.82rem;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: #334155;
+    }
+
+    .empty-state pre {
+      background: #0f172a;
+      color: #94a3b8;
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      font-size: 0.82rem;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      text-align: left;
+      margin: 1rem 0;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* ================================================================== */
+    /* STEP 1 — Goals entry                                                */
+    /* ================================================================== */
+    /* ------------------------------------------------------------------ */
+    #step-1 {
+      max-width: 720px;
+      margin: 3.5rem auto 3rem;
+      padding: 0 1.5rem;
+      transition: margin .35s ease;
+    }
+
+    #step-1.minimised {
+      margin: 1.5rem auto 1.5rem;
+    }
+
+    .goals-hero {
+      margin-bottom: 2.25rem;
+      transition: margin .35s ease;
+    }
+
+    .goals-hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -0.025em;
+      margin-bottom: 0.55rem;
+      line-height: 1.15;
+      transition: font-size .35s ease, margin .35s ease;
+    }
+
+    .goals-hero.minimised {
+      margin-bottom: 1.25rem;
+    }
+
+    .goals-hero.minimised h1 {
+      font-size: 1.35rem;
+      margin-bottom: 0;
+      letter-spacing: -0.01em;
+    }
+
+    /* Suggestions */
+    .suggestions-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--slate-2);
+      margin-bottom: 0.65rem;
+    }
+
+    .suggestions-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .suggestion-chip {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.82rem;
+      color: #334155;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .suggestion-chip:hover {
+      border-color: var(--navy-3);
+      background: #f0f4ff;
+      color: var(--navy);
+    }
+
+    .suggestion-chip.used {
+      background: #eff6ff;
+      border-color: #93c5fd;
+      color: #1d4ed8;
+    }
+
+    .suggestion-chip .chip-icon {
+      flex-shrink: 0;
+      width: 14px; height: 14px;
+    }
+
+    /* Goals input area */
+    .goals-input-section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .goals-input-label {
+      padding: 0.85rem 1rem 0;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--slate-2);
+    }
+
+    /* Goal chips in the entry box */
+    .goals-chips-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      padding: 0.65rem 1rem 0;
+      min-height: 0;
+    }
+
+    .goal-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      color: #1e40af;
+      border-radius: 999px;
+      padding: 0.3rem 0.4rem 0.3rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      max-width: 100%;
+      word-break: break-word;
+    }
+
+    .goal-chip-text {
+      white-space: normal;
+      line-height: 1.3;
+    }
+
+    .goal-chip-remove {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #60a5fa;
+      padding: 0 0.15rem;
+      line-height: 1;
+      font-size: 1rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .goal-chip-remove:hover { color: #1d4ed8; }
+
+    .goals-textarea-row {
+      display: flex;
+      align-items: flex-end;
+      padding: 0.5rem 1rem 1rem;
+      gap: 0.6rem;
+    }
+
+    #goals-textarea {
+      flex: 1;
+      border: none;
+      outline: none;
+      resize: none;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #1e293b;
+      background: transparent;
+      min-height: 2.4rem;
+      max-height: 140px;
+      overflow-y: auto;
+      line-height: 1.5;
+      padding-top: 0.15rem;
+    }
+
+    #goals-textarea::placeholder { color: var(--slate-2); }
+
+    .add-goal-btn {
+      flex-shrink: 0;
+      background: var(--navy-2);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.45rem 0.9rem;
+      font-size: 0.83rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+
+    .add-goal-btn:hover { background: var(--navy-3); }
+
+    .goals-hint {
+      padding: 0 1rem 0.85rem;
+      font-size: 0.76rem;
+      color: var(--slate-2);
+    }
+
+    .goals-count-hint {
+      font-size: 0.82rem;
+      color: var(--slate-2);
+      margin-top: 0.65rem;
+      display: block;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* ================================================================== */
+    /* STEP 2 — Analysis                                                   */
+    /* ================================================================== */
+    /* ------------------------------------------------------------------ */
+    #step-2 {
+      opacity: 0;
+      transform: translateY(24px);
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity .45s ease, transform .45s ease, max-height .6s ease;
+      pointer-events: none;
+    }
+
+    #step-2.revealed {
+      opacity: 1;
+      transform: translateY(0);
+      max-height: none;
+      overflow: visible;
+      pointer-events: auto;
+    }
+
+    /* Goals banner */
+    .goals-banner {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0.65rem 2rem;
+    }
+
+    .goals-banner-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .goals-banner-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--slate-2);
+      padding-top: 0.05rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+      align-self: center;
+    }
+
+    .goals-pills-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      flex: 1;
+    }
+
+    .goal-filter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #f1f5f9;
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.8rem;
+      color: #334155;
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none;
+    }
+
+    .goal-filter-pill:hover {
+      border-color: var(--navy-3);
+      background: #e8eef8;
+      color: var(--navy);
+    }
+
+    .goal-filter-pill.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #fff;
+    }
+
+    .goal-pill-count {
+      background: rgba(255,255,255,.2);
+      border-radius: 999px;
+      padding: 0 0.4rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .goal-filter-pill:not(.active) .goal-pill-count {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    /* Goal coverage summary strip */
+    .goal-coverage-strip {
+      display: none; /* shown when a goal is active */
+      margin: 0 2rem 0;
+      padding: 0.6rem 1rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius);
+      font-size: 0.83rem;
+      color: #1e40af;
+      max-width: 1400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .goal-coverage-strip strong { font-weight: 700; }
+
+    /* ------------------------------------------------------------------ */
+    /* Main layout                                                          */
+    /* ------------------------------------------------------------------ */
+    .main-wrapper {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.75rem 2rem 3rem;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Tabs                                                                 */
+    /* ------------------------------------------------------------------ */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      padding: 0.65rem 1.1rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--slate);
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover { color: var(--navy); }
+
+    .tab-btn.active {
+      color: var(--navy);
+      border-bottom-color: var(--navy);
+    }
+
+    .tab-badge {
+      background: #e2e8f0;
+      color: #475569;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.05rem 0.45rem;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .tab-badge.risk { background: #fee2e2; color: #991b1b; }
+
+    /* ------------------------------------------------------------------ */
+    /* Filters bar                                                          */
+    /* ------------------------------------------------------------------ */
+    .filters-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+      max-width: 380px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.75rem; top: 50%;
+      transform: translateY(-50%);
+      color: var(--slate-2);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      background: var(--white);
+      color: #1e293b;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .search-input:focus {
+      border-color: var(--navy-3);
+      box-shadow: 0 0 0 3px rgba(37,58,99,.12);
+    }
+
+    .filter-group { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+
+    .filter-btn {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--slate);
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .filter-btn:hover { border-color: var(--navy-3); color: var(--navy); }
+
+    .filter-btn.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #fff;
+    }
+
+    .filter-btn .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    .result-count {
+      margin-left: auto;
+      font-size: 0.82rem;
+      color: var(--slate-2);
+      white-space: nowrap;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Proposition cards                                                    */
+    /* ------------------------------------------------------------------ */
+    .card-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .prop-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: box-shadow .15s;
+    }
+
+    .prop-card:hover { box-shadow: var(--shadow-md); }
+
+    .prop-card.status-supported  { border-left: 4px solid var(--supported); }
+    .prop-card.status-contested  { border-left: 4px solid var(--contested); }
+    .prop-card.status-undermined { border-left: 4px solid var(--undermined); }
+    .prop-card.status-MISSING    { border-left: 4px solid var(--missing); }
+
+    /* Goal-match highlight */
+    .prop-card.goal-match {
+      box-shadow: 0 0 0 2px #3b82f6, var(--shadow-md);
+      border-color: #93c5fd;
+    }
+
+    .goal-match-badge {
+      display: none;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-radius: 3px;
+      padding: 0.1rem 0.4rem;
+    }
+
+    .prop-card.goal-match .goal-match-badge { display: inline; }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.9rem 1rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .card-header:hover { background: var(--bg); }
+
+    .prop-meta { flex: 1; min-width: 0; }
+
+    .prop-top-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.3rem;
+    }
+
+    .prop-id {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--slate-2);
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .prop-type-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.1rem 0.45rem;
+      border-radius: 3px;
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .prop-party { font-size: 0.75rem; color: var(--slate); }
+
+    .prop-text { font-size: 0.92rem; color: #1e293b; line-height: 1.5; }
+
+    .prop-source {
+      font-size: 0.75rem;
+      color: var(--slate-2);
+      margin-top: 0.3rem;
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+    }
+
+    .status-badge.supported  { background: var(--supported-bg);  color: var(--supported);  border: 1px solid var(--supported-border); }
+    .status-badge.contested  { background: var(--contested-bg);  color: var(--contested);  border: 1px solid var(--contested-border); }
+    .status-badge.undermined { background: var(--undermined-bg); color: var(--undermined); border: 1px solid var(--undermined-border); }
+    .status-badge.MISSING    { background: var(--missing-bg);    color: var(--missing);    border: 1px solid var(--missing-border); }
+
+    .expand-icon {
+      color: var(--slate-2);
+      transition: transform .2s;
+      flex-shrink: 0;
+    }
+
+    .prop-card.open .expand-icon { transform: rotate(180deg); }
+
+    /* ---- evidence drawer ---- */
+    .evidence-drawer {
+      display: none;
+      border-top: 1px solid var(--border);
+      background: #fafbfc;
+    }
+
+    .prop-card.open .evidence-drawer { display: block; }
+
+    .evidence-inner { padding: 0.9rem 1rem 1rem; }
+
+    .evidence-heading {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 0.6rem;
+    }
+
+    .evidence-empty { font-size: 0.85rem; color: var(--slate-2); font-style: italic; }
+
+    .evidence-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .evidence-item {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.7rem 0.85rem;
+      position: relative;
+      padding-left: 1.1rem;
+    }
+
+    .evidence-item::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 3px 0 0 3px;
+    }
+
+    .evidence-item.rel-supportive::before { background: var(--supported); }
+    .evidence-item.rel-adverse::before    { background: var(--undermined); }
+    .evidence-item.rel-neutral::before    { background: var(--missing); }
+
+    .ev-top-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.3rem;
+      flex-wrap: wrap;
+    }
+
+    .rel-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+    }
+
+    .rel-badge.supportive { background: var(--supported-bg);  color: var(--supported); }
+    .rel-badge.adverse    { background: var(--undermined-bg); color: var(--undermined); }
+    .rel-badge.neutral    { background: var(--missing-bg);    color: var(--missing); }
+
+    .conf-bar-wrap { display: flex; align-items: center; gap: 0.4rem; }
+
+    .conf-bar {
+      width: 50px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .conf-fill { height: 100%; border-radius: 2px; }
+    .conf-fill.supportive { background: var(--supported); }
+    .conf-fill.adverse    { background: var(--undermined); }
+    .conf-fill.neutral    { background: var(--slate-2); }
+
+    .conf-num {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--slate);
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .ev-citation {
+      font-size: 0.72rem;
+      color: var(--slate-2);
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .ev-witness { font-size: 0.78rem; font-weight: 600; color: var(--slate); }
+
+    .ev-rationale {
+      font-size: 0.82rem;
+      color: #334155;
+      margin: 0.25rem 0;
+      line-height: 1.5;
+    }
+
+    .ev-quote {
+      font-size: 0.8rem;
+      color: #475569;
+      font-style: italic;
+      border-left: 2px solid var(--border);
+      padding-left: 0.6rem;
+      margin-top: 0.3rem;
+      line-height: 1.5;
+    }
+
+    .quote-warn {
+      font-size: 0.7rem;
+      color: #d97706;
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Risk / gap panel                                                     */
+    /* ------------------------------------------------------------------ */
+    .risk-intro {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      color: #7f1d1d;
+      margin-bottom: 1.25rem;
+      line-height: 1.55;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Skeleton loading                                                     */
+    /* ------------------------------------------------------------------ */
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+    }
+
+    .skel-card { height: 80px; border-radius: var(--radius); margin-bottom: 0.75rem; }
+
+    /* ------------------------------------------------------------------ */
+    /* Responsive                                                           */
+    /* ------------------------------------------------------------------ */
+    @media (max-width: 768px) {
+      .app-header { padding: 0 1rem; }
+      .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 1rem 0;
+      }
+      .readiness-block { align-items: flex-start; }
+      .main-wrapper { padding: 1.25rem 1rem 2rem; }
+      .header-stats { gap: 0.5rem; }
+      #step-1 { margin: 2rem auto 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================== -->
+<!-- HEADER (shared across both steps)                                   -->
+<!-- ================================================================== -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <span class="case-name">Proof Matrix</span>
+    </div>
+
+    <div class="header-stats" id="header-stats" style="display:none">
+      <div class="stat-pill">
+        <span class="dot" style="background:#16a34a"></span>
+        <span class="count" id="count-supported">0</span>
+        <span class="lbl">Supported</span>
+      </div>
+      <div class="stat-pill">
+        <span class="dot" style="background:#d97706"></span>
+        <span class="count" id="count-contested">0</span>
+        <span class="lbl">Contested</span>
+      </div>
+      <div class="stat-pill">
+        <span class="dot" style="background:#dc2626"></span>
+        <span class="count" id="count-undermined">0</span>
+        <span class="lbl">Undermined</span>
+      </div>
+      <div class="stat-pill">
+        <span class="dot" style="background:#9ca3af"></span>
+        <span class="count" id="count-missing">0</span>
+        <span class="lbl">Missing</span>
+      </div>
+    </div>
+
+    <div class="readiness-block" id="readiness-block" style="display:none">
+      <span class="readiness-label">Trial Readiness</span>
+      <div class="readiness-row">
+        <span class="readiness-score" id="readiness-score">0%</span>
+        <div class="readiness-bar">
+          <div class="readiness-fill" id="readiness-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================================================================== -->
+<!-- STEP 1 — State your goals                                           -->
+<!-- ================================================================== -->
+<section id="step-1">
+
+  <div class="goals-hero" id="goals-hero">
+    <h1>What do you want to focus on?</h1>
+  </div>
+
+  <!-- Suggestion chips -->
+  <div class="suggestions-label">Quick-add a common goal</div>
+  <div class="suggestions-list" id="suggestions-list">
+    <button class="suggestion-chip" data-text="Identify allegations with no supporting witness evidence">
+      <svg class="chip-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      Missing witness evidence
+    </button>
+    <button class="suggestion-chip" data-text="Surface contradictions between Defence and the witness statements">
+      <svg class="chip-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      Defence contradictions
+    </button>
+    <button class="suggestion-chip" data-text="Flag propositions where the only evidence is uncorroborated hearsay">
+      <svg class="chip-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      Hearsay risks
+    </button>
+    <button class="suggestion-chip" data-text="Find weak points around the breach-of-contract claim">
+      <svg class="chip-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Breach-of-contract weak points
+    </button>
+    <button class="suggestion-chip" data-text="Identify propositions that are undermined by adverse expert evidence">
+      <svg class="chip-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      Adverse expert evidence
+    </button>
+  </div>
+
+  <!-- Goals entry box -->
+  <div class="goals-input-section">
+    <div class="goals-input-label">Your goals</div>
+    <div class="goals-chips-wrap" id="goals-chips"></div>
+    <div class="goals-textarea-row">
+      <textarea
+        id="goals-textarea"
+        rows="2"
+        placeholder="Type a goal and press Enter or click Add..."
+        aria-label="Enter a case review goal"
+      ></textarea>
+      <button class="add-goal-btn" id="add-goal-btn">Add</button>
+    </div>
+    <div class="goals-hint">Press <strong>Enter</strong> to add a goal. The analysis will appear below as you go.</div>
+  </div>
+  <span class="goals-count-hint" id="goals-count-hint"></span>
+
+</section>
+
+<!-- ================================================================== -->
+<!-- STEP 2 — Analysis                                                   -->
+<!-- ================================================================== -->
+<section id="step-2">
+
+  <!-- Goals banner (filter pills) -->
+  <div class="goals-banner" id="goals-banner">
+    <div class="goals-banner-inner">
+      <span class="goals-banner-label">Goals</span>
+      <div class="goals-pills-row" id="goals-pills-row">
+        <!-- injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Goal coverage summary strip (shown when a goal pill is active) -->
+  <div style="padding: 0.55rem 2rem 0; max-width:1440px; margin: 0 auto;">
+    <div class="goal-coverage-strip" id="goal-coverage-strip"></div>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div id="loading-state" class="main-wrapper">
+    <div class="skeleton skel-card"></div>
+    <div class="skeleton skel-card"></div>
+    <div class="skeleton skel-card"></div>
+  </div>
+
+  <!-- Error / empty state -->
+  <div id="error-state" class="empty-state" style="display:none">
+    <div class="icon">
+      <svg width="28" height="28" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <h2>Matrix not available</h2>
+    <p id="error-msg">The matrix data has not been generated yet.</p>
+    <pre id="error-cmd">python extract.py
+python build_matrix.py</pre>
+  </div>
+
+  <!-- Loaded content -->
+  <div id="content" class="main-wrapper" style="display:none">
+
+    <!-- Tabs -->
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="matrix">
+        Full Matrix
+        <span class="tab-badge" id="tab-badge-matrix">0</span>
+      </button>
+      <button class="tab-btn" data-tab="risk">
+        Risk &amp; Gaps
+        <span class="tab-badge risk" id="tab-badge-risk">0</span>
+      </button>
+    </nav>
+
+    <!-- Tab: Matrix -->
+    <div id="tab-matrix">
+      <div class="filters-bar">
+        <div class="search-wrap">
+          <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="search-input" class="search-input" placeholder="Search propositions..." />
+        </div>
+        <div class="filter-group" id="status-filters">
+          <button class="filter-btn active" data-status="all">All</button>
+          <button class="filter-btn" data-status="supported">
+            <span class="dot" style="background:var(--supported)"></span>Supported
+          </button>
+          <button class="filter-btn" data-status="contested">
+            <span class="dot" style="background:var(--contested)"></span>Contested
+          </button>
+          <button class="filter-btn" data-status="undermined">
+            <span class="dot" style="background:var(--undermined)"></span>Undermined
+          </button>
+          <button class="filter-btn" data-status="MISSING">
+            <span class="dot" style="background:var(--missing)"></span>Missing
+          </button>
+        </div>
+        <span class="result-count" id="matrix-result-count"></span>
+      </div>
+      <div class="card-list" id="matrix-list"></div>
+    </div>
+
+    <!-- Tab: Risk & Gaps -->
+    <div id="tab-risk" style="display:none">
+      <div class="risk-intro">
+        Showing only <strong>Missing</strong> and <strong>Undermined</strong> propositions,
+        sorted by risk. Missing propositions (no evidential support at all) are shown first;
+        undermined propositions (contradicted by evidence) follow.
+        These are the areas requiring further witness, expert, or documentary evidence.
+      </div>
+      <div class="filters-bar">
+        <div class="search-wrap">
+          <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="risk-search-input" class="search-input" placeholder="Search risk items..." />
+        </div>
+        <span class="result-count" id="risk-result-count"></span>
+      </div>
+      <div class="card-list" id="risk-list"></div>
+    </div>
+
+  </div><!-- /content -->
+</section>
+
+<!-- ================================================================== -->
+<!-- SCRIPT                                                              -->
+<!-- ================================================================== -->
+<script>
+(function () {
+  "use strict";
+
+  // ------------------------------------------------------------------
+  // State
+  // ------------------------------------------------------------------
+  let _matrix        = [];
+  let _goals         = [];       // [{id, text}, ...]
+  let _activeGoalId  = null;     // null = "show all"
+  let _activeStatus  = "all";
+  let _searchQuery   = "";
+  let _riskSearch    = "";
+  let _activeTab     = "matrix";
+  let _saveTimer     = null;
+  let _matrixLoaded  = false;
+
+  // ------------------------------------------------------------------
+  // Layout helpers — minimise tagline, reveal step 2
+  // ------------------------------------------------------------------
+  function setMinimised(on) {
+    const hero  = document.getElementById("goals-hero");
+    const step1 = document.getElementById("step-1");
+    hero.classList.toggle("minimised", !!on);
+    step1.classList.toggle("minimised", !!on);
+  }
+
+  function revealStep2(opts) {
+    const step2 = document.getElementById("step-2");
+    step2.classList.add("revealed");
+    document.getElementById("header-stats").style.display    = _matrixLoaded ? "flex" : "none";
+    document.getElementById("readiness-block").style.display = _matrixLoaded ? "flex" : "none";
+    if (opts && opts.scroll) {
+      // Wait until the slide-in transition (max-height + opacity) settles so
+      // step-2's final offsetTop is accurate, then align its top with the
+      // viewport top.
+      setTimeout(() => {
+        const y = step2.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: y, behavior: "smooth" });
+      }, 500);
+    }
+  }
+
+  function hideStep2() {
+    document.getElementById("step-2").classList.remove("revealed");
+    document.getElementById("header-stats").style.display    = "none";
+    document.getElementById("readiness-block").style.display = "none";
+  }
+
+  // ------------------------------------------------------------------
+  // Boot: load goals + preload matrix in parallel.
+  // ------------------------------------------------------------------
+  async function boot() {
+    // Kick off matrix preload immediately so it's ready when the user
+    // finishes typing their first goal.
+    loadMatrix();
+
+    let savedGoals = [];
+    try {
+      const resp = await fetch("/api/goals");
+      const data = await resp.json();
+      if (data.ok && data.has_goals && data.goals && data.goals.goals) {
+        savedGoals = data.goals.goals;
+      }
+    } catch (_) { /* no goals yet — that's fine */ }
+
+    if (savedGoals.length > 0) {
+      _goals = savedGoals;
+      renderGoalChips();
+      updateGoalsCountHint();
+      syncSuggestionUsedState();
+      setMinimised(true);
+      renderGoalsBanner();
+      // Reveal step 2 without scrolling (user didn't just act).
+      revealStep2({ scroll: false });
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Step 1 — goals entry
+  // ------------------------------------------------------------------
+
+  // Suggestion chips
+  document.querySelectorAll(".suggestion-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const text = chip.dataset.text;
+      if (_goals.some(g => g.text === text)) return; // already added
+      addGoal(text);
+      chip.classList.add("used");
+    });
+  });
+
+  function addGoal(text) {
+    text = (text || "").trim();
+    if (!text) return;
+    if (_goals.some(g => g.text === text)) return; // dedupe
+    const id = "g" + (_goals.length + 1);
+    _goals.push({ id, text });
+    renderGoalChips();
+    updateGoalsCountHint();
+    syncSuggestionUsedState();
+    setMinimised(true);
+    scheduleSave();
+    renderGoalsBanner();
+    revealStep2({ scroll: true });
+  }
+
+  function removeGoal(id) {
+    _goals = _goals.filter(g => g.id !== id);
+    // Re-number ids to keep them tidy (not strictly required but cleaner)
+    _goals = _goals.map((g, i) => ({ id: "g" + (i + 1), text: g.text }));
+    renderGoalChips();
+    updateGoalsCountHint();
+    syncSuggestionUsedState();
+    scheduleSave();
+    renderGoalsBanner();
+    if (_goals.length === 0) {
+      hideStep2();
+      // Only un-minimise if the textarea is also empty.
+      if (!document.getElementById("goals-textarea").value.trim()) {
+        setMinimised(false);
+      }
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Auto-save (debounced) — no Continue button.
+  // ------------------------------------------------------------------
+  function scheduleSave() {
+    if (_saveTimer) clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(saveGoalsNow, 400);
+  }
+
+  async function saveGoalsNow() {
+    if (_goals.length === 0) return;
+    try {
+      await fetch("/api/goals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goals: _goals }),
+      });
+    } catch (_) { /* in-memory state still works for filtering */ }
+  }
+
+  function renderGoalChips() {
+    const wrap = document.getElementById("goals-chips");
+    wrap.innerHTML = "";
+    _goals.forEach(g => {
+      const chip = document.createElement("div");
+      chip.className = "goal-chip";
+
+      const span = document.createElement("span");
+      span.className = "goal-chip-text";
+      span.textContent = g.text;
+
+      const btn = document.createElement("button");
+      btn.className = "goal-chip-remove";
+      btn.setAttribute("aria-label", "Remove goal");
+      btn.innerHTML = "&times;";
+      btn.addEventListener("click", () => removeGoal(g.id));
+
+      chip.appendChild(span);
+      chip.appendChild(btn);
+      wrap.appendChild(chip);
+    });
+  }
+
+  function updateGoalsCountHint() {
+    const hint = document.getElementById("goals-count-hint");
+    const n = _goals.length;
+    hint.textContent = n === 0 ? "" : n + " goal" + (n === 1 ? "" : "s") + " added";
+  }
+
+  function syncSuggestionUsedState() {
+    const texts = new Set(_goals.map(g => g.text));
+    document.querySelectorAll(".suggestion-chip").forEach(chip => {
+      chip.classList.toggle("used", texts.has(chip.dataset.text));
+    });
+  }
+
+  // Textarea: add on Enter (Shift+Enter inserts newline)
+  const textarea = document.getElementById("goals-textarea");
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const val = textarea.value.trim();
+      if (val) { addGoal(val); textarea.value = ""; }
+    }
+  });
+
+  // Minimise the tagline as soon as the user starts typing.
+  textarea.addEventListener("input", () => {
+    if (textarea.value.length > 0) setMinimised(true);
+    else if (_goals.length === 0)  setMinimised(false);
+  });
+
+  document.getElementById("add-goal-btn").addEventListener("click", () => {
+    const val = textarea.value.trim();
+    if (val) { addGoal(val); textarea.value = ""; }
+    textarea.focus();
+  });
+
+  // ------------------------------------------------------------------
+  // Step 2 — goals banner
+  // ------------------------------------------------------------------
+  function renderGoalsBanner() {
+    const row = document.getElementById("goals-pills-row");
+    row.innerHTML = "";
+
+    _goals.forEach(g => {
+      const count = _matrix.length > 0 ? matchCount(g) : null;
+
+      const pill = document.createElement("button");
+      pill.className = "goal-filter-pill" + (g.id === _activeGoalId ? " active" : "");
+      pill.dataset.goalId = g.id;
+      pill.title = g.text;
+
+      const label = document.createElement("span");
+      label.textContent = g.text.length > 55 ? g.text.slice(0, 52) + "…" : g.text;
+
+      const badge = document.createElement("span");
+      badge.className = "goal-pill-count";
+      badge.textContent = count !== null ? String(count) : "…";
+
+      pill.appendChild(label);
+      pill.appendChild(badge);
+
+      pill.addEventListener("click", () => {
+        if (_activeGoalId === g.id) {
+          // Deselect
+          _activeGoalId = null;
+        } else {
+          _activeGoalId = g.id;
+        }
+        // Re-render pills
+        document.querySelectorAll(".goal-filter-pill").forEach(p => {
+          p.classList.toggle("active", p.dataset.goalId === _activeGoalId);
+        });
+        updateCoverageStrip();
+        renderMatrix();
+        renderRisk();
+      });
+
+      row.appendChild(pill);
+    });
+  }
+
+  function matchCount(goal) {
+    return _matrix.filter(row => rowMatchesGoal(row, goal)).length;
+  }
+
+  function rowMatchesGoal(row, goal) {
+    if (!goal) return false;
+    const needle = goal.text.toLowerCase();
+    const words = needle.split(/\s+/).filter(w => w.length > 3);
+    const hay = buildSearchHay(row);
+    // Match if any word of >3 chars appears in the hay.
+    return words.some(w => hay.includes(w));
+  }
+
+  function buildSearchHay(row) {
+    const parts = [
+      row.proposition && row.proposition.text,
+      row.proposition && row.proposition.type,
+      row.proposition && row.proposition.party,
+    ];
+    if (row.links) {
+      row.links.forEach(lk => {
+        parts.push(lk.rationale, lk.quote, lk.witness);
+      });
+    }
+    return parts.filter(Boolean).join(" ").toLowerCase();
+  }
+
+  function updateCoverageStrip() {
+    const strip = document.getElementById("goal-coverage-strip");
+    if (!_activeGoalId) {
+      strip.style.display = "none";
+      return;
+    }
+    const goal = _goals.find(g => g.id === _activeGoalId);
+    if (!goal) { strip.style.display = "none"; return; }
+
+    const matching = _matrix.filter(row => rowMatchesGoal(row, goal));
+    const statusCounts = {};
+    matching.forEach(row => {
+      const s = row.status || "MISSING";
+      statusCounts[s] = (statusCounts[s] || 0) + 1;
+    });
+
+    const parts = [];
+    if (statusCounts.supported)  parts.push(`${statusCounts.supported} supported`);
+    if (statusCounts.contested)  parts.push(`${statusCounts.contested} contested`);
+    if (statusCounts.undermined) parts.push(`${statusCounts.undermined} undermined`);
+    if (statusCounts.MISSING)    parts.push(`${statusCounts.MISSING} missing`);
+
+    strip.innerHTML =
+      `<strong>Goal coverage:</strong> ${matching.length} proposition${matching.length === 1 ? "" : "s"} match` +
+      (parts.length ? ` — ${parts.join(", ")}` : "") + ".";
+    strip.style.display = "block";
+  }
+
+  // ------------------------------------------------------------------
+  // Fetch matrix
+  // ------------------------------------------------------------------
+  async function loadMatrix() {
+    try {
+      const resp = await fetch("/api/matrix");
+      const data = await resp.json();
+      if (!data.ok) {
+        showError(data.error || "Unknown error from server.");
+        return;
+      }
+      applyData(data);
+    } catch (e) {
+      showError("Could not reach the server. Is case_ui/app.py running on port 8001?");
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Render top-level state
+  // ------------------------------------------------------------------
+  function applyData(data) {
+    const { summary, matrix } = data;
+    _matrix = matrix;
+    _matrixLoaded = true;
+
+    document.getElementById("count-supported").textContent = summary.counts.supported || 0;
+    document.getElementById("count-contested").textContent  = summary.counts.contested || 0;
+    document.getElementById("count-undermined").textContent = summary.counts.undermined || 0;
+    document.getElementById("count-missing").textContent    = summary.counts.MISSING || 0;
+    document.getElementById("readiness-score").textContent  = summary.trial_readiness + "%";
+    document.getElementById("readiness-fill").style.width   = summary.trial_readiness + "%";
+
+    // Tab badges
+    document.getElementById("tab-badge-matrix").textContent = matrix.length;
+    const riskCount = matrix.filter(r => r.status === "MISSING" || r.status === "undermined").length;
+    document.getElementById("tab-badge-risk").textContent = riskCount;
+
+    // Show content, hide skeleton
+    document.getElementById("loading-state").style.display = "none";
+    document.getElementById("content").style.display       = "block";
+
+    // If step 2 is already revealed, show the header stats now.
+    if (document.getElementById("step-2").classList.contains("revealed")) {
+      document.getElementById("header-stats").style.display    = "flex";
+      document.getElementById("readiness-block").style.display = "flex";
+    }
+
+    // Update goal pills with real counts.
+    renderGoalsBanner();
+
+    renderMatrix();
+    renderRisk();
+  }
+
+  function showError(msg) {
+    document.getElementById("loading-state").style.display = "none";
+    document.getElementById("error-state").style.display   = "block";
+    document.getElementById("error-msg").textContent = msg;
+  }
+
+  // ------------------------------------------------------------------
+  // Matrix tab
+  // ------------------------------------------------------------------
+  function filteredMatrix() {
+    return _matrix.filter(row => {
+      // Status filter
+      if (_activeStatus !== "all" && row.status !== _activeStatus) return false;
+      // Text search
+      if (_searchQuery) {
+        const hay = buildSearchHay(row) + " " + row.proposition.id.toLowerCase();
+        if (!hay.includes(_searchQuery.toLowerCase())) return false;
+      }
+      // Goal filter
+      if (_activeGoalId) {
+        const goal = _goals.find(g => g.id === _activeGoalId);
+        if (goal && !rowMatchesGoal(row, goal)) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderMatrix() {
+    const rows = filteredMatrix();
+    const labelSuffix = _activeGoalId ? " matching goal" : " of " + _matrix.length + " propositions";
+    document.getElementById("matrix-result-count").textContent = rows.length + labelSuffix;
+    const list = document.getElementById("matrix-list");
+    list.innerHTML = "";
+    if (rows.length === 0) {
+      list.innerHTML = '<p style="color:var(--slate-2);font-size:.87rem;padding:.5rem 0">No propositions match this filter.</p>';
+      return;
+    }
+    rows.forEach(row => list.appendChild(buildCard(row)));
+  }
+
+  // ------------------------------------------------------------------
+  // Risk tab
+  // ------------------------------------------------------------------
+  function filteredRisk() {
+    let risky = _matrix
+      .filter(r => r.status === "MISSING" || r.status === "undermined")
+      .sort((a, b) => {
+        const order = { "MISSING": 0, "undermined": 1 };
+        return (order[a.status] ?? 2) - (order[b.status] ?? 2);
+      });
+
+    if (_riskSearch) {
+      risky = risky.filter(r => buildSearchHay(r).includes(_riskSearch.toLowerCase()));
+    }
+    if (_activeGoalId) {
+      const goal = _goals.find(g => g.id === _activeGoalId);
+      if (goal) risky = risky.filter(r => rowMatchesGoal(r, goal));
+    }
+    return risky;
+  }
+
+  function renderRisk() {
+    const rows = filteredRisk();
+    document.getElementById("risk-result-count").textContent =
+      rows.length + " risk item" + (rows.length === 1 ? "" : "s");
+    const list = document.getElementById("risk-list");
+    list.innerHTML = "";
+    if (rows.length === 0) {
+      list.innerHTML = '<p style="color:var(--supported);font-size:.87rem;padding:.5rem 0">No missing or undermined propositions — case looks strong.</p>';
+      return;
+    }
+    rows.forEach(row => list.appendChild(buildCard(row)));
+  }
+
+  // ------------------------------------------------------------------
+  // Card builder
+  // ------------------------------------------------------------------
+  function buildCard(row) {
+    const p      = row.proposition;
+    const status = row.status;
+    const isMatch = _activeGoalId && (() => {
+      const goal = _goals.find(g => g.id === _activeGoalId);
+      return goal ? rowMatchesGoal(row, goal) : false;
+    })();
+
+    const card = document.createElement("div");
+    card.className = "prop-card status-" + status + (isMatch ? " goal-match" : "");
+
+    // header
+    const header = document.createElement("div");
+    header.className = "card-header";
+    header.setAttribute("role", "button");
+    header.setAttribute("tabindex", "0");
+    header.setAttribute("aria-expanded", "false");
+
+    const meta = document.createElement("div");
+    meta.className = "prop-meta";
+
+    const topRow = document.createElement("div");
+    topRow.className = "prop-top-row";
+
+    const idEl = document.createElement("span");
+    idEl.className = "prop-id";
+    idEl.textContent = p.id;
+
+    const typeEl = document.createElement("span");
+    typeEl.className = "prop-type-badge";
+    typeEl.textContent = p.type;
+
+    topRow.appendChild(idEl);
+    topRow.appendChild(typeEl);
+
+    if (p.party) {
+      const partyEl = document.createElement("span");
+      partyEl.className = "prop-party";
+      partyEl.textContent = p.party;
+      topRow.appendChild(partyEl);
+    }
+
+    // Goal-match badge
+    const matchBadge = document.createElement("span");
+    matchBadge.className = "goal-match-badge";
+    matchBadge.textContent = "Goal match";
+    topRow.appendChild(matchBadge);
+
+    const textEl = document.createElement("p");
+    textEl.className = "prop-text";
+    textEl.textContent = p.text;
+
+    const srcEl = document.createElement("div");
+    srcEl.className = "prop-source";
+    if (p.source) {
+      const s = p.source;
+      srcEl.textContent = [s.doc_id, s.page ? "p" + s.page : null, s.paragraph ? "¶" + s.paragraph : null]
+        .filter(Boolean).join("  ");
+    }
+
+    meta.appendChild(topRow);
+    meta.appendChild(textEl);
+    if (srcEl.textContent) meta.appendChild(srcEl);
+
+    // right side
+    const right = document.createElement("div");
+    right.className = "card-right";
+
+    const badge = document.createElement("span");
+    badge.className = "status-badge " + status;
+    badge.textContent = status === "MISSING" ? "Missing" : cap(status);
+
+    const arrow = document.createElement("svg");
+    arrow.setAttribute("width", "16");
+    arrow.setAttribute("height", "16");
+    arrow.setAttribute("fill", "none");
+    arrow.setAttribute("stroke", "currentColor");
+    arrow.setAttribute("stroke-width", "2");
+    arrow.setAttribute("viewBox", "0 0 24 24");
+    arrow.className = "expand-icon";
+    arrow.innerHTML = '<polyline points="6 9 12 15 18 9"/>';
+
+    right.appendChild(badge);
+    right.appendChild(arrow);
+
+    header.appendChild(meta);
+    header.appendChild(right);
+
+    // evidence drawer
+    const drawer   = document.createElement("div");
+    drawer.className = "evidence-drawer";
+    const inner    = document.createElement("div");
+    inner.className = "evidence-inner";
+
+    const heading   = document.createElement("div");
+    heading.className = "evidence-heading";
+    const linkCount = row.links ? row.links.length : 0;
+    heading.textContent = "Evidence links (" + linkCount + " retrieved, " + row.n_candidates + " candidates)";
+    inner.appendChild(heading);
+
+    if (!row.links || row.links.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "evidence-empty";
+      empty.textContent = "No evidence links — this proposition has no supportive or adverse material in the bundle.";
+      inner.appendChild(empty);
+    } else {
+      const evList = document.createElement("div");
+      evList.className = "evidence-list";
+      row.links.forEach(link => evList.appendChild(buildEvidenceItem(link)));
+      inner.appendChild(evList);
+    }
+
+    drawer.appendChild(inner);
+    card.appendChild(header);
+    card.appendChild(drawer);
+
+    // toggle
+    function toggleCard() {
+      const open = card.classList.toggle("open");
+      header.setAttribute("aria-expanded", String(open));
+    }
+    header.addEventListener("click", toggleCard);
+    header.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleCard(); }
+    });
+
+    return card;
+  }
+
+  function buildEvidenceItem(link) {
+    const item = document.createElement("div");
+    item.className = "evidence-item rel-" + link.relation;
+
+    const topRow = document.createElement("div");
+    topRow.className = "ev-top-row";
+
+    const relBadge = document.createElement("span");
+    relBadge.className = "rel-badge " + link.relation;
+    relBadge.textContent = cap(link.relation);
+
+    const confWrap = document.createElement("div");
+    confWrap.className = "conf-bar-wrap";
+    const bar = document.createElement("div");
+    bar.className = "conf-bar";
+    const fill = document.createElement("div");
+    fill.className = "conf-fill " + link.relation;
+    fill.style.width = Math.round((link.confidence || 0) * 100) + "%";
+    bar.appendChild(fill);
+    const confNum = document.createElement("span");
+    confNum.className = "conf-num";
+    confNum.textContent = Math.round((link.confidence || 0) * 100) + "%";
+    confWrap.appendChild(bar);
+    confWrap.appendChild(confNum);
+
+    topRow.appendChild(relBadge);
+    topRow.appendChild(confWrap);
+
+    if (link.witness) {
+      const wit = document.createElement("span");
+      wit.className = "ev-witness";
+      wit.textContent = link.witness;
+      topRow.appendChild(wit);
+    }
+
+    const s = link.evidence_source || {};
+    const citation = [
+      link.evidence_id, s.doc_id,
+      s.page ? "p" + s.page : null,
+      s.paragraph ? "¶" + s.paragraph : null,
+    ].filter(Boolean).join("  ");
+
+    const citEl = document.createElement("div");
+    citEl.className = "ev-citation";
+    citEl.textContent = citation;
+
+    item.appendChild(topRow);
+    item.appendChild(citEl);
+
+    if (link.rationale) {
+      const rat = document.createElement("p");
+      rat.className = "ev-rationale";
+      rat.textContent = link.rationale;
+      item.appendChild(rat);
+    }
+
+    if (link.quote) {
+      const q = document.createElement("div");
+      q.className = "ev-quote";
+      q.textContent = "“" + link.quote + "”";
+      if (!link.quote_ok) {
+        const warn = document.createElement("span");
+        warn.className = "quote-warn";
+        warn.textContent = "  [unverified quote]";
+        q.appendChild(warn);
+      }
+      item.appendChild(q);
+    }
+
+    return item;
+  }
+
+  // ------------------------------------------------------------------
+  // Tabs
+  // ------------------------------------------------------------------
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      _activeTab = btn.dataset.tab;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("tab-matrix").style.display = _activeTab === "matrix" ? "block" : "none";
+      document.getElementById("tab-risk").style.display   = _activeTab === "risk"   ? "block" : "none";
+    });
+  });
+
+  // ------------------------------------------------------------------
+  // Status filter buttons
+  // ------------------------------------------------------------------
+  document.querySelectorAll("#status-filters .filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      _activeStatus = btn.dataset.status;
+      document.querySelectorAll("#status-filters .filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderMatrix();
+    });
+  });
+
+  // ------------------------------------------------------------------
+  // Search
+  // ------------------------------------------------------------------
+  document.getElementById("search-input").addEventListener("input", e => {
+    _searchQuery = e.target.value;
+    renderMatrix();
+  });
+
+  document.getElementById("risk-search-input").addEventListener("input", e => {
+    _riskSearch = e.target.value;
+    renderRisk();
+  });
+
+  // ------------------------------------------------------------------
+  // Utils
+  // ------------------------------------------------------------------
+  function cap(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+  }
+
+  // ------------------------------------------------------------------
+  // Boot
+  // ------------------------------------------------------------------
+  boot();
+
+})();
+</script>
+</body>
+</html>

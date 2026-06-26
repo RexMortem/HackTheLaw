@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(python -c \"import ast, pathlib; ast.parse\\(pathlib.Path\\('C:/Users/Edwar/Documents/LLMxLaw/goals_ui/app.py'\\).read_text\\(\\)\\); print\\('app.py: syntax OK'\\)\")",
+      "Bash(CASE_UI_DEMO=1 python case_ui/app.py)",
+      "Bash(curl -s http://localhost:8001/api/matrix)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('ok=',d['ok'],'demo=',d['demo_mode'],'total=',d['summary']['total'],'readiness=',d['summary']['trial_readiness']\\)\")",
+      "Bash(kill %1)",
+      "Bash(CASE_UI_DEMO=1 python3 case_ui/app.py)",
+      "Bash(CASE_UI_DEMO=1 /c/Users/Edwar/AppData/Local/Microsoft/WindowsApps/python3 case_ui/app.py)",
+      "Bash(/c/Users/Edwar/AppData/Local/Microsoft/WindowsApps/python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('ok=',d['ok'],'demo=',d['demo_mode'],'total=',d['summary']['total'],'readiness=',d['summary']['trial_readiness']\\)\")",
+      "PowerShell(Get-Command *#)",
+      "PowerShell(Stop-Process *)",
+      "Bash(python -c \"import ast, pathlib; ast.parse\\(pathlib.Path\\('case_ui/app.py'\\).read_text\\(encoding='utf-8'\\)\\); print\\('app.py OK'\\)\")",
+      "Bash(python *)"
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+- [Case UI project](project_case_ui.md) — litigation pleading-to-proof matrix; case_ui/, Python stdlib server port 8001, demo mode via CASE_UI_DEMO=1
