@@ -1,17 +1,18 @@
-# LLM × Law — Pleading-to-Proof
+# LLM × Law: Pleading-to-Proof
 
-Our entry for the **CMS — Pleading to Proof** challenge. We built a tool that
-takes a litigation bundle (PDFs) and stress-tests the case theory: it extracts
-every pleaded allegation and denial, maps each one to the available evidence,
-and labels it **supported**, **contested**, **undermined**, or **missing** — a
-*pleading-to-proof matrix* with a trial-readiness score, an AI case summary, and
-a built-in litigation assistant you can chat with.
+Our entry for the CMS Pleading-to-Proof challenge. It takes a litigation bundle
+(a set of `.docx` documents) and stress-tests the case theory: it extracts every
+pleaded allegation and denial, maps each one to the available evidence, and
+labels it **supported**,
+**contested**, **undermined**, or **missing**. The result is a pleading-to-proof
+matrix with a trial-readiness score, an AI case summary, and a built-in
+litigation assistant you can chat with.
 
 ---
 
 ## Run it
 
-### Quick start — the web app
+### Quick start: the web app
 
 ```bash
 pip install -r requirements.txt
@@ -24,37 +25,46 @@ It works out of the box: a sample proof matrix is bundled with the repo
 (`case_ui/data/matrix.json`), so the matrix, filters, goals, and risk view all
 run with no API key and no pipeline run.
 
-To enable the **AI case summary** and the **Second Chair chat assistant**, set
-an Anthropic API key first (these features degrade gracefully without one):
+To enable the AI case summary and the Second Chair chat assistant, set an
+Anthropic API key first (these features degrade gracefully without one):
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...      # PowerShell: $env:ANTHROPIC_API_KEY="..."
 ```
 
-### Regenerate the matrix from source PDFs (optional)
+### Regenerate the matrix from the source bundle (optional)
 
-The bundled matrix is pre-computed. To rebuild it from a raw bundle:
+The bundled matrix is pre-computed. To rebuild it from the raw `.docx` bundle,
+run the **preprocessing step first**, then the pipeline:
 
 ```bash
 pip install -r requirements.txt
 export ANTHROPIC_API_KEY=sk-ant-...
 
-python convert_pdfs.py     # PDFs        -> converted/*.md
-python extract.py          # converted/  -> out/propositions.json, out/evidence.json
+# PREPROCESSING — run this BEFORE the app/pipeline. It is NOT part of the app;
+# it converts the .docx case bundle into LLM-readable Markdown, once.
+python convert_docx.py     # dataset/<bundle>/*.docx -> bundle_md/*.md
+
+# Pipeline (reads the preprocessed bundle_md/)
+python extract.py          # bundle_md/  -> out/propositions.json, out/evidence.json
 python build_matrix.py     # the above   -> out/matrix.{json,csv,md}
 python case_ui/snapshot_data.py   # copy out/matrix.json -> case_ui/data/ for the app
 ```
 
 Cheap dry run first: `python extract.py --mode sync --limit 3`.
 
+> **Preprocessing is a separate, offline step.** `convert_docx.py` is never
+> invoked by the running app — the app only reads the matrix produced downstream.
+> Re-run it only when the source `.docx` bundle changes.
+
 ---
 
 ## What we built
 
 In complex litigation, the pleadings set out dozens of allegations and denials,
-but the evidence that proves (or disproves) them is scattered across witness
-statements, exhibits, correspondence and contracts. Working out which parts of
-the case are actually evidenced is slow, manual cross-referencing — and teams
+but the evidence that proves or disproves them is scattered across witness
+statements, exhibits, correspondence, and contracts. Working out which parts of
+the case are actually evidenced is slow, manual cross-referencing, and teams
 often discover a weak point far too late.
 
 Our tool does that cross-referencing automatically. It reads the bundle, pulls
@@ -62,20 +72,20 @@ out each atomic pleaded proposition, finds the evidence that bears on it, and
 decides whether that evidence **supports**, **contests**, **undermines**, or
 **fails to address** the proposition. The result is a single matrix that shows,
 at a glance, where the case is strong, where it is vulnerable, and where there
-is simply no evidence at all.
+is no evidence at all.
 
-On top of that matrix, the web app lets a lawyer **state what they care about**
+On top of that matrix, the web app lets a lawyer state what they care about
 (e.g. "contradictions in the Defence", "allegations with no witness support")
-and instantly filters the case to those points. A header **trial-readiness
-score** rolls the whole bundle into one number. An **AI case summary** explains,
-in plain English, what the dispute is actually about — grounded by a live web
-search and by relevant EU legal materials — and folds in the proof figures. And
-**"Second Chair"**, an embedded AI associate, answers free-text questions about
-the case, citing the exact propositions it relies on.
+and instantly filters the case to those points. A header trial-readiness score
+rolls the whole bundle into one number. An AI case summary explains, in plain
+English, what the dispute is actually about, grounded by a live web search and by
+relevant EU legal materials, and folds in the proof figures. And "Second Chair",
+an embedded AI associate, answers free-text questions about the case, citing the
+exact propositions it relies on.
 
-Every cell is **auditable**: each link back to the evidence carries the source
+Every cell is auditable: each link back to the evidence carries the source
 document, page, and paragraph, plus a verbatim quote that is checked against the
-original text — so nothing in the matrix is a hallucination.
+original text, so nothing in the matrix is a hallucination.
 
 ---
 
@@ -83,30 +93,31 @@ original text — so nothing in the matrix is a hallucination.
 
 The system is two halves:
 
-1. **An offline pipeline** that turns PDFs into the proof matrix — three scripts
-   run in sequence (`convert_pdfs.py` → `extract.py` → `build_matrix.py`).
-2. **A web app** (`case_ui/`) that serves the matrix as an interactive UI and
-   adds the goals, AI summary, and chat features on top.
+1. **Offline pipeline:** turns the `.docx` case bundle into the proof matrix. A
+   preprocessing step (`convert_docx.py`) plus the pipeline (`extract.py` →
+   `build_matrix.py`) run in sequence, before the app.
+2. **Web app** (`case_ui/`): serves the matrix as an interactive UI and adds the
+   goals, AI summary, and chat features on top.
 
 ```
-PDFs ─convert_pdfs.py─▶ converted/*.md ─extract.py─▶ out/propositions.json
-                                          │                out/evidence.json
-                                          └─build_matrix.py─▶ out/matrix.{json,csv,md}
-                                                                      │
-                                                          case_ui/app.py ──▶ browser UI
+.docx bundle ─convert_docx.py─▶ bundle_md/*.md ─extract.py─▶ out/propositions.json
+                                                 │                out/evidence.json
+                                                 └─build_matrix.py─▶ out/matrix.{json,csv,md}
+                                                                             │
+                                                                 case_ui/app.py ──▶ browser UI
 ```
 
 Key design choices, in brief:
 
-- **Two layers, one mapping.** Allegations/denials come from the *pleadings*;
+- **Two layers, one mapping:** allegations and denials come from the *pleadings*;
   witness statements and exhibits are *evidence*. The product is the mapping
   between them.
-- **Atomic + provenance.** One claim per record, each tied to a source paragraph
-  and a quote verified against the text — so every matrix cell is checkable.
-- **Retrieval + classification.** For each proposition we retrieve candidate
+- **Atomic + provenance:** one claim per record, each tied to a source paragraph
+  and a quote verified against the text, so every matrix cell is checkable.
+- **Retrieval + classification:** for each proposition we retrieve candidate
   evidence (BM25 by default, with legal-tuned embeddings optional) and have
-  Claude classify each candidate as supportive / adverse / neutral.
-- **Grounded AI, graceful fallback.** The summary and chat are grounded in the
+  Claude classify each candidate as supportive, adverse, or neutral.
+- **Grounded AI, graceful fallback:** the summary and chat are grounded in the
   matrix (and external sources for the summary); if no API key is present they
   fall back to deterministic, matrix-derived answers rather than failing.
 
@@ -117,37 +128,43 @@ Key design choices, in brief:
 ### The pipeline
 
 ```
-PDFs ─convert_pdfs.py─▶ converted/*.md ─extract.py─▶ out/propositions.json
-                                          │                out/evidence.json
-                                          └─build_matrix.py─▶ out/matrix.{json,csv,md}
+.docx bundle ─convert_docx.py─▶ bundle_md/*.md ─extract.py─▶ out/propositions.json
+                                                 │                out/evidence.json
+                                                 └─build_matrix.py─▶ out/matrix.{json,csv,md}
 ```
 
-1. **`convert_pdfs.py`** — PDF → AI-readable Markdown (frontmatter + page markers
-   + preserved paragraph numbering). Already run; output in `converted/`.
-2. **`extract.py`** — classifies each doc (pleading / witness statement /
-   exhibit), extracts atomic propositions from pleadings and evidence units from
-   the rest. Every record carries provenance (doc_id, page, paragraph) and a
-   **verbatim quote verified against the source** (anti-hallucination gate).
-3. **`build_matrix.py`** — BM25-retrieves candidate evidence per proposition, has
+0. **`convert_docx.py` (preprocessing, run before the app):** converts the
+   `.docx` case bundle into LLM-readable Markdown in `bundle_md/`, matching the
+   format the pipeline expects (frontmatter, a `<!-- page 1 -->` marker,
+   blank-line-separated paragraphs with leading numbers preserved, tables
+   rendered as Markdown). Pure stdlib (`zipfile` + ElementTree); no app
+   involvement. Supersedes the deprecated PDF path (see [Challenges](#challenges)).
+1. **`extract.py`:** reads `bundle_md/`, classifies each doc (pleading, witness
+   statement, or exhibit), and extracts atomic propositions from pleadings and
+   evidence units from the rest. Every record carries provenance (doc_id, page,
+   paragraph) and a verbatim quote verified against the source (anti-hallucination
+   gate).
+2. **`build_matrix.py`:** BM25-retrieves candidate evidence per proposition, has
    Claude classify each candidate, and rolls up the four-bucket matrix.
 
 **Why this design**
 
 - **Structured outputs** (`output_config.format`) for schema-valid records.
-- **Batch API** (50% cheaper) for per-document extraction; **prompt caching** on
-  the shared instruction prefix.
+- **Batch API** (50% cheaper) for per-document extraction, with **prompt
+  caching** on the shared instruction prefix.
 - **Model:** `claude-opus-4-8`, adaptive thinking, `effort: high`.
 
-**Retrieval & scoring knobs**
+**Retrieval and scoring knobs**
 
 - **Top-k:** `build_matrix.py --top-k N` controls how many candidate evidence
-  units are considered per proposition (default 25). Higher = better adverse-
-  evidence recall at higher cost. The count is logged — no silent truncation.
-- **Retriever:** `--retriever bm25` (default, no extra deps) | `embeddings` |
-  `hybrid`. Embeddings/hybrid use **Voyage AI** (`voyage-law-2`, legal-domain
-  tuned) and need `VOYAGE_API_KEY`; vectors cache in `out/emb_*.npz`. **Hybrid**
-  fuses BM25 + embeddings via reciprocal-rank fusion — best for catching adverse
-  evidence worded differently from the allegation:
+  units are considered per proposition (default 25). Higher means better
+  adverse-evidence recall at higher cost. The count is logged; no silent
+  truncation.
+- **Retriever:** `--retriever bm25` (default, no extra deps), `embeddings`, or
+  `hybrid`. Embeddings and hybrid use **Voyage AI** (`voyage-law-2`,
+  legal-domain tuned) and need `VOYAGE_API_KEY`; vectors cache in
+  `out/emb_*.npz`. Hybrid fuses BM25 and embeddings via reciprocal-rank fusion,
+  best for catching adverse evidence worded differently from the allegation:
   ```bash
   export VOYAGE_API_KEY=pa-...
   python build_matrix.py --retriever hybrid --top-k 40
@@ -160,19 +177,20 @@ PDFs ─convert_pdfs.py─▶ converted/*.md ─extract.py─▶ out/proposition
 `case_ui/app.py` is a pure-stdlib Python HTTP server (no framework, no build
 step) serving a single-page vanilla HTML/CSS/JS UI (`case_ui/index.html`).
 
-- **Goals.** The page opens by asking what the lawyer wants to focus on. Goals
+- **Goals:** the page opens by asking what the lawyer wants to focus on. Goals
   become clickable pills that filter the matrix to matching propositions and show
-  a coverage strip ("4 match — 2 supported, 1 undermined, 1 missing"). Matching
-  is keyword-based (no LLM call). Goals auto-save (debounced) to
+  a coverage strip ("4 match: 2 supported, 1 undermined, 1 missing"). Matching is
+  keyword-based (no LLM call). Goals auto-save (debounced) to
   `case_ui/data/goals.json`.
-- **Trial readiness.** A single header score: `supported` counts 1.0,
-  `contested` 0.5, `undermined`/`missing` 0.0, averaged over all propositions.
-- **Matrix views.** Full Matrix and Risk & Gaps tabs, status filters, free-text
-  search, and expandable evidence drawers showing verbatim quotes + citations.
+- **Trial readiness:** a single header score. `supported` counts 1.0,
+  `contested` 0.5, `undermined` and `missing` 0.0, averaged over all
+  propositions.
+- **Matrix views:** Full Matrix and Risk & Gaps tabs, status filters, free-text
+  search, and expandable evidence drawers showing verbatim quotes and citations.
 
 **Data source.** The app prefers the live pipeline output (`out/matrix.json`)
 and falls back to the committed snapshot (`case_ui/data/matrix.json`) when `out/`
-is absent — which is why it runs out of the box and on a deploy host where `out/`
+is absent, which is why it runs out of the box and on a deploy host where `out/`
 (gitignored) doesn't exist. Refresh the snapshot with `case_ui/snapshot_data.py`.
 
 **API endpoints**
@@ -196,12 +214,12 @@ is absent — which is why it runs out of the box and on a deploy host where `ou
 3. Call Claude (`claude-opus-4-8`, adaptive thinking) with the pleaded
    propositions, the proof-matrix figures, and the retrieved EU materials, plus
    the **`web_search` tool** to identify and ground the real-world dispute.
-4. Parse the model's `HEADLINE:` + paragraph format and return it with the
+4. Parse the model's `HEADLINE:` and paragraph format and return it with the
    sources used.
 
 The narrative is **cached to disk** (`case_ui/data/summary.json`), keyed by a
 SHA-256 signature of the matrix content, so the LLM is only re-called when the
-case changes; the HTTP response adds an ETag + `Cache-Control` for browser
+case changes; the HTTP response adds an ETag and `Cache-Control` for browser
 caching. If the LLM is unavailable, a deterministic matrix-derived summary is
 returned instead.
 
@@ -219,24 +237,48 @@ reply over the pleadings so it still says something true about the case.
 
 - Build `pip install -r requirements.txt`, start `python case_ui/app.py`.
 - The server reads `$PORT` (Render-injected) and binds all interfaces.
-- `ANTHROPIC_API_KEY` / `VOYAGE_API_KEY` are dashboard secrets (`sync: false`),
+- `ANTHROPIC_API_KEY` and `VOYAGE_API_KEY` are dashboard secrets (`sync: false`),
   never committed.
 - Health check at `/api/status`.
 
 Because `out/` is gitignored and absent on the host, the app serves the
 committed `case_ui/data/matrix.json` snapshot. Note: the free tier sleeps when
-idle and has an ephemeral disk, so goal/summary writes don't survive a restart.
+idle and has an ephemeral disk, so goal and summary writes don't survive a
+restart.
 
 ---
 
-## Notes & caveats
+## Notes and caveats
 
-- **Pleadings input.** If the `converted/` set contains only witness statements,
-  `extract.py` reports *no pleadings detected* and propositions stay empty until
-  the Particulars of Claim / Defence are added (or designated with
-  `--pleadings "<glob>"`). Evidence extraction runs regardless.
+- **Pleadings input:** if `bundle_md/` contains no pleadings (e.g. only witness
+  statements), `extract.py` reports *no pleadings detected* and propositions stay
+  empty until the Claim Form / Particulars of Claim / Defence are present (or
+  designated with `--pleadings "<glob>"`). Evidence extraction runs regardless.
+  The CMS bundle includes `01_Claim_Form.docx` and `02_Particulars_of_Claim.docx`.
 - **Goals are single-session, single-user** (hackathon scope). Delete
   `case_ui/data/goals.json` to reset.
-- **Two corrupt source PDFs** (`witn04520100_2.pdf`, `witn04600300.pdf`) are
-  0-byte and were skipped during conversion.
-- **Port.** Defaults to `8001` locally; override with `$PORT`.
+- **Port:** defaults to `8001` locally; override with `$PORT`.
+
+---
+
+## Challenges
+
+**We jumped the gun on the data.** Before the challenge was fully released we
+started analysing a preliminary bundle to plan our approach, a large set of PDF
+witness statements. We built our first ingestion path around it: a PDF-to-JSON
+converter (`pdf_to_ai_safe.py`, with OCR fallback) feeding the extraction and
+proof-matrix pipeline. That early analysis shaped the whole design (atomic
+propositions, provenance-checked quotes, the four-bucket matrix).
+
+**Then the real bundle landed in a different format.** When the challenge was
+fully released, the official data came as a new bundle of `.docx` files,
+different documents and a different format from the PDFs we'd planned against. So
+we had to pivot the ingestion layer: a new preprocessing step, `convert_docx.py`,
+reads the `.docx` bundle into `bundle_md/`, which the pipeline now consumes — and
+we kept the extraction, matrix, and UI work we'd already built on top.
+
+As a result, the original PDF path is deprecated. The PDF-to-JSON `.jsonl`
+outputs now live in `out2_deprecated_pdf_jsonl/` (renamed to flag that they came
+from the superseded PDF bundle, not the released `.docx` data). The
+`pdf_to_ai_safe.py` and `convert_pdfs.py` scripts are kept for reference but are
+no longer in the active path.

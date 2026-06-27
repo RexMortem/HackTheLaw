@@ -15,10 +15,18 @@ out/
 
 # Large / source data
 dataset/
+# Raw case bundle archives (extract into dataset/, then convert_docx.py)
+CMS Challenge - Case Bundle*.zip
 
-# Converted Markdown is regenerable from dataset/ via convert_pdfs.py.
-# Comment the next line out if you want it tracked.
+# Converted Markdown is regenerable from dataset/.
+# converted/  — deprecated PDF path (convert_pdfs.py)
+# bundle_md/  — current .docx path (convert_docx.py); run before the app
+# Comment a line out if you want that output tracked.
 converted/
+bundle_md/
+
+# Deprecated PDF->JSON pipeline outputs (superseded by the .docx bundle)
+out2_deprecated_pdf_jsonl/
 
 # OS / editor
 .DS_Store

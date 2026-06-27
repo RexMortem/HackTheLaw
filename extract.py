@@ -15,7 +15,7 @@ Outputs:
   out/classification.csv  what kind each document was judged to be
 
 Usage:
-  python extract.py                       # batch mode (default), reads ./converted
+  python extract.py                       # batch mode (default), reads ./bundle_md
   python extract.py --mode sync           # sequential calls (easier to debug)
   python extract.py --limit 5             # only the first 5 docs (a cheap dry run)
   python extract.py --pleadings "POC*.md" # force a glob to be treated as pleadings
@@ -65,7 +65,7 @@ def doc_user_prompt(doc: cl.Document) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--input", default="converted")
+    ap.add_argument("--input", default="bundle_md")
     ap.add_argument("--out", default="out")
     ap.add_argument("--mode", choices=["batch", "sync"], default="batch")
     ap.add_argument("--limit", type=int, default=0, help="cap number of docs (dry run)")
