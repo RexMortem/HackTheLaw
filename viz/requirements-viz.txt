@@ -1,0 +1,17 @@
+# Animation / video deps — kept separate from the app's requirements.txt so
+# Manim's heavy toolchain never leaks into the deployed web service.
+#
+#   python -m venv .venv-viz && .venv-viz\Scripts\activate   (Windows)
+#   pip install -r viz/requirements-viz.txt
+#
+# Manim Community Edition (the maintained 3b1b fork — NOT manimgl).
+manim>=0.18.1
+
+# Voiceover plugin: write narration inline, auto-time animations to the audio.
+# gTTS is the zero-config default (needs internet, no API key). For broadcast-
+# quality voices add the azure extra and set AZURE_SUBSCRIPTION_KEY / _REGION.
+manim-voiceover[gtts]>=0.3.7
+# manim-voiceover[azure,gtts]>=0.3.7   # <- swap to this for Azure neural voices
+
+# numpy ships with manim; pinned here only so the layout solver is explicit.
+numpy>=1.24

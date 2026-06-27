@@ -9,6 +9,11 @@ __pycache__/
 .venv/
 venv/
 
+# Manim / video animation (viz/) — heavy venv + render output, all regenerable
+.venv-viz/
+media/
+viz/media/
+
 # Pipeline outputs / caches (regenerable; may contain extracted case content)
 out/
 *.npz

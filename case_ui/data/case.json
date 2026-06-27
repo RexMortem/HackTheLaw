@@ -1,6 +1,11 @@
 {
   "title": "",
   "theory": "",
-  "propositions": [],
-  "saved_at": "2026-06-27T16:41:06.365204+00:00"
+  "propositions": [
+    "ase.\r\nOpen Case Builder →\r\n×\r\nAdd to the case\r\nProposition\r\nEvidence\r\nText *\r\nThe pleaded allegation or denial, in one sentence…\r\nType\r\nAllegation\r\nParty\r\nClaimant / Defendant\r\nResponds to (optional)\r\ne.g. P0003, or a short description\r\nLinked evidence\r\n+ Add link\r\nReference the evidence this proposition relies on.\r\n\r\nCancel\r\nAdd to case\r\nArgumentation\r\nAllegation vs defence — the case theory\r\nClaimant allegations on the left, Defendant denials on the right. Each node is risk-coded; a clash marks where a denial directly answers an allegation (via responds to). Click any node to open it in Propositions.\r\n\r\nClaimant — allegations\r\nP0001 · contested\r\nThe Defendant defectively designed, built and implemented a cloud-based inventory and EPOS platform.",
+    "P0001",
+    "P0003",
+    "P0002"
+  ],
+  "saved_at": "2026-06-27T18:54:21.795252+00:00"
 }
