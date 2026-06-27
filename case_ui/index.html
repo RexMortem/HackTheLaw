@@ -1641,23 +1641,9 @@
 <!-- ======================= ROOM: ARGUMENTATION ===================== -->
 <section id="room-argumentation" class="view room">
   <div class="room-head">
-    <div><h1>Argumentation</h1><div class="sub">Allegation vs defence — the case theory</div></div>
+    <div><h1>Argumentation</h1><div class="sub">The arguments each side can run</div></div>
   </div>
   <div class="room-body">
-    <p class="arg-intro">Claimant allegations on the left, Defendant denials on the right.
-       Each node is risk-coded; a <strong>clash</strong> marks where a denial directly answers an
-       allegation (via <code>responds&nbsp;to</code>). Click any node to open it in Propositions.</p>
-    <div class="arg-cols">
-      <div class="arg-col claimant">
-        <div class="arg-col-head"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--navy-3)"></span>Claimant — allegations</div>
-        <div id="arg-claimant"></div>
-      </div>
-      <div class="arg-col defendant">
-        <div class="arg-col-head"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--undermined)"></span>Defendant — denials</div>
-        <div id="arg-defendant"></div>
-      </div>
-    </div>
-
     <section class="args-section" id="args-section">
       <div class="args-head">
         <div>
@@ -1826,7 +1812,7 @@
       b.classList.toggle("active", b.dataset.room === name));
 
     if (name === "propositions") ensureSummary();
-    if (name === "argumentation") { renderArgumentation(); ensureArguments(); }
+    if (name === "argumentation") { ensureArguments(); }
     if (name === "graph") ensureGraph();
     if (name === "builder") ensureBuilder();
     if (name === "damages") ensureQuantum();
@@ -2459,34 +2445,6 @@
   }
 
   let _argRendered = false;
-
-  // ------------------------------------------------------------------ argumentation
-  function renderArgumentation() {
-    if (!_matrixLoaded || _argRendered) return;
-    _argRendered = true;
-    const claimant = $("arg-claimant"), defendant = $("arg-defendant");
-    claimant.innerHTML = ""; defendant.innerHTML = "";
-
-    _matrix.forEach(row => {
-      const p = row.proposition;
-      const node = document.createElement("div");
-      node.className = "arg-node status-" + row.status;
-      node.dataset.propId = p.id;
-      const id = document.createElement("div"); id.className = "id"; id.textContent = p.id + " · " + row.status;
-      const t = document.createElement("div"); t.className = "t"; t.textContent = p.text;
-      node.appendChild(id); node.appendChild(t);
-
-      if (p.responds_to) {
-        const c = document.createElement("div"); c.className = "clash";
-        c.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7l10 10"/></svg> clashes with ' + p.responds_to;
-        node.appendChild(c);
-      }
-      node.addEventListener("click", () => openProposition(p.id));
-
-      const col = (p.party === "Defendant" || p.type === "denial") ? defendant : claimant;
-      col.appendChild(node);
-    });
-  }
 
   // ------------------------------------------------------------------ case graph
   // A dependency-free force-directed view of the same graph we load into Neo4j:
