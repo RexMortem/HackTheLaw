@@ -768,7 +768,7 @@
       position: absolute; top: 1.6rem; left: 1.9rem; z-index: 2;
       display: flex; align-items: center; gap: 0.7rem;
     }
-    .hero-logo .sc-mark { height: 46px; width: auto; display: block; }
+    .hero-logo .sc-mark { height: 32px; width: auto; display: block; }
     .hero-logo .sc-word {
       display: flex; flex-direction: column;
       font-family: var(--mono); font-size: 0.95rem; font-weight: 700;
@@ -777,7 +777,7 @@
     }
     @media (max-width: 760px) {
       .hero-logo { top: 1rem; left: 1rem; gap: 0.5rem; }
-      .hero-logo .sc-mark { height: 36px; }
+      .hero-logo .sc-mark { height: 27px; }
       .hero-logo .sc-word { font-size: 0.8rem; letter-spacing: 0.26em; }
     }
     #hero .hero-eyebrow { font-family: var(--mono); color: var(--slate-2); letter-spacing: 0.2em; }
@@ -881,18 +881,22 @@
 
   <!-- Second Chair logo (top-left) -->
   <div class="hero-logo" aria-label="Second Chair">
-    <svg class="sc-mark" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+    <svg class="sc-mark" viewBox="12 2 44 58" fill="none" aria-hidden="true">
       <defs>
-        <linearGradient id="scGrad" x1="8" y1="6" x2="46" y2="52" gradientUnits="userSpaceOnUse">
+        <linearGradient id="scGrad" x1="16" y1="4" x2="52" y2="56" gradientUnits="userSpaceOnUse">
           <stop offset="0" stop-color="#5cb98a"/>
           <stop offset="1" stop-color="#2f7d56"/>
         </linearGradient>
       </defs>
-      <g stroke="url(#scGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-        <!-- chair 1: back post + seat + front leg (side profile) -->
-        <path d="M12 8 V46 M12 29 H26 V46"/>
-        <!-- chair 2: staggered behind -->
-        <path d="M30 14 V50 M30 35 H44 V50"/>
+      <g stroke="url(#scGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <!-- chair A (back): tall backrest, perspective seat, four legs -->
+        <path d="M16 6 L18 30 M30 4 L32 28 M16 6 L30 4"/>
+        <path d="M18 30 L32 28 L38 36 L22 40 Z"/>
+        <path d="M18 30 L17 50 M32 28 L33 48 M38 36 L39 54 M22 40 L21 56"/>
+        <!-- chair B (front, overlapping) -->
+        <path d="M29 7 L31 31 M43 5 L45 29 M29 7 L43 5"/>
+        <path d="M31 31 L45 29 L51 37 L35 41 Z"/>
+        <path d="M31 31 L30 51 M45 29 L46 49 M51 37 L52 55 M35 41 L34 57"/>
       </g>
     </svg>
     <span class="sc-word"><span>Second</span><span>Chair</span></span>
