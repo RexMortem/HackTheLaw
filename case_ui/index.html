@@ -337,8 +337,19 @@
       padding: 0.7rem 0.95rem; border-radius: 12px;
       white-space: pre-wrap; word-break: break-word;
     }
-    .msg.sc .msg-body { background: var(--white); border: 1px solid var(--border); border-top-left-radius: 4px; box-shadow: var(--shadow); }
+    .msg.sc .msg-body { background: var(--white); border: 1px solid var(--border); border-top-left-radius: 4px; box-shadow: var(--shadow); white-space: normal; }
     .msg.user .msg-body { background: var(--navy); color: #fff; border-top-right-radius: 4px; }
+    /* markdown rendered inside Second Chair replies */
+    .msg.sc .msg-body > :first-child { margin-top: 0; }
+    .msg.sc .msg-body > :last-child { margin-bottom: 0; }
+    .msg.sc .msg-body p { margin: 0 0 0.6rem; }
+    .msg.sc .msg-body ul, .msg.sc .msg-body ol { margin: 0 0 0.6rem; padding-left: 1.25rem; }
+    .msg.sc .msg-body li { margin: 0.15rem 0; }
+    .msg.sc .msg-body h4, .msg.sc .msg-body h5, .msg.sc .msg-body h6 { margin: 0.6rem 0 0.3rem; font-size: 0.95rem; font-weight: 700; }
+    .msg.sc .msg-body code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.85em; background: var(--paper-2); padding: 0.05rem 0.3rem; border-radius: 4px; }
+    .msg.sc .msg-body pre { background: var(--paper-2); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.8rem; overflow-x: auto; margin: 0 0 0.6rem; }
+    .msg.sc .msg-body pre code { background: none; padding: 0; }
+    .msg.sc .msg-body a { color: var(--navy-3); text-decoration: underline; }
 
     .msg-name { font-size: 0.7rem; font-weight: 700; color: var(--slate-2); margin-bottom: 0.25rem; letter-spacing: 0.02em; }
     .msg.sc .msg-name .tag-offline {
@@ -1497,8 +1508,7 @@
 <!-- ======================= ROOM: PROPOSITIONS ====================== -->
 <section id="room-propositions" class="view room">
   <div class="room-head">
-    <!-- Timeline panel temporarily hidden (remove style here + on #timeline-sidebar to restore) -->
-    <button class="tl-toggle" id="tl-toggle" title="Toggle timeline" aria-pressed="false" style="display:none">
+    <button class="tl-toggle" id="tl-toggle" title="Toggle timeline" aria-pressed="false">
       <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       <span>Timeline</span>
     </button>
@@ -1512,8 +1522,8 @@
   <div class="room-body">
    <div class="claims-layout">
 
-    <!-- Left: timeline sidebar (toggled) — temporarily hidden -->
-    <aside class="timeline-sidebar" id="timeline-sidebar" style="display:none">
+    <!-- Left: timeline sidebar (toggled open from the room header) -->
+    <aside class="timeline-sidebar" id="timeline-sidebar">
       <div class="tl-head">
         <span>Evidence Timeline</span>
         <button class="tl-close" id="tl-close" aria-label="Close timeline">&times;</button>
@@ -2003,16 +2013,71 @@
     return wrap;
   }
 
-  // turn [P0003] tokens into colour-coded, clickable chips
+  // Render a Second Chair reply: markdown -> HTML, then turn [P0003] tokens into
+  // colour-coded, clickable chips. Markdown is what Claude emits (bold, lists,
+  // headings); without this it shows raw ** and - .
   function renderWithCitations(container, text) {
-    const re = /\[(P\d{3,5})\]/g;
-    let last = 0, m;
-    while ((m = re.exec(text)) !== null) {
-      if (m.index > last) container.appendChild(document.createTextNode(text.slice(last, m.index)));
-      container.appendChild(makeCite(m[1]));
-      last = re.lastIndex;
+    container.innerHTML = mdToHtml(text);
+    linkCitations(container);
+  }
+
+  function mdEsc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+
+  // Minimal, safe Markdown -> HTML (escapes first, no raw HTML passthrough).
+  function mdToHtml(src) {
+    const blocks = [];
+    src = String(src || "").replace(/```([\s\S]*?)```/g, (_, code) => {
+      blocks.push(code.replace(/^\n/, "")); return " CB" + (blocks.length - 1) + " ";
+    });
+    const inline = (t) => t
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*([^*\s][^*]*?)\*/g, "$1<em>$2</em>")
+      .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    const lines = mdEsc(src).split(/\r?\n/);
+    let html = "", i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      if (/^\s*$/.test(line)) { i++; continue; }
+      const cb = line.match(/^ CB(\d+) \s*$/);
+      if (cb) { html += "<pre><code>" + mdEsc(blocks[+cb[1]]) + "</code></pre>"; i++; continue; }
+      const h = line.match(/^(#{1,6})\s+(.*)$/);
+      if (h) { const lvl = Math.min(6, h[1].length + 3); html += "<h" + lvl + ">" + inline(h[2]) + "</h" + lvl + ">"; i++; continue; }
+      if (/^\s*[-*]\s+/.test(line)) {
+        html += "<ul>";
+        while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) { html += "<li>" + inline(lines[i].replace(/^\s*[-*]\s+/, "")) + "</li>"; i++; }
+        html += "</ul>"; continue;
+      }
+      if (/^\s*\d+\.\s+/.test(line)) {
+        html += "<ol>";
+        while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) { html += "<li>" + inline(lines[i].replace(/^\s*\d+\.\s+/, "")) + "</li>"; i++; }
+        html += "</ol>"; continue;
+      }
+      const para = [];
+      while (i < lines.length && !/^\s*$/.test(lines[i]) && !/^(#{1,6})\s/.test(lines[i])
+             && !/^\s*[-*]\s+/.test(lines[i]) && !/^\s*\d+\.\s+/.test(lines[i])
+             && !/^ CB\d+ \s*$/.test(lines[i])) { para.push(lines[i]); i++; }
+      html += "<p>" + inline(para.join("<br>")) + "</p>";
     }
-    if (last < text.length) container.appendChild(document.createTextNode(text.slice(last)));
+    return html;
+  }
+
+  // Walk text nodes and swap [P0003] tokens for clickable citation chips.
+  function linkCitations(root) {
+    const re = /\[(P\d{3,5})\]/g;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    let n; while ((n = walker.nextNode())) { re.lastIndex = 0; if (re.test(n.nodeValue)) nodes.push(n); }
+    nodes.forEach(node => {
+      const s = node.nodeValue; const frag = document.createDocumentFragment();
+      let last = 0, m; re.lastIndex = 0;
+      while ((m = re.exec(s)) !== null) {
+        if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
+        frag.appendChild(makeCite(m[1])); last = re.lastIndex;
+      }
+      if (last < s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
   }
 
   function makeCite(pid) {
@@ -3176,10 +3241,10 @@
 
   function renderCase() {
     const box = $("case-items"); box.innerHTML = "";
-    $("case-count").textContent = _case.propositions.length + " selected";
-    $("dropzone-hint").style.display = _case.propositions.length ? "none" : "block";
+    let n = 0;
     _case.propositions.forEach(pid => {
       const row = caseRow(pid); if (!row) return;
+      n++;
       const p = row.proposition;
       const links = (row.links || []).filter(l => l.relation === "supportive");
       const witns = [...new Set(links.map(l => l.witness).filter(Boolean))];
@@ -3193,10 +3258,15 @@
       item.querySelector(".ci-remove").addEventListener("click", () => removeFromCase(pid));
       box.appendChild(item);
     });
+    $("case-count").textContent = n + " selected";
+    $("dropzone-hint").style.display = n ? "none" : "block";
   }
 
   function addToCase(pid) {
-    if (!pid || _case.propositions.includes(pid)) return;
+    pid = (pid || "").trim();
+    // Only accept a real proposition id that exists in the matrix. Guards against
+    // a stray text drag dropping a blob of page text in as a bogus "id".
+    if (!/^P\d{3,5}$/.test(pid) || !caseRow(pid) || _case.propositions.includes(pid)) return;
     _case.propositions.push(pid);
     refreshCaseViews(); saveCaseDebounced();
   }
@@ -3223,17 +3293,20 @@
                   propositions: data.case.propositions || [] };
       }
     } catch (_) {}
+    // Drop any persisted ids that aren't real propositions in the current matrix
+    // (stale saves, or a bad drag), and de-dupe — so the count always matches.
+    const seen = new Set();
+    _case.propositions = (_case.propositions || []).filter(pid =>
+      /^P\d{3,5}$/.test(pid) && (!_matrixLoaded || caseRow(pid)) && !seen.has(pid) && seen.add(pid));
     renderTray();
   }
 
   function renderTray() {
-    const n = _case.propositions.length;
-    $("ct-count").textContent = n;
-    $("ct-count-2").textContent = n;
-    $("ct-hint").style.display = n ? "none" : "block";
     const box = $("ct-items"); box.innerHTML = "";
+    let n = 0;
     _case.propositions.forEach(pid => {
       const row = caseRow(pid); if (!row) return;
+      n++;
       const p = row.proposition;
       const item = document.createElement("div");
       item.className = "ct-item status-" + row.status;
@@ -3243,6 +3316,9 @@
       item.querySelector(".ci-remove").addEventListener("click", () => removeFromCase(pid));
       box.appendChild(item);
     });
+    $("ct-count").textContent = n;
+    $("ct-count-2").textContent = n;
+    $("ct-hint").style.display = n ? "none" : "block";
   }
 
   function openTray() { $("case-tray").classList.add("show"); }

@@ -540,11 +540,14 @@ def heuristic_evidence(doc: "Document") -> list[dict]:
 # Anthropic helpers
 # ---------------------------------------------------------------------------
 def get_client():
+    # RuntimeError (not SystemExit) so callers' `except Exception` can catch a
+    # missing package and degrade gracefully (web chat/summary -> offline reply;
+    # extract.py -> heuristic) instead of the request/process dying.
     try:
         import anthropic
     except ImportError as e:
-        raise SystemExit("The 'anthropic' package is required. "
-                         "Run: pip install -r requirements.txt") from e
+        raise RuntimeError("The 'anthropic' package is required. "
+                           "Run: pip install -r requirements.txt") from e
     return anthropic.Anthropic()   # reads ANTHROPIC_API_KEY from env
 
 
