@@ -2045,7 +2045,7 @@
 
     // hero context + card stats
     $("ctx-props").textContent  = matrix.length;
-    $("stat-propositions").innerHTML = matrix.length + " <span class='muted'>claims ·</span> " + summary.trial_readiness + "% <span class='muted'>ready</span>";
+    $("stat-propositions").innerHTML = matrix.length + " <span class='muted'>claims</span>";
     const ctx = $("context-row");
     ctx.classList.add("scan");
     setTimeout(() => ctx.classList.remove("scan"), 1200);
