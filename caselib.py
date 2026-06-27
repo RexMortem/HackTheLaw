@@ -721,3 +721,73 @@ def load_json(path: str):
 def dump_json(path: str, obj) -> None:
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(obj, fh, ensure_ascii=False, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# Perplexity — real-time, citation-first legal research.
+#
+# Used to find supporting / contrary legal authority for generated arguments and
+# in the stress test's "contrary authority" check. The API is OpenAI-compatible
+# (POST /chat/completions) so we hit it with stdlib urllib — no extra dependency.
+# Returns (answer_text, citations). Never raises: research is best-effort
+# enrichment, so on any failure it returns ("", []) and the caller degrades.
+# ---------------------------------------------------------------------------
+PERPLEXITY_URL = "https://api.perplexity.ai/chat/completions"
+PERPLEXITY_MODEL = "sonar"   # fast online model; "sonar-pro" for deeper search
+
+
+def perplexity_available() -> bool:
+    return bool(os.environ.get("PERPLEXITY_API_KEY"))
+
+
+def perplexity_chat(system: str, user: str, *, model: str = PERPLEXITY_MODEL,
+                    max_tokens: int = 700, timeout: float = 25.0
+                    ) -> tuple[str, list[dict]]:
+    """Ask Perplexity a question with live web search. Returns (text, citations)
+    where each citation is {title, url}. Best-effort — returns ("", []) on any
+    error or when PERPLEXITY_API_KEY is unset."""
+    import urllib.request
+
+    key = os.environ.get("PERPLEXITY_API_KEY")
+    if not key:
+        return "", []
+
+    body = json.dumps({
+        "model": model,
+        "max_tokens": max_tokens,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        PERPLEXITY_URL, data=body, method="POST",
+        headers={"Authorization": f"Bearer {key}",
+                 "Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:  # network / auth / quota — degrade quietly
+        print(f"  [perplexity] skipped: {type(exc).__name__}: {exc}")
+        return "", []
+
+    try:
+        text = data["choices"][0]["message"]["content"].strip()
+    except (KeyError, IndexError, TypeError):
+        text = ""
+
+    # Perplexity returns sources as `search_results` (newer) and/or `citations`
+    # (a list of URLs). Normalise both into {title, url}.
+    citations: list[dict] = []
+    seen: set[str] = set()
+    for sr in data.get("search_results") or []:
+        url = (sr or {}).get("url", "")
+        if url and url not in seen:
+            seen.add(url)
+            citations.append({"title": sr.get("title") or url, "url": url})
+    for url in data.get("citations") or []:
+        if isinstance(url, str) and url and url not in seen:
+            seen.add(url)
+            citations.append({"title": url, "url": url})
+    return text, citations
