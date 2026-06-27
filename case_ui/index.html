@@ -350,6 +350,11 @@
     .msg.sc .msg-body pre { background: var(--paper-2); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.8rem; overflow-x: auto; margin: 0 0 0.6rem; }
     .msg.sc .msg-body pre code { background: none; padding: 0; }
     .msg.sc .msg-body a { color: var(--navy-3); text-decoration: underline; }
+    .msg.sc .msg-body table { border-collapse: collapse; width: 100%; margin: 0 0 0.6rem; font-size: 0.85rem; display: block; overflow-x: auto; }
+    .msg.sc .msg-body th, .msg.sc .msg-body td { border: 1px solid var(--border); padding: 0.3rem 0.5rem; text-align: left; vertical-align: top; }
+    .msg.sc .msg-body th { background: var(--paper-2); font-weight: 700; }
+    .msg.sc .msg-body tr:nth-child(even) td { background: rgba(0,0,0,.02); }
+    .msg.sc .msg-body hr { border: none; border-top: 1px solid var(--border); margin: 0.75rem 0; }
 
     .msg-name { font-size: 0.7rem; font-weight: 700; color: var(--slate-2); margin-bottom: 0.25rem; letter-spacing: 0.02em; }
     .msg.sc .msg-name .tag-offline {
@@ -2035,12 +2040,32 @@
       .replace(/(^|[^*])\*([^*\s][^*]*?)\*/g, "$1<em>$2</em>")
       .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
     const lines = mdEsc(src).split(/\r?\n/);
+    // A horizontal rule: a line of 3+ of the same -, * or _ (spaces allowed).
+    const isHr = (l) => /^\s*([-*_])(?:\s*\1){2,}\s*$/.test(l);
+    // A GFM table starts when a row containing a pipe is followed by a separator
+    // row made only of dashes/colons/pipes/spaces (the |---|---| line).
+    const isTableStart = (idx) => idx + 1 < lines.length && lines[idx].indexOf("|") !== -1
+      && /-/.test(lines[idx + 1]) && /^[\s|:\-]+$/.test(lines[idx + 1]);
+    const cells = (row) => row.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map(c => c.trim());
     let html = "", i = 0;
     while (i < lines.length) {
       const line = lines[i];
       if (/^\s*$/.test(line)) { i++; continue; }
-      const cb = line.match(/^ CB(\d+) \s*$/);
+      const cb = line.match(/^ CB(\d+) \s*$/);
       if (cb) { html += "<pre><code>" + mdEsc(blocks[+cb[1]]) + "</code></pre>"; i++; continue; }
+      if (isHr(line)) { html += "<hr>"; i++; continue; }
+      if (isTableStart(i)) {
+        const header = cells(line); i += 2;   // consume header + separator rows
+        let body = "";
+        while (i < lines.length && lines[i].indexOf("|") !== -1 && lines[i].trim() !== "" && !isHr(lines[i])) {
+          const c = cells(lines[i]);
+          body += "<tr>" + header.map((_, k) => "<td>" + inline(c[k] || "") + "</td>").join("") + "</tr>";
+          i++;
+        }
+        html += "<table><thead><tr>" + header.map(x => "<th>" + inline(x) + "</th>").join("")
+              + "</tr></thead><tbody>" + body + "</tbody></table>";
+        continue;
+      }
       const h = line.match(/^(#{1,6})\s+(.*)$/);
       if (h) { const lvl = Math.min(6, h[1].length + 3); html += "<h" + lvl + ">" + inline(h[2]) + "</h" + lvl + ">"; i++; continue; }
       if (/^\s*[-*]\s+/.test(line)) {
@@ -2056,7 +2081,7 @@
       const para = [];
       while (i < lines.length && !/^\s*$/.test(lines[i]) && !/^(#{1,6})\s/.test(lines[i])
              && !/^\s*[-*]\s+/.test(lines[i]) && !/^\s*\d+\.\s+/.test(lines[i])
-             && !/^ CB\d+ \s*$/.test(lines[i])) { para.push(lines[i]); i++; }
+             && !/^ CB\d+ \s*$/.test(lines[i]) && !isHr(lines[i]) && !isTableStart(i)) { para.push(lines[i]); i++; }
       html += "<p>" + inline(para.join("<br>")) + "</p>";
     }
     return html;

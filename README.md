@@ -10,6 +10,11 @@ litigation assistant you can chat with.
 
 **Live demo:** https://proof-matrix-rexmortem.onrender.com/
 
+> ⚠️ The demo is on Render's free tier, so it sleeps when idle and may be
+> intermittently unavailable. The first request can take ~30-60s to wake the
+> service (and writes don't persist across restarts). If it's down, run it
+> locally with the steps below.
+
 ---
 
 ## Run it
