@@ -62,7 +62,7 @@ undermined / MISSING), the witnesses, and evidence ids.
 
 Draft the concrete legal ARGUMENTS each side can run. For each argument:
 - party: who runs it ("Claimant" or "Defendant").
-- issue: a short label for the legal issue (e.g. "Reliability of Horizon").
+- issue: a short label for the legal issue (e.g. "Reliability of the IT system").
 - thesis: one sentence — the proposition you are asking the court to accept.
 - reasoning: 2-4 sentences of how the argument runs.
 - relies_on: the ids of the pleaded propositions it depends on (e.g. ["P0003"]). \
@@ -113,6 +113,24 @@ def _add_authority(args: list[dict], limit: int = 8) -> None:
             a["authority"] = cites[:3]
 
 
+def _add_eu_authority(args: list[dict]) -> None:
+    """Attach persuasive EU authority (CJEU decisions / directives) to each
+    argument from the EU Publications Office Cellar, by the legal concepts the
+    argument raises. Best-effort; mutates in place. Cached per concept-set so we
+    don't re-query Cellar for the same terms."""
+    cache: dict[tuple, list] = {}
+    for a in args:
+        terms = caselib.concepts_in(
+            f"{a.get('issue', '')} {a.get('thesis', '')} {a.get('reasoning', '')}")
+        if not terms:
+            continue
+        key = tuple(sorted(terms))
+        if key not in cache:
+            cache[key] = caselib.cellar_search(list(key), limit=3)
+        if cache[key]:
+            a["eu_authority"] = cache[key]
+
+
 def generate_arguments(matrix: list, with_authority: bool = True) -> dict:
     """Generate linked arguments. Returns {arguments, generated_by}. Never raises;
     on LLM failure returns an empty, well-formed payload so callers degrade."""
@@ -137,9 +155,11 @@ def generate_arguments(matrix: list, with_authority: bool = True) -> dict:
         a["evidence"] = [x for x in a.get("evidence", []) if x in valid_e]
         a.setdefault("authority", [])
         a.setdefault("authority_note", "")
+        a.setdefault("eu_authority", [])
 
     if with_authority:
         _add_authority(args)
+    _add_eu_authority(args)   # Cellar is public/no-auth — always attempt
 
     return {"arguments": args, "generated_by": "claude"}
 

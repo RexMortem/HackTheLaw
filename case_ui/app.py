@@ -90,6 +90,7 @@ SUMMARY_FILE = DATA_DIR / "summary.json"
 # the case changes.
 ARGUMENTS_FILE = DATA_DIR / "arguments.json"
 CASE_FILE = DATA_DIR / "case.json"
+QUANTUM_FILE = DATA_DIR / "quantum.json"
 
 # EU Publications Office — Cellar SPARQL endpoint (public, no auth). Used to
 # retrieve potentially relevant EU legal materials to ground the AI summary.
@@ -639,6 +640,37 @@ def _arguments_response(matrix: list, refresh: bool = False) -> dict:
     return {**record, "cached": False}
 
 
+def _quantum_response(matrix: list, refresh: bool = False) -> dict:
+    """Return the quantum-assessment payload, cached by matrix signature. The LLM
+    only runs on refresh or a case change; empty results aren't cached."""
+    sig = _matrix_signature(matrix)
+    if not refresh and QUANTUM_FILE.exists():
+        try:
+            with open(QUANTUM_FILE, encoding="utf-8") as fh:
+                cached = json.load(fh)
+            if cached.get("signature") == sig and cached.get("methods"):
+                return {**cached, "cached": True}
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    try:
+        import quantum_gen
+        result = quantum_gen.generate_quantum(matrix)
+    except Exception as exc:
+        _log("quantum", f"generation failed: {type(exc).__name__}: {exc}")
+        result = {"methods": [], "generated_by": "unavailable"}
+
+    record = {"signature": sig, **result}
+    if result.get("methods") and result.get("generated_by") == "claude":
+        try:
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            with open(QUANTUM_FILE, "w", encoding="utf-8") as fh:
+                json.dump(record, fh, ensure_ascii=False, indent=2)
+        except OSError:
+            pass
+    return {**record, "cached": False}
+
+
 def _load_arguments_cached() -> list:
     """Return the cached generated arguments (no LLM call) for the stress test
     to attack; [] if none have been generated yet."""
@@ -690,6 +722,8 @@ class Handler(BaseHTTPRequestHandler):
             self._api_summary()
         elif path == "/api/arguments":
             self._api_arguments()
+        elif path == "/api/quantum":
+            self._api_quantum()
         elif path == "/api/stress":
             self._api_stress()
         elif path == "/api/status":
@@ -832,6 +866,23 @@ class Handler(BaseHTTPRequestHandler):
         _log("arguments", f"-> {len(result.get('arguments', []))} arguments "
                           f"({result.get('generated_by')}) in {time.monotonic() - t0:.1f}s")
         self._json_cacheable(json.dumps({"ok": True, **result}), max_age=60)
+
+    def _api_quantum(self):
+        """GET /api/quantum — preliminary quantum (damages) assessment: competing
+        valuation methodologies grounded in the matrix, each linked to the
+        propositions it depends on. Cached by signature; ?refresh=1 regenerates."""
+        matrix, err = _load_matrix()
+        if err:
+            self._json_response(503, json.dumps({"ok": False, "error": err}))
+            return
+        params = parse_qs(urlparse(self.path).query)
+        refresh = params.get("refresh", ["0"])[0] in ("1", "true", "yes")
+        _log("quantum", f"GET /api/quantum (refresh={refresh})")
+        t0 = time.monotonic()
+        result = _quantum_response(matrix, refresh=refresh)
+        _log("quantum", f"-> {len(result.get('methods', []))} methods "
+                        f"({result.get('generated_by')}) in {time.monotonic() - t0:.1f}s")
+        self._json_response(200, json.dumps({"ok": True, **result}))
 
     def _api_stress(self):
         """GET /api/stress — run the case-theory stress-test suite over the

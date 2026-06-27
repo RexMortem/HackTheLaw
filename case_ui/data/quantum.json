@@ -1,0 +1,215 @@
+{
+  "signature": "16460c6e87966cb2",
+  "case_name": "Meridian v TechFlow — Cloud EPOS Platform Dispute",
+  "case_type": "Commercial — breach of contract / IT system implementation / misrepresentation",
+  "currency": "GBP",
+  "methods": [
+    {
+      "name": "Wasted Expenditure (Reliance Loss)",
+      "figure": 1800000,
+      "confidence": 0.62,
+      "risk_level": "conservative",
+      "recovery_likelihood": 0.55,
+      "summary": "Meridian seeks to recover the £1,800,000 it has already paid TechFlow under the MSA on the basis that the Platform was defective and/or unfit for purpose, rendering the expenditure wasted. This is the most natural head of loss given the contractual cap pleaded by TechFlow.",
+      "factors": [
+        "Total MSA charges of £2,400,000 (P0013)",
+        "Amount actually paid: £1,800,000 (P0036)",
+        "Whether platform was of satisfactory quality / fit for purpose (P0031, P0032)",
+        "Liability cap at charges paid per Clause 14 (P0059)",
+        "Whether Meridian accepted Phase 1 (P0054)",
+        "Withheld milestone payments of £600,000 (P0061)"
+      ],
+      "strengths": [
+        "Directly pleaded and quantified at £1,800,000 (P0036)",
+        "Consistent with, and capped by, the Clause 14 contractual liability cap (P0059) — so survives even if exclusion clauses are upheld",
+        "MSA and payment history likely to be documented",
+        "Does not depend on contested misrepresentation or negligence allegations",
+        "Avoids the need to prove counterfactual lost profits"
+      ],
+      "weaknesses": [
+        "Defendant will argue acceptance of Phase 1 (P0054) and signed Change Orders (P0040, P0041) undermine a full rescission claim",
+        "If Meridian actually received partial benefit from the platform, court may apportion rather than award full wasted expenditure",
+        "Claimant must elect between wasted expenditure and expectation loss — cannot recover both",
+        "The £600,000 withheld by Meridian may be set off, reducing net exposure",
+        "Undermined propositions re acceptance (P0033, P0034) weaken the case for total rejection"
+      ],
+      "relies_on": [
+        "P0001",
+        "P0003",
+        "P0004",
+        "P0011",
+        "P0013",
+        "P0029",
+        "P0031",
+        "P0032",
+        "P0036"
+      ]
+    },
+    {
+      "name": "Lost Profits — Peak Trading Period (Claimant's Pleaded Figure)",
+      "figure": 4200000,
+      "confidence": 0.28,
+      "risk_level": "optimistic",
+      "recovery_likelihood": 0.2,
+      "summary": "Meridian claims £4,200,000 in lost profits attributable to platform unavailability and defects during the critical November–December 2024 peak trading window. This is the largest head of loss but faces multiple serious obstacles including the contractual exclusion of loss of profit and significant causation challenges.",
+      "factors": [
+        "Platform unavailability alleged at >40% of trading hours (P0026)",
+        "Till failures and inability to process sales across 180 stores (P0027, P0028)",
+        "Peak trading period revenue and margin data for Nov–Dec 2024",
+        "Counterfactual trading performance absent platform failures",
+        "Intervening causes: Lutterworth flood (P0056), retail sector downturn (P0057), Northgate Telecom outage (P0052)",
+        "Clause 14 exclusion of loss of profit (P0058)",
+        "Claimant's own decision to proceed to go-live on 18 November 2024 (P0048, P0049, P0050)"
+      ],
+      "strengths": [
+        "Directly pleaded and quantified at £4,200,000 (P0037)",
+        "180-store estate with online channel creates large revenue base capable of supporting a high figure (P0009)",
+        "If liability exclusion clause is struck down (e.g. UCTA reasonableness challenge), full figure is potentially in play",
+        "Loss during peak trading period is foreseeable and arguably within reasonable contemplation"
+      ],
+      "weaknesses": [
+        "Clause 14 expressly excludes loss of profit (P0058) — a critical obstacle; status contested but Defendant has strong textual argument",
+        "Claimant's own Programme Director overrode TechFlow's written recommendation to defer to January 2025 (P0046, P0047, P0048, P0049) — strong contributory cause / volenti argument",
+        "Flood at Lutterworth DC (P0056, supported) is a significant evidenced intervening cause",
+        "Retail sector downturn (P0057) is a partially evidenced confounding factor",
+        "Platform unavailability disputed; 40% figure contested and contradicted by Defendant (P0051)",
+        "Misrepresentation and negligence propositions underpinning alternative tortious route are MISSING (P0005, P0006)",
+        "Causation between specific outages and specific lost sales will require granular store-by-store transactional data",
+        "Risk of double-counting with wasted expenditure claim"
+      ],
+      "relies_on": [
+        "P0001",
+        "P0002",
+        "P0004",
+        "P0026",
+        "P0027",
+        "P0028",
+        "P0029",
+        "P0030",
+        "P0037"
+      ]
+    },
+    {
+      "name": "Reduced / Apportioned Lost Profits (Court-Adjusted, Net of Intervening Causes)",
+      "figure": 1200000,
+      "confidence": 0.45,
+      "risk_level": "balanced",
+      "recovery_likelihood": 0.35,
+      "summary": "Even if some lost profit survives the Clause 14 exclusion, the court is likely to apply substantial reductions for the Lutterworth flood, the retail downturn, the claimant's own decision to proceed on 18 November, and partial platform functionality. An illustrative court-adjusted figure of circa £1,200,000 represents a realistic mid-case outcome for this head alone if the exclusion clause fails.",
+      "factors": [
+        "Gross lost profit claim of £4,200,000 reduced by intervening causes",
+        "Apportionment for Lutterworth flood (P0056) — supported evidence",
+        "Apportionment for retail sector downturn (P0057)",
+        "Reduction for claimant's contributory conduct in overriding deferral advice (P0048–P0050)",
+        "Reduction for platform partial functionality during the period",
+        "Whether Clause 14 exclusion survives UCTA/reasonableness scrutiny (P0058)",
+        "Actual platform downtime percentage — contested (P0026, P0051)"
+      ],
+      "strengths": [
+        "Reflects realistic judicial approach to multi-cause loss",
+        "Acknowledges partial platform functionality rather than total failure",
+        "Consistent with the principle that a claimant cannot recover for losses caused by third-party or own acts",
+        "Provides a realistic negotiation anchor between the parties' positions"
+      ],
+      "weaknesses": [
+        "Highly speculative at this stage — requires detailed financial expert analysis of trading data",
+        "Clause 14 exclusion remains the primary obstacle; apportioned figure still zero if exclusion upheld",
+        "Significant factual disputes on causation remain unresolved",
+        "Claimant's own conduct (P0048, P0049, P0050) may entirely break the chain of causation for the peak-period losses",
+        "Difficult to model without access to granular POS transaction records, distributor data and sector benchmarks"
+      ],
+      "relies_on": [
+        "P0001",
+        "P0004",
+        "P0026",
+        "P0027",
+        "P0028",
+        "P0029",
+        "P0037"
+      ]
+    },
+    {
+      "name": "Cost of Cure / Rectification",
+      "figure": 750000,
+      "confidence": 0.38,
+      "risk_level": "balanced",
+      "recovery_likelihood": 0.3,
+      "summary": "Meridian may claim the reasonable cost of procuring a third party to rectify the platform defects, as an alternative to or in addition to part of the wasted expenditure claim. This figure is illustrative, representing a typical proportion of original contract price for remediation of a materially defective enterprise software implementation.",
+      "factors": [
+        "Nature and severity of defects (stock-sync module, Sev-1 failures) (P0029, P0030)",
+        "Cost of engaging replacement implementation partner",
+        "Cost of data migration, re-testing and re-integration",
+        "Whether defects are remediable or require full platform replacement",
+        "Original contract value of £2,400,000 as a reference point (P0013)",
+        "Whether Meridian has already incurred third-party remediation costs (not pleaded — MISSING)"
+      ],
+      "strengths": [
+        "Recognised measure in IT system disputes where the delivered system is defective but used",
+        "Does not depend on establishing consequential loss or overcoming profit exclusion clause",
+        "May be recoverable alongside wasted expenditure for distinct defects",
+        "Grounded in objective market cost rather than Meridian's internal financial performance"
+      ],
+      "weaknesses": [
+        "Quantum not specifically pleaded — figure is entirely illustrative and lacks evidential foundation at this stage",
+        "Risk of overlap with wasted expenditure claim — court will not allow double-recovery",
+        "Defendant will argue defects are minor, disputed and/or that Meridian accepted Phase 1 (P0054)",
+        "Rectification costs must be proportionate to the benefit — may be challenged as disproportionate if platform is partially functional",
+        "No supported pleaded proposition directly evidencing third-party remediation expenditure"
+      ],
+      "relies_on": [
+        "P0001",
+        "P0003",
+        "P0004",
+        "P0011",
+        "P0029",
+        "P0031",
+        "P0032"
+      ]
+    },
+    {
+      "name": "Restitutionary / Unjust Enrichment (Recovery of Payments for No Consideration)",
+      "figure": 1800000,
+      "confidence": 0.25,
+      "risk_level": "conservative",
+      "recovery_likelihood": 0.2,
+      "summary": "As a fallback, Meridian might pursue restitution of the £1,800,000 paid under the MSA on the basis of total failure of consideration, arguing TechFlow delivered nothing of value. This route is difficult given Phase 1 acceptance and partial use of the platform.",
+      "factors": [
+        "Whether there was a total failure of consideration — undermined by Phase 1 acceptance (P0054)",
+        "Amount paid: £1,800,000 (P0036)",
+        "Whether Meridian derived any benefit from the platform",
+        "Signed Acceptance Certificate dated 12 November 2024 (P0054)",
+        "Whether Meridian can restore the parties to their pre-contract position"
+      ],
+      "strengths": [
+        "Provides a route to recovery that does not require proof of specific loss",
+        "Consistent in quantum with the wasted expenditure contractual claim",
+        "Avoids reliance on contested causation and loss of profit arguments"
+      ],
+      "weaknesses": [
+        "Total failure of consideration is almost certainly unavailable: Phase 1 was accepted by signed certificate (P0054), and the platform operated in some form from 18 November 2024",
+        "Meridian's own continued use of the platform after go-live undermines the claim for total failure",
+        "Court of Appeal authorities require a substantially total failure — partial delivery defeats this",
+        "Likely to be pleaded as an alternative only; primary route remains breach of contract",
+        "Strengthens Defendant's argument that Meridian accepted the platform and now owes the £600,000 balance (P0061)"
+      ],
+      "relies_on": [
+        "P0003",
+        "P0004",
+        "P0011",
+        "P0013",
+        "P0036"
+      ]
+    }
+  ],
+  "recommendation": {
+    "preferred_method": "Wasted Expenditure (Reliance Loss)",
+    "range_low": 600000,
+    "range_high": 2400000,
+    "rationale": "The wasted expenditure claim of £1,800,000 (P0036) is the most defensible primary head of loss. It is directly quantified, consistent with the Clause 14 contractual liability cap (P0059), and does not depend on the contested loss-of-profit exclusion or the MISSING negligence and misrepresentation propositions. The realistic range reflects: at the low end, the possibility that TechFlow succeeds in its counterclaim for the withheld £600,000 milestone payments and the court finds partial benefit was received (net recovery circa £600,000–£900,000); at the high end, if UCTA arguments defeat the liability cap and/or the exclusion clause, a court could award the full £1,800,000 paid plus a contribution towards apportioned lost profits, approaching £2,400,000. The headline £4,200,000 lost profit claim is not recommended as the primary method: Clause 14 (P0058, supported) presents a near-fatal obstacle, and the claimant's own decision to override TechFlow's deferral advice (P0048–P0050, supported) creates a powerful causation and contributory fault defence that could extinguish peak-trading losses entirely. Litigation strategy should focus on: (1) attacking Clause 14's reasonableness under UCTA 1977; (2) particularising defects to support a cost-of-cure alternative; and (3) gathering granular POS transaction data before committing to a lost profits quantum."
+  },
+  "generated_by": "claude",
+  "meta": {
+    "propositions": 61,
+    "evidence_links": 1428
+  }
+}

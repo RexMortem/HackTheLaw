@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Convert Post Office Inquiry witness-statement PDFs into an AI-readable format
+Convert witness-statement PDFs into an AI-readable format
 (Markdown by default) so Claude can extract allegations and denials.
 
 Why Markdown (the recommended/default format):
@@ -41,7 +41,7 @@ import pdfplumber
 # ---------------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------------
-DEFAULT_INPUT = r"dataset\CMS Challenge - Dataset (Post Office Witness Statements)"
+DEFAULT_INPUT = r"dataset\witness_statements"
 DEFAULT_OUTPUT = "converted"
 
 # ---------------------------------------------------------------------------

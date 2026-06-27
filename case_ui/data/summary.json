@@ -1,22 +1,17 @@
 {
-  "signature": "d760f97636ae3e46",
+  "signature": "16460c6e87966cb2",
   "generated_by": "claude",
-  "headline": "Bates & Others v Post Office Ltd — group litigation by over 500 subpostmasters against Post Office Ltd arising from financial losses, wrongful repayment demands and prosecutions attributable to defects in the Defendant's Horizon accounting software.",
+  "headline": "Meridian plc claims approximately £6 million against TechFlow for the allegedly defective and delayed implementation of a cloud-based retail inventory and EPOS platform under a Master Services Agreement dated 14 March 2024.",
   "paragraphs": [
-    "This is *Bates & Others v Post Office Ltd*, the group litigation brought in the English High Court in which subpostmasters (SPMs) alleged that the Post Office's Horizon IT system — rolled out from 1999 and developed by Fujitsu — contained bugs, errors and defects that produced spurious accounting shortfalls in branch accounts.\n \nRather than investigating or disclosing those faults, the Post Office required SPMs to repay the apparent shortfalls in full and, between 1999 and 2015, pursued hundreds of prosecutions against them for offences including theft and false accounting.",
-    "The 555 Claimants are former SPMs whose contracts with the Post Office stated that they were held personally responsible for all losses through negligence, carelessness or error.\n They advance claims in misrepresentation, breach of contract and breach of good faith, contending that the Defendant concealed known Horizon faults, extracted repayments on the basis of defective data, and wrongly prosecuted them. \nThe Post Office denies these allegations, asserting that the Horizon system was and is robust and extremely unlikely to have caused the discrepancies complained of\n, and maintains that complaints were investigated adequately through its helpline and audit processes.",
-    "Of the 24 pleaded propositions, only 5 are evidentially supported while 17 remain contested; critically, 2 propositions are marked as undermined — the Defendant's denial that it misrepresented Horizon's reliability (P0019) and its denial that the Claimants suffered any recoverable loss (P0023) — indicating that the evidence already obtained tends against the Defendant on both of those points. At a trial readiness figure of 56.2%, the technically complex questions of Horizon's defects, the Defendant's actual state of knowledge, and the adequacy of its investigations remain the central live battlegrounds. None of the EU legal materials retrieved from the Cellar repository is applicable: they address banana import licensing, EU customs duty remission, EU civil service non-contractual liability, Italian company-law accounting penalties and competition-law attribution — none of which engages the domestic contract, misrepresentation and good-faith issues that define this litigation."
+    "This is a UK commercial claim for breach of contract, negligence and misrepresentation arising from TechFlow's design, build and implementation of a cloud-based inventory management and electronic point-of-sale platform for a major multi-channel retailer. The platform went live on 18 November 2024 and, Meridian alleges, suffered severe outages and stock-synchronisation defects throughout the critical November and December 2024 peak trading period, causing both wasted contractual expenditure and substantial lost profit.",
+    "Meridian is a public limited company operating approximately 180 UK retail stores and an online sales channel; TechFlow is a retail software systems supplier that agreed under the MSA to design, configure and implement the platform for total charges of £2.4 million. Meridian claims £1.8 million in wasted expenditure and £4.2 million in lost profits, while TechFlow denies liability in its entirety, counterclaiming £600,000 in withheld milestone payments and relying on Meridian's own signed Change Order No. 3 (extending go-live to 18 November), a signed Acceptance Certificate dated 12 November 2024, Meridian's Programme Director's rejection of TechFlow's written recommendation to defer launch to January 2025, a third-party network failure as the cause of the most significant outage, and a contractual cap and exclusion of loss-of-profit liability under clause 14.",
+    "Of the 61 pleaded propositions, 22 are evidentially supported, 28 remain contested and 8 are undermined, producing a trial readiness of only 59%; the undermined propositions strike heavily at the Claimant's case, eroding its central contentions that the go-live date was fixed and time was of the essence (P0014–P0015), that no scope changes were requested (P0021), that no acceptance was given (P0034) and that TechFlow proceeded to go-live in the face of Meridian's warnings (P0023–P0025), all of which are contradicted by the Defendant's supported documentary evidence. Three propositions remain entirely without evidential support — the negligence cause of action (P0005), the misrepresentation cause of action (P0006) and the critical factual allegation that the platform was incapable of 10,000 concurrent transactions (P0018) — representing material gaps that must be plugged before trial. The EU legal materials supplied from the Cellar repository (relating to banana import licences, EU civil service non-contractual liability, competition fines, customs remission and indirect capital taxes) are entirely inapplicable to this purely domestic UK contract, negligence and misrepresentation dispute and should be disregarded."
   ],
   "sources": [
     {
       "title": "Judgment of the Court (Second Chamber) of 30 June 2005 in Case C-295/03 P: Alessandrini Srl and Others v Commission of the European Communities (Appeal — Bananas — Third-country imports — Regulation (EC) No 2362/98 — Import licences for bananas from ACP States — Measures under Article 20(d) of Regulation (EEC) No 404/93 — Non-contractual liability of the Community)",
       "work": "http://publications.europa.eu/resource/cellar/243d58d2-987e-446b-90ef-23a419a24c4b",
       "celex": "C2005/205/04"
-    },
-    {
-      "title": "2001/387/EC: Commission Decision of 15 May 2001 granting to Spain a transitional period of two years to bring its accounting systems into line with Regulation (EC) No 2516/2000 of the European Parliament and of the Council (notified under document number C(2001) 1415)",
-      "work": "http://publications.europa.eu/resource/cellar/21649eaf-5da9-4851-8c96-370030fb7aa7",
-      "celex": "32001D0387"
     },
     {
       "title": "Case T-684/15 P: Judgment of the General Court of 22 September 2016 — Weissenfels v Parliament (Appeal — Civil service — Officials — Non-contractual liability — Impartiality on the part of the Civil Service Tribunal — Personal data)",
@@ -29,16 +24,6 @@
       "celex": "C2007/199/22"
     },
     {
-      "title": "Corrigendum to Commission Regulation (EEC) No 2615/74 of 14 October 1974 amending Regulation No 91/66/EEC as regards the number of returning holdings per division for the 1975 accounting year (OJ No L 279, 16.10.1974)",
-      "work": "http://publications.europa.eu/resource/cellar/cd975867-c341-4258-a774-f4860b38e9c1",
-      "celex": "31974R2615R(01)"
-    },
-    {
-      "title": "Joined Cases C-23/03, C-52/03, C-133/03, C-337/03 and C-473/03: Order of the Court (Second Chamber) of  4 May 2006  — (references for a preliminary ruling from the Tribunale ordinario di Milano and the Tribunale ordinario di Torino (Italy)) — Criminal proceedings against Michel Mulliez and Others and Giuseppe Momblano (Joined Cases C-23/03 and C-52/03), Alessandro Nizza and Giacomo Pizzi (C-133/03), Fabrizio Barra (C-337/03), Adelio Aggio and Others (C-473/03) (First subparagraph of Article 104(3) of the Rules of Procedure — Company law — First Directive 68/151/EEC, Fourth Directive 78/660/EEC and Seventh Directive 83/349/EEC — Annual accounts — Principle of a true and fair view — Penalties provided for in cases of false information on companies (false accounting) — Article 6 of First Directive 68/151/EEC — Requirement that penalties for breaches of Community law be appropriate)",
-      "work": "http://publications.europa.eu/resource/cellar/d5ae9292-b0a8-42c0-93dc-1e80d8cd1915",
-      "celex": "C2006/178/17"
-    },
-    {
       "title": "Case T-70/16 P: Order of the General Court of 3 May 2017 — De Nicola v EIB (Appeal — Civil Service — EIB staff — Psychological harassment — Non-contractual liability — Errors of law — Appeal manifestly unfounded)",
       "work": "http://publications.europa.eu/resource/cellar/3e75f39b-653c-11e7-b2f2-01aa75ed71a1",
       "celex": "62016TB0070"
@@ -47,6 +32,21 @@
       "title": "Judgment of the Court (Fourth Chamber) of 10 April 2014.#Areva and Others v European Commission.#Appeals — Competition ‒ Agreements, decisions and concerted practices — Market in gas insulated switchgear projects — Attributability of unlawful conduct of subsidiaries to their parent companies — Obligation to state reasons — Joint and several liability for payment of a fine — Concept of an ‘undertaking’ — ‘De facto’ joint and several liability — Principle of legal certainty and the principle that penalties must be specific to the offender and the offence ‒ Principles of proportionality and equal treatment.#Joined Cases C-247/11 P and C-253/11 P.",
       "work": "http://publications.europa.eu/resource/cellar/3f14c1f6-c092-11e3-86f9-01aa75ed71a1",
       "celex": "62011CJ0247"
+    },
+    {
+      "title": "Opinion of Advocate General Stix-Hackl delivered on 7 June 2001. # Commission of the European Communities v Hellenic Republic. # Failure by a Member State to fulfil its obligations - Directive 69/335/EEC - Indirect taxes on the raising of capital - Special charges imposed on the formation of public and private limited liability companies, on the publication and alteration of their statutes and on the increase in their capital. # Case C-426/98.",
+      "work": "http://publications.europa.eu/resource/cellar/94f3412a-5cce-4ba5-8055-c23059263efc",
+      "celex": "61998CC0426"
+    },
+    {
+      "title": "A study of evaluation of hyper- and multi-media educational software Open call for tenders (DG XXII/23/96)",
+      "work": "http://publications.europa.eu/resource/cellar/88044a25-3290-4b94-91be-a7fcd15f5388",
+      "celex": "C1996/209/25"
+    },
+    {
+      "title": "Opinion of Mr Advocate General Lenz delivered on 27 October 1987. # Les Grands Moulins de Paris v European Economic Community. # Non-contractual liability of the Community - Refusal to grant production refunds. # Case 50/86.",
+      "work": "http://publications.europa.eu/resource/cellar/28d0f510-1dec-4a89-835b-a03010416056",
+      "celex": "61986CC0050"
     }
   ]
 }

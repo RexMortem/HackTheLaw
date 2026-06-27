@@ -166,6 +166,36 @@ def _check_contradiction(matrix: list, graph: dict) -> list[dict]:
     return out
 
 
+def _check_eu_authority(matrix: list, limit: int = 6) -> list[dict]:
+    """For evidential gaps / undermined propositions, surface persuasive EU
+    authority (CJEU / directives) from the EU Cellar that could help fill the
+    gap — post-Brexit EU law is no longer binding but can still persuade.
+    Best-effort (no key needed); returns [] if Cellar is unreachable."""
+    import caselib
+    out, cache = [], {}
+    weak = [r for r in matrix if r.get("status") in ("MISSING", "undermined")]
+    for r in weak[:limit]:
+        p = r["proposition"]
+        terms = caselib.concepts_in(p.get("text", ""))
+        if not terms:
+            continue
+        key = tuple(sorted(terms))
+        if key not in cache:
+            cache[key] = caselib.cellar_search(list(key), limit=3)
+        mats = cache[key]
+        if not mats:
+            continue
+        f = _finding(
+            "info", f"Persuasive EU authority may bear on {p.get('id')}",
+            f"{p.get('id')} is {r.get('status')}; the EU Cellar has materials on "
+            f"{', '.join(terms)} that could be argued as persuasive authority.",
+            [p.get("id")], capability="contradiction")
+        f["sources"] = [{"title": m["title"] + (f" (CELEX {m['celex']})" if m["celex"] else ""),
+                         "url": m["work"]} for m in mats]
+        out.append(f)
+    return out
+
+
 def _check_human_review(matrix: list, graph: dict) -> list[dict]:
     """Organise the riskiest items for a lawyer to judge — the tool spots and
     prioritises; the lawyer decides."""
@@ -337,6 +367,7 @@ def run(matrix: list, case: dict | None = None, arguments: list | None = None,
     by_lens["classification"] += _check_classification(matrix)
     by_lens["grounding"] += _check_grounding(matrix)
     by_lens["contradiction"] += _check_contradiction(matrix, graph)
+    by_lens["contradiction"] += _check_eu_authority(matrix)
     by_lens["human_review"] += _check_human_review(matrix, graph)
     by_lens["stress"] += _check_stress(matrix, graph, arguments)
 

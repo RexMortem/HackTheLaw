@@ -806,8 +806,74 @@
     .sf-src a { font-size: .72rem; color: var(--navy-3); }
 
     @media (max-width: 1000px) { .builder-grid { grid-template-columns: 1fr; } }
+
+    /* ---- Quantum dashboard ---- */
+    .q-casebar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      background: var(--navy); color: #fff; border-radius: var(--radius); padding: 1rem 1.3rem; margin-bottom: 1.3rem; }
+    .q-case-name { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; }
+    .q-case-type { font-size: .8rem; color: var(--slate-2); margin-top: .15rem; }
+    .q-case-metrics { display: flex; gap: 1.4rem; flex-wrap: wrap; }
+    .q-metric { text-align: right; }
+    .q-metric .v { font-size: 1.05rem; font-weight: 800; font-family: "SFMono-Regular", Consolas, monospace; }
+    .q-metric .l { font-size: .68rem; color: var(--slate-2); text-transform: uppercase; letter-spacing: .06em; }
+    .q-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+    .q-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 1.1rem 1.2rem; cursor: pointer; transition: transform .15s, box-shadow .15s, border-color .15s; position: relative; overflow: hidden; }
+    .q-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+    .q-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: #c7d2fe; }
+    .q-card.risk-conservative::before { background: var(--supported); }
+    .q-card.risk-balanced::before { background: var(--contested); }
+    .q-card.risk-optimistic::before { background: var(--undermined); }
+    .q-card.best { border-color: var(--navy-3); box-shadow: 0 0 0 2px rgba(37,58,99,.12), var(--shadow); }
+    .q-card-name { font-size: .9rem; font-weight: 700; color: var(--navy); line-height: 1.3; min-height: 2.3em; }
+    .q-figure { font-size: 2rem; font-weight: 800; color: var(--navy); letter-spacing: -0.02em; margin: .4rem 0 .1rem; }
+    .q-figure .cur { font-size: 1.1rem; color: var(--slate); font-weight: 700; margin-right: .15rem; }
+    .q-risk-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: .12rem .5rem; border-radius: 999px; }
+    .q-risk-badge.conservative { background: var(--supported-bg); color: var(--supported); }
+    .q-risk-badge.balanced { background: var(--contested-bg); color: var(--contested); }
+    .q-risk-badge.optimistic { background: var(--undermined-bg); color: var(--undermined); }
+    .q-meter-row { margin-top: .7rem; }
+    .q-meter-row .ml { display: flex; justify-content: space-between; font-size: .68rem; color: var(--slate); margin-bottom: .2rem; }
+    .q-meter { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .q-meter-fill { height: 100%; border-radius: 3px; }
+    .q-meter-fill.conf { background: linear-gradient(90deg, var(--navy-3), var(--accent-a)); }
+    .q-meter-fill.rec { background: linear-gradient(90deg, var(--supported), var(--accent-b)); }
+    .q-card-foot { margin-top: .7rem; font-size: .72rem; color: var(--slate-2); display: flex; justify-content: space-between; align-items: center; }
+    .q-best-tag { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--navy-3); background: #eff4ff; border: 1px solid #dbe4ff; border-radius: 999px; padding: .05rem .45rem; }
+
+    .q-rec { margin-top: 1.6rem; background: linear-gradient(135deg, #f0f7ff, #f8fafc); border: 1px solid #dbe4ff; border-left: 4px solid var(--navy-3); border-radius: var(--radius); padding: 1.2rem 1.4rem; }
+    .q-rec-label { font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: .5rem; }
+    .q-rec-body { display: flex; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; align-items: flex-start; }
+    .q-rec-method { font-size: 1.15rem; font-weight: 800; color: var(--navy); }
+    .q-rec-rationale { font-size: .86rem; color: #334155; line-height: 1.55; margin-top: .3rem; max-width: 620px; }
+    .q-rec-range { text-align: right; flex-shrink: 0; }
+    .q-rec-range-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--slate); }
+    .q-rec-range-val { font-size: 1.3rem; font-weight: 800; color: var(--supported); font-family: "SFMono-Regular", Consolas, monospace; }
+    .q-disclaimer { margin-top: 1.4rem; font-size: .78rem; color: #7f1d1d; background: var(--undermined-bg); border: 1px solid var(--undermined-border); border-radius: 8px; padding: .7rem .9rem; line-height: 1.5; }
+
+    .q-drawer-backdrop { position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 48; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .q-drawer-backdrop.show { opacity: 1; pointer-events: auto; }
+    .q-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 460px; max-width: 92vw; background: var(--white); box-shadow: -8px 0 30px rgba(15,31,61,.2);
+      z-index: 49; transform: translateX(100%); transition: transform .25s cubic-bezier(.4,0,.2,1); overflow-y: auto; padding: 1.6rem 1.5rem 2rem; }
+    .q-drawer.show { transform: none; }
+    .q-drawer-close { position: absolute; top: 1rem; right: 1.1rem; border: none; background: none; font-size: 1.6rem; line-height: 1; color: var(--slate-2); cursor: pointer; }
+    .q-drawer-close:hover { color: var(--navy); }
+    .qd-name { font-size: 1.2rem; font-weight: 800; color: var(--navy); margin: .2rem 2rem .2rem 0; line-height: 1.3; }
+    .qd-figure { font-size: 2.2rem; font-weight: 800; color: var(--navy); margin: .5rem 0; }
+    .qd-badges { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .9rem; }
+    .qd-summary { font-size: .92rem; color: #334155; line-height: 1.6; margin-bottom: 1rem; }
+    .qd-section { margin-bottom: 1rem; }
+    .qd-section h4 { font-size: .7rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--slate); margin-bottom: .4rem; }
+    .qd-list { list-style: none; display: flex; flex-direction: column; gap: .3rem; }
+    .qd-list li { font-size: .84rem; color: #334155; line-height: 1.45; padding-left: 1rem; position: relative; }
+    .qd-list li::before { content: ""; position: absolute; left: 0; top: .55em; width: 5px; height: 5px; border-radius: 50%; }
+    .qd-list.factors li::before { background: var(--slate-2); }
+    .qd-list.strengths li::before { background: var(--supported); }
+    .qd-list.weaknesses li::before { background: var(--undermined); }
+    .qd-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+
     @media (max-width: 760px) {
-      .cards { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+      .q-figure { font-size: 1.7rem; }
       .hero-title { font-size: 2.3rem; }
       .arg-cols { grid-template-columns: 1fr; }
       .room-head { padding-left: 4.6rem; }
@@ -838,6 +904,10 @@
   <button class="rail-btn" data-room="builder">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 11h7v9h-7zM4 14h7v6H4z"/></svg>
     <span class="tip">Case Builder</span>
+  </button>
+  <button class="rail-btn" data-room="quantum">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19V9M9 19V5M14 19v-7M19 19V8"/></svg>
+    <span class="tip">Quantum</span>
   </button>
 </nav>
 
@@ -896,6 +966,12 @@
         <div class="opt-name">Case Builder</div>
         <div class="opt-desc">Drag propositions into a strategy, stress-test it, export the plan.</div>
         <div class="opt-stat" id="stat-builder"><span class="muted">build &amp; stress-test</span></div>
+      </button>
+      <button class="opt-card" data-room="quantum">
+        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19V9M9 19V5M14 19v-7M19 19V8"/></svg></span>
+        <div class="opt-name">Quantum</div>
+        <div class="opt-desc">Compare damages valuation methods, side by side, linked to the proof.</div>
+        <div class="opt-stat" id="stat-quantum"><span class="muted">damages dashboard</span></div>
       </button>
     </div>
     </div><!-- /.hero-intro -->
@@ -1151,7 +1227,7 @@
           <h3>Your strategy</h3>
           <span class="result-count" id="case-count">0 selected</span>
         </div>
-        <input type="text" id="case-title" class="case-title-input" placeholder="Strategy title (e.g. Claimants' case on Horizon reliability)">
+        <input type="text" id="case-title" class="case-title-input" placeholder="Strategy title (e.g. Claimants' case on system reliability)">
         <textarea id="case-theory" class="case-theory-input" placeholder="Case theory / strategy notes — the story you'll tell the court…"></textarea>
         <div class="dropzone-hint" id="dropzone-hint">Drop propositions here to build your case.</div>
         <div class="case-items" id="case-items"></div>
@@ -1167,6 +1243,45 @@
       </div>
     </div>
   </div>
+</section>
+
+<!-- ========================= ROOM: QUANTUM ========================= -->
+<section id="room-quantum" class="view room">
+  <div class="room-head">
+    <div><h1>Quantum Assessment</h1><div class="sub">Compare damages valuation methodologies before commissioning the full report</div></div>
+    <div class="spacer"></div>
+    <button class="gc-btn" id="quantum-refresh" title="Regenerate from the case">↻ Regenerate</button>
+    <button class="gc-btn" id="quantum-report" style="color:#fff;background:var(--navy-3);border-color:var(--navy-3)">Request full report</button>
+  </div>
+  <div class="room-body">
+    <div class="q-casebar" id="q-casebar">
+      <div class="q-case-main"><div class="q-case-name" id="q-case-name">—</div><div class="q-case-type" id="q-case-type"></div></div>
+      <div class="q-case-metrics" id="q-case-metrics"></div>
+    </div>
+    <div id="q-loading"><div class="skeleton skel-card" style="height:140px"></div><div class="skeleton skel-card" style="height:140px"></div></div>
+    <div class="q-grid" id="q-grid"></div>
+
+    <div class="q-rec" id="q-rec" style="display:none">
+      <div class="q-rec-label">Recommended approach</div>
+      <div class="q-rec-body">
+        <div><div class="q-rec-method" id="q-rec-method"></div><div class="q-rec-rationale" id="q-rec-rationale"></div></div>
+        <div class="q-rec-range"><div class="q-rec-range-label">Realistic range</div><div class="q-rec-range-val" id="q-rec-range"></div></div>
+      </div>
+    </div>
+
+    <p class="q-disclaimer" id="q-disclaimer" style="display:none">
+      <strong>Preliminary analysis only.</strong> These figures are AI-generated estimates produced from the pleaded
+      case to aid triage — they are not a quantum expert's opinion and must not be relied on as a final valuation.
+      Commission a full expert report before relying on any figure.
+    </p>
+  </div>
+
+  <!-- drill-down drawer -->
+  <div class="q-drawer-backdrop" id="q-drawer-backdrop"></div>
+  <aside class="q-drawer" id="q-drawer">
+    <button class="q-drawer-close" id="q-drawer-close" aria-label="Close">×</button>
+    <div id="q-drawer-body"></div>
+  </aside>
 </section>
 
 <script>
@@ -1187,7 +1302,7 @@
   let _sending = false;
   let _currentView = "hero";
 
-  const ROOMS = ["timeline", "propositions", "argumentation", "graph", "builder"];
+  const ROOMS = ["timeline", "propositions", "argumentation", "graph", "builder", "quantum"];
 
   // ------------------------------------------------------------------ routing
   function go(name) {
@@ -1196,7 +1311,7 @@
       hero: "hero",
       timeline: "room-timeline", propositions: "room-propositions",
       argumentation: "room-argumentation", graph: "room-graph",
-      builder: "room-builder",
+      builder: "room-builder", quantum: "room-quantum",
     };
     $(map[name]).classList.add("active");
     _currentView = name;
@@ -1214,6 +1329,7 @@
     if (name === "argumentation") { renderArgumentation(); ensureArguments(); }
     if (name === "graph") ensureGraph();
     if (name === "builder") ensureBuilder();
+    if (name === "quantum") ensureQuantum();
 
     window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
   }
@@ -1803,7 +1919,7 @@
   let G = null;   // live graph-view state
 
   async function ensureGraph() {
-    if (_graphLoaded) { graphResize(); reheat(0.5); return; }
+    if (_graphLoaded) { graphResize(); reheat(0.25); return; }
     _graphLoaded = true;
     try {
       const resp = await fetch("api/graph");
@@ -1888,21 +2004,26 @@
 
   function tick() {
     G.raf = requestAnimationFrame(tick);
-    step();
+    const moved = step();
     draw();
-    G.alpha *= 0.985;
-    if (G.alpha < 0.02 && !G.drag) { cancelAnimationFrame(G.raf); G.raf = 0; draw(); }
+    G.alpha *= 0.94;                       // cool quickly so motion is short-lived
+    // Freeze once the layout is essentially still (or fully cooled). Dragging
+    // keeps it warm. Stopping on low movement is what kills the lingering jiggle.
+    if (!G.drag && (G.alpha < 0.015 || (G.alpha < 0.2 && moved < 0.4))) {
+      cancelAnimationFrame(G.raf); G.raf = 0; draw();
+    }
   }
 
   function step() {
     const n = G.nodes, cx = G.W / 2, cy = G.H / 2, a = G.alpha;
-    const REPULSION = 2300, GRAVITY = 0.015, DAMP = 0.86, SEP_PAD = 14;
+    const REPULSION = 1900, GRAVITY = 0.02, DAMP = 0.78, SEP_PAD = 14;
     for (let i = 0; i < n.length; i++) {
       const p = n[i];
       for (let j = i + 1; j < n.length; j++) {
         const q = n[j];
         let dx = p.x - q.x, dy = p.y - q.y;
-        let d2 = dx * dx + dy * dy; if (d2 < 0.01) { d2 = 0.01; dx = Math.random() - 0.5; dy = Math.random() - 0.5; }
+        // Deterministic nudge for coincident nodes (random() here causes buzz).
+        let d2 = dx * dx + dy * dy; if (d2 < 0.01) { d2 = 0.01; dx = (i - j) * 0.05 || 0.05; dy = ((i + j) % 2 ? 1 : -1) * 0.05; }
         const f = (REPULSION * a) / d2;
         const d = Math.sqrt(d2); const ux = dx / d, uy = dy / d;
         p.vx += ux * f; p.vy += uy * f; q.vx -= ux * f; q.vy -= uy * f;
@@ -1916,6 +2037,7 @@
       const ux = dx / d, uy = dy / d;
       l.s.vx += ux * f; l.s.vy += uy * f; l.t.vx -= ux * f; l.t.vy -= uy * f;
     });
+    let maxMove = 0;
     n.forEach(p => {
       p.vx += (cx - p.x) * GRAVITY * a; p.vy += (cy - p.y) * GRAVITY * a;
       if (p.fx != null) { p.x = p.fx; p.y = p.fy; p.vx = p.vy = 0; return; }
@@ -1924,9 +2046,12 @@
       const m = 14;
       p.x = Math.max(m, Math.min(G.W - m, p.x));
       p.y = Math.max(m, Math.min(G.H - m, p.y));
+      const mv = Math.abs(p.vx) + Math.abs(p.vy);
+      if (mv > maxMove) maxMove = mv;   // convergence is judged on velocity only
     });
-    // Hard minimum-separation pass: keep node disks from overlapping, even at
-    // rest (position-based, so it holds after the simulation cools).
+    // Minimum-separation pass: nudge overlapping node disks apart. A gentle
+    // factor (vs. a hard 1.0 resolve) converges without bouncing nodes around;
+    // it's excluded from maxMove so residual overlaps can't keep the sim awake.
     for (let i = 0; i < n.length; i++) {
       const p = n[i];
       for (let j = i + 1; j < n.length; j++) {
@@ -1935,13 +2060,14 @@
         let d = Math.sqrt(dx * dx + dy * dy) || 0.01;
         const min = p.r + q.r + SEP_PAD;
         if (d < min) {
-          const push = (min - d) / d * 0.5;
+          const push = (min - d) / d * 0.25;
           const ox = dx * push, oy = dy * push;
           if (p.fx == null) { p.x -= ox; p.y -= oy; }
           if (q.fx == null) { q.x += ox; q.y += oy; }
         }
       }
     }
+    return maxMove;
   }
 
   function nodeFill(node) {
@@ -2104,7 +2230,7 @@
 
   function wireGraphControls() {
     const canvas = G.canvas, tip = $("graph-tooltip");
-    $("g-neutral").addEventListener("change", e => { G.showNeutral = e.target.checked; buildGraphModel(); seedLayout(); reheat(0.8); });
+    $("g-neutral").addEventListener("change", e => { G.showNeutral = e.target.checked; buildGraphModel(); seedLayout(); reheat(0.5); });
     $("g-labels").addEventListener("change", e => { G.showLabels = e.target.checked; draw(); });
     $("g-evidence").addEventListener("change", e => { G.showEvidence = e.target.checked; draw(); });
     $("g-colour").addEventListener("change", e => { G.colourMode = e.target.value; draw(); });
@@ -2425,6 +2551,18 @@
       }
       card.appendChild(au);
     }
+    if ((a.eu_authority || []).length) {
+      const eu = document.createElement("div"); eu.className = "arg-authority";
+      eu.innerHTML = '<span class="attr">Persuasive EU authority — EU Publications Office (Cellar)</span>';
+      const src = document.createElement("div"); src.className = "src";
+      a.eu_authority.forEach(m => {
+        const link = document.createElement("a");
+        link.href = m.work || "#"; link.target = "_blank"; link.rel = "noopener";
+        link.textContent = (m.title || "").slice(0, 52) + (m.celex ? " · CELEX " + m.celex : "");
+        src.appendChild(link);
+      });
+      eu.appendChild(src); card.appendChild(eu);
+    }
     return card;
   }
 
@@ -2614,6 +2752,7 @@
       + '<div class="meta">Relies on: ' + (a.relies_on || []).join(", ") + ((a.evidence || []).length ? ' &middot; Evidence: ' + (a.evidence || []).join(", ") : '') + '</div>'
       + (a.vulnerability ? '<div class="vuln"><b>Weakest link:</b> ' + esc2(a.vulnerability) + '</div>' : '')
       + (a.authority_note ? '<div class="auth"><b>Authority:</b> ' + esc2(a.authority_note) + (a.authority || []).map(c => ' [' + esc2(c.url) + ']').join("") + '</div>' : '')
+      + ((a.eu_authority || []).length ? '<div class="auth"><b>EU authority (Cellar):</b> ' + a.eu_authority.map(m => esc2(m.title) + (m.celex ? ' (CELEX ' + esc2(m.celex) + ')' : '')).join("; ") + '</div>' : '')
       + '</div>').join("") || '<p class="muted">No arguments generated.</p>';
 
     let stressHtml = '<p class="muted">Stress test not run.</p>';
@@ -2652,6 +2791,154 @@
 
     const w = window.open("", "_blank");
     if (!w) { alert("Allow pop-ups to export the plan."); return; }
+    w.document.write(doc); w.document.close();
+    setTimeout(() => w.print(), 350);
+  }
+
+  // ------------------------------------------------------------------ Quantum
+  let _quantumLoaded = false, _quantumData = null;
+
+  function money(n, cur) {
+    if (n == null || isNaN(n)) return "—";
+    const sym = { GBP: "£", USD: "$", EUR: "€" }[cur] || "";
+    const abs = Math.abs(n);
+    let body;
+    if (abs >= 1e6) body = (n / 1e6).toFixed(n % 1e6 === 0 ? 0 : 1) + "M";
+    else if (abs >= 1e3) body = Math.round(n / 1e3) + "k";
+    else body = String(Math.round(n));
+    return sym + body;
+  }
+  function moneyFull(n, cur) {
+    if (n == null || isNaN(n)) return "—";
+    const sym = { GBP: "£", USD: "$", EUR: "€" }[cur] || "";
+    return sym + Math.round(n).toLocaleString("en-GB");
+  }
+
+  async function ensureQuantum(refresh) {
+    if (_quantumLoaded && !refresh) return;
+    _quantumLoaded = true;
+    $("q-loading").style.display = "block";
+    $("q-grid").innerHTML = "";
+    try {
+      const resp = await fetch("api/quantum" + (refresh ? "?refresh=1" : ""));
+      const data = await resp.json();
+      _quantumData = (data && data.ok) ? data : null;
+      renderQuantum();
+    } catch (e) {
+      $("q-loading").style.display = "none";
+      $("q-grid").innerHTML = '<p class="gp-detail-empty">Could not load the quantum assessment.</p>';
+      _quantumLoaded = false;
+    }
+  }
+
+  function renderQuantum() {
+    $("q-loading").style.display = "none";
+    const d = _quantumData;
+    const grid = $("q-grid");
+    if (!d || !(d.methods || []).length) {
+      grid.innerHTML = '<p class="gp-detail-empty">No quantum assessment yet. Set an Anthropic API key and click Regenerate.</p>';
+      return;
+    }
+    const cur = d.currency || "GBP";
+    $("q-case-name").textContent = d.case_name || "Case";
+    $("q-case-type").textContent = d.case_type || "";
+    const meta = d.meta || {};
+    $("q-case-metrics").innerHTML =
+      '<div class="q-metric"><div class="v">' + (d.methods.length) + '</div><div class="l">Methods</div></div>'
+      + '<div class="q-metric"><div class="v">' + (meta.propositions || "—") + '</div><div class="l">Propositions</div></div>'
+      + '<div class="q-metric"><div class="v">' + (meta.evidence_links || "—") + '</div><div class="l">Evidence links</div></div>'
+      + '<div class="q-metric"><div class="v">' + new Date().toLocaleDateString("en-GB", { month: "short", year: "numeric" }) + '</div><div class="l">Assessed</div></div>';
+
+    const best = d.recommendation && d.recommendation.preferred_method;
+    grid.innerHTML = "";
+    d.methods.forEach((m, i) => grid.appendChild(buildQCard(m, i, cur, best)));
+
+    if (d.recommendation) {
+      const r = d.recommendation;
+      $("q-rec-method").textContent = r.preferred_method || "";
+      $("q-rec-rationale").textContent = r.rationale || "";
+      $("q-rec-range").textContent = moneyFull(r.range_low, cur) + " – " + moneyFull(r.range_high, cur);
+      $("q-rec").style.display = "block";
+    }
+    $("q-disclaimer").style.display = "block";
+  }
+
+  function buildQCard(m, i, cur, best) {
+    const card = document.createElement("div");
+    card.className = "q-card risk-" + m.risk_level + (m.name === best ? " best" : "");
+    const isBest = m.name === best;
+    card.innerHTML =
+      '<div class="q-card-name">' + esc(m.name) + (isBest ? ' <span class="q-best-tag">recommended</span>' : '') + '</div>'
+      + '<div class="q-figure"><span class="cur">' + ({ GBP: "£", USD: "$", EUR: "€" }[cur] || "") + '</span>' + money(m.figure, cur).replace(/^[£$€]/, "") + '</div>'
+      + '<span class="q-risk-badge ' + m.risk_level + '">' + m.risk_level + '</span>'
+      + '<div class="q-meter-row"><div class="ml"><span>Confidence</span><span>' + Math.round((m.confidence || 0) * 100) + '%</span></div>'
+      + '<div class="q-meter"><div class="q-meter-fill conf" style="width:' + Math.round((m.confidence || 0) * 100) + '%"></div></div></div>'
+      + '<div class="q-meter-row"><div class="ml"><span>Recovery likelihood</span><span>' + Math.round((m.recovery_likelihood || 0) * 100) + '%</span></div>'
+      + '<div class="q-meter"><div class="q-meter-fill rec" style="width:' + Math.round((m.recovery_likelihood || 0) * 100) + '%"></div></div></div>'
+      + '<div class="q-card-foot"><span>' + (m.relies_on || []).length + ' propositions</span><span>details →</span></div>';
+    card.addEventListener("click", () => openQDrawer(m, cur));
+    return card;
+  }
+
+  function openQDrawer(m, cur) {
+    const body = $("q-drawer-body");
+    const list = (arr, cls) => (arr && arr.length)
+      ? '<ul class="qd-list ' + cls + '">' + arr.map(x => '<li>' + esc(x) + '</li>').join("") + '</ul>' : '<p class="gp-detail-empty">—</p>';
+    body.innerHTML =
+      '<div class="qd-name">' + esc(m.name) + '</div>'
+      + '<div class="qd-figure">' + moneyFull(m.figure, cur) + '</div>'
+      + '<div class="qd-badges"><span class="q-risk-badge ' + m.risk_level + '">' + m.risk_level + '</span>'
+      + '<span class="q-risk-badge balanced" style="background:#eef2ff;color:var(--navy-3)">Confidence ' + Math.round((m.confidence || 0) * 100) + '%</span>'
+      + '<span class="q-risk-badge conservative">Recovery ' + Math.round((m.recovery_likelihood || 0) * 100) + '%</span></div>'
+      + '<div class="qd-summary">' + esc(m.summary || "") + '</div>'
+      + '<div class="qd-section"><h4>Factors considered</h4>' + list(m.factors, "factors") + '</div>'
+      + '<div class="qd-section"><h4>Why it\'s defensible</h4>' + list(m.strengths, "strengths") + '</div>'
+      + '<div class="qd-section"><h4>Weaknesses &amp; challenges</h4>' + list(m.weaknesses, "weaknesses") + '</div>'
+      + '<div class="qd-section"><h4>Depends on these propositions</h4><div class="qd-chips" id="qd-chips"></div></div>';
+    const chips = body.querySelector("#qd-chips");
+    if ((m.relies_on || []).length) m.relies_on.forEach(pid => chips.appendChild(makeCite(pid)));
+    else chips.innerHTML = '<span class="gp-detail-empty">Rests on pleading alone.</span>';
+    $("q-drawer").classList.add("show");
+    $("q-drawer-backdrop").classList.add("show");
+  }
+  function closeQDrawer() { $("q-drawer").classList.remove("show"); $("q-drawer-backdrop").classList.remove("show"); }
+  $("q-drawer-close").addEventListener("click", closeQDrawer);
+  $("q-drawer-backdrop").addEventListener("click", closeQDrawer);
+  $("quantum-refresh").addEventListener("click", () => ensureQuantum(true));
+  $("quantum-report").addEventListener("click", exportQuantum);
+
+  function exportQuantum() {
+    const d = _quantumData;
+    if (!d || !(d.methods || []).length) { alert("No quantum assessment to report yet."); return; }
+    const cur = d.currency || "GBP";
+    const esc2 = s => (s == null ? "" : String(s)).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    const today = new Date().toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
+    const rows = d.methods.map(m =>
+      '<tr><td>' + esc2(m.name) + '<div class="sm">' + esc2(m.summary) + '</div></td>'
+      + '<td class="num">' + moneyFull(m.figure, cur) + '</td><td>' + esc2(m.risk_level) + '</td>'
+      + '<td class="num">' + Math.round((m.confidence || 0) * 100) + '%</td>'
+      + '<td class="num">' + Math.round((m.recovery_likelihood || 0) * 100) + '%</td>'
+      + '<td class="sm">' + (m.relies_on || []).join(", ") + '</td></tr>').join("");
+    const r = d.recommendation || {};
+    const doc = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Quantum Assessment</title><style>'
+      + 'body{font-family:Georgia,serif;color:#1e293b;max-width:880px;margin:2rem auto;padding:0 1.5rem;line-height:1.5}'
+      + 'h1{font-size:1.6rem;color:#0f1f3d;margin-bottom:.1rem}.sub{color:#64748b;font-size:.85rem;margin-bottom:1.2rem}'
+      + 'table{width:100%;border-collapse:collapse;font-family:-apple-system,Segoe UI,sans-serif;font-size:.82rem;margin-top:.5rem}'
+      + 'th{text-align:left;border-bottom:2px solid #0f1f3d;padding:.4rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}'
+      + 'td{border-bottom:1px solid #e2e8f0;padding:.5rem;vertical-align:top}td.num{font-family:monospace;text-align:right;white-space:nowrap}.sm{font-size:.72rem;color:#64748b}'
+      + '.rec{margin-top:1.4rem;background:#f0f7ff;border-left:4px solid #253a63;padding:.9rem 1.1rem;font-family:-apple-system,Segoe UI,sans-serif}'
+      + '.rec b{font-size:1.05rem;color:#0f1f3d}.range{font-family:monospace;font-weight:700;color:#16a34a}'
+      + '.disc{margin-top:1.5rem;font-size:.74rem;color:#7f1d1d;background:#fef2f2;border:1px solid #fecaca;padding:.6rem .8rem;border-radius:6px}'
+      + '@media print{body{margin:0}}</style></head><body>'
+      + '<h1>Preliminary Quantum Assessment</h1><div class="sub">' + esc2(d.case_name || "") + ' &middot; ' + esc2(d.case_type || "") + ' &middot; ' + today + '</div>'
+      + '<table><thead><tr><th>Methodology</th><th>Estimate</th><th>Risk</th><th>Conf.</th><th>Recovery</th><th>Relies on</th></tr></thead><tbody>' + rows + '</tbody></table>'
+      + '<div class="rec"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#253a63;font-weight:700">Recommended approach</div>'
+      + '<b>' + esc2(r.preferred_method || "") + '</b> &middot; realistic range <span class="range">' + moneyFull(r.range_low, cur) + ' – ' + moneyFull(r.range_high, cur) + '</span>'
+      + '<div style="font-size:.85rem;margin-top:.3rem">' + esc2(r.rationale || "") + '</div></div>'
+      + '<div class="disc"><b>Preliminary analysis only.</b> AI-generated estimates from the pleaded case for triage — not a quantum expert\'s opinion. Commission a full expert report before relying on any figure.</div>'
+      + '</body></html>';
+    const w = window.open("", "_blank");
+    if (!w) { alert("Allow pop-ups to export the report."); return; }
     w.document.write(doc); w.document.close();
     setTimeout(() => w.print(), 350);
   }

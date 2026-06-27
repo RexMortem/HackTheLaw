@@ -758,6 +758,75 @@ def dump_json(path: str, obj) -> None:
 PERPLEXITY_URL = "https://api.perplexity.ai/chat/completions"
 PERPLEXITY_MODEL = "sonar"   # fast online model; "sonar-pro" for deeper search
 
+# ---------------------------------------------------------------------------
+# EU Publications Office — Cellar SPARQL (public, no auth). Retrieves EU legal
+# materials (directives, CJEU decisions, etc.) whose title matches given terms,
+# as persuasive authority. Shared by the AI summary, argument generation and the
+# stress test. Best-effort: returns [] on any error.
+# ---------------------------------------------------------------------------
+CELLAR_SPARQL = "http://publications.europa.eu/webapi/rdf/sparql"
+
+# Curated legal-concept vocabulary — we only search Cellar for the concepts that
+# actually appear in the text, so retrieval is driven by the case.
+LEGAL_CONCEPTS = [
+    "misrepresentation", "breach of contract", "unfair contract terms",
+    "consumer protection", "accounting", "software", "electronic evidence",
+    "burden of proof", "negligence", "duty of care", "data protection",
+    "liability", "good faith", "disclosure", "damages", "limitation",
+]
+
+
+def concepts_in(text: str) -> list[str]:
+    """Legal concepts from LEGAL_CONCEPTS that appear in `text`."""
+    low = (text or "").lower()
+    return [c for c in LEGAL_CONCEPTS if c in low]
+
+
+def cellar_search(terms: list[str], limit: int = 6, timeout: float = 8.0) -> list[dict]:
+    """Query Cellar for English-language legal works whose title matches any of
+    `terms`. Returns [{title, work, celex}]. Never raises."""
+    import urllib.parse
+    import urllib.request
+
+    terms = [t for t in (terms or []) if t]
+    if not terms:
+        return []
+    contains = " OR ".join(f'"{t}"' for t in terms)
+    query = (
+        "PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>\n"
+        "SELECT DISTINCT ?work ?title ?celex WHERE {\n"
+        "  ?exp cdm:expression_title ?title .\n"
+        f"  ?title bif:contains '{contains}' .\n"
+        "  ?exp cdm:expression_uses_language"
+        " <http://publications.europa.eu/resource/authority/language/ENG> .\n"
+        "  ?exp cdm:expression_belongs_to_work ?work .\n"
+        "  OPTIONAL { ?work cdm:resource_legal_id_celex ?celex }\n"
+        f"}} LIMIT {limit}"
+    )
+    url = CELLAR_SPARQL + "?" + urllib.parse.urlencode({
+        "query": query, "format": "application/sparql-results+json"})
+    req = urllib.request.Request(url, headers={
+        "Accept": "application/sparql-results+json", "User-Agent": "ProofMatrix/1.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:
+        print(f"  [cellar] retrieval skipped: {type(exc).__name__}: {exc}")
+        return []
+
+    out, seen = [], set()
+    for b in data.get("results", {}).get("bindings", []):
+        title = (b.get("title", {}) or {}).get("value", "").strip()
+        if not title or title.lower() in seen:
+            continue
+        seen.add(title.lower())
+        out.append({
+            "title": title,
+            "work": (b.get("work", {}) or {}).get("value", ""),
+            "celex": (b.get("celex", {}) or {}).get("value", ""),
+        })
+    return out
+
 
 def perplexity_available() -> bool:
     return bool(os.environ.get("PERPLEXITY_API_KEY"))

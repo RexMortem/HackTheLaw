@@ -226,9 +226,14 @@ is absent, which is why it runs out of the box and on a deploy host where `out/`
 | `GET`  | `/api/matrix`  | Full matrix + summary stats |
 | `GET`  | `/api/graph`   | Case graph (proposition + evidence nodes, support/undermine edges) for the Case Graph view and Neo4j |
 | `GET`  | `/api/summary` | AI case summary (cached; `?refresh=1` to regenerate) |
+| `GET`  | `/api/arguments` | Claude-drafted arguments linked to propositions/evidence, with Perplexity authority (cached; `?refresh=1`) |
+| `GET`  | `/api/stress`  | Case-theory stress-test report across six lenses (`?adversarial=1` adds the LLM red-team) |
+| `GET`  | `/api/quantum` | Preliminary quantum assessment — competing valuation methodologies linked to propositions (cached; `?refresh=1`) |
 | `GET`  | `/api/status`  | Health check (data present, goals exist) |
 | `GET`  | `/api/goals`   | Saved goals (`{}` if none) |
 | `POST` | `/api/goals`   | Save goals; body `{"goals": [{id, text}, ...]}` |
+| `GET`  | `/api/case`    | The saved built case (Case Builder selection) |
+| `POST` | `/api/case`    | Save the built case; body `{title, theory, propositions:[ids]}` |
 | `POST` | `/api/chat`    | Chat with Second Chair; body `{"messages": [...]}` |
 
 ### AI case summary
@@ -303,6 +308,68 @@ out/matrix.json ─graph_export.py─▶ out/graph.json    (→ /api/graph → C
   ```
   Example queries (load-bearing evidence, single-witness propositions,
   contradictions) are in the `neo4j_load.py` docstring.
+
+### Argument generation, stress test & Case Builder
+
+Three pieces turn the proof matrix into a working litigation strategy. Each has a
+standalone script (writes `out/*.json` + a `case_ui/data/` snapshot) and a web
+endpoint, and each degrades gracefully without an API key.
+
+- **Proposition dependencies** (`derive_dependencies.py`): Claude maps the
+  *logical* structure of the case — `A DEPENDS_ON B` when B is a premise of A
+  (duty → breach → causation → loss). `graph_export.py` adds these as
+  `DEPENDS_ON` edges (the dashed blue spine in the Case Graph) and runs Tarjan
+  **strongly-connected-components** over them to detect **circular reasoning**
+  (a cycle = a proposition used, transitively, to prove itself; a sound theory is
+  acyclic).
+- **Arguments** (`arguments_gen.py` → `/api/arguments`, Argumentation room):
+  Claude drafts the arguments each side can run, every one **linked** to the
+  propositions it relies on and the evidence that carries it (click the chips),
+  with its own weakest link named. **Perplexity** attaches real, citable
+  supporting **authority** via live web search, and the **EU Publications Office
+  Cellar** adds persuasive **EU authority** (CJEU decisions / directives, with
+  CELEX ids) matched to the legal concepts each argument raises.
+- **Stress test** (`stress_test.py` → `/api/stress`, Case Builder): a battery of
+  checks grouped by the challenge's six capability lenses — extraction integrity,
+  evidence classification, source-grounding, contradiction & gap detection,
+  prioritised human-review items, and case-theory stress-testing (single points
+  of failure, weak premises with dependents, arguments resting on unsupported
+  ground, circular reasoning). It also surfaces persuasive **EU Cellar
+  authority** that could help fill a gap or undermined proposition. It returns a
+  robustness score and severity-ranked findings. `?adversarial=1` adds a
+  **red-team** pass — Claude as opposing counsel attacks each argument and
+  Perplexity finds **contrary** authority.
+- **Quantum assessment** (`quantum_gen.py` → `/api/quantum`, Quantum room):
+  Claude produces a preliminary **damages** triage — 3-5 competing valuation
+  methodologies (lost profits, wasted expenditure, diminution in value,
+  restitutionary, etc.), each with a headline figure, confidence, risk level and
+  recovery likelihood, and **linked to the propositions** that must succeed for
+  that figure to be recoverable (so quantum ties back to liability). The
+  dashboard compares them side by side, drills into each method's factors /
+  strengths / weaknesses, recommends a realistic range, and exports a report.
+  Figures are clearly flagged as preliminary AI estimates, not an expert opinion.
+
+**Case Builder** (UI rail → *Case Builder*) is the lawyer-facing surface:
+drag-and-drop propositions into a strategy, add a case-theory note, run the stress
+test inline, and **export a strategy-plan PDF** (selected propositions with
+status and evidence, the relevant arguments with authority, and the stress-test
+findings — printed from a self-contained document via the browser, no server-side
+PDF dependency). The built case persists to `case_ui/data/case.json`.
+
+Pre-generate everything for a no-wait demo (and to snapshot for deploy):
+
+```bash
+python derive_dependencies.py     # DEPENDS_ON edges + cycle detection
+python graph_export.py            # fold them into out/graph.json
+python arguments_gen.py           # linked arguments + Perplexity authority
+python quantum_gen.py             # damages valuation methodologies
+python stress_test.py             # print the stress report (--adversarial for red-team)
+```
+
+**Perplexity** is reached via `caselib.perplexity_chat` (stdlib `urllib`, no extra
+dependency); set `PERPLEXITY_API_KEY` in `.env`. Without it, arguments still
+generate and the stress test still runs — only the supporting/contrary-authority
+enrichment is skipped.
 
 ### Deployment (Render)
 
