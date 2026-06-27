@@ -690,28 +690,20 @@
     #room-propositions .room-head .tl-toggle.active { background: #fff; color: var(--ink); border-color: #fff; }
 
     #room-propositions .claims-layout { display: flex; align-items: flex-start; gap: 1.25rem; }
-    #room-propositions .claims-main { flex: 1 1 auto; min-width: 0; }
+    #room-propositions .claims-main { flex: 1 1 auto; min-width: 520px; }
 
-    /* Left timeline drawer — off-canvas overlay (does not resize the matrix) */
+    /* Left timeline column — in-flow, expands the layout left (no overlay) */
     #room-propositions .timeline-sidebar {
-      position: fixed; top: 0; left: 0; bottom: 0;
-      width: 280px; max-width: 82vw;
-      z-index: 60;
-      background: var(--white);
-      border-right: 3px solid var(--ink);
-      padding: 1.1rem 1.2rem;
-      overflow-y: auto;
-      transform: translateX(-100%);
-      transition: transform .28s ease;
-      box-shadow: var(--shadow-lg);
+      flex: 0 0 0; width: 0; overflow: hidden; opacity: 0; padding: 0;
+      position: sticky; top: 1rem; align-self: flex-start;
+      max-height: calc(100vh - 2rem); overflow-y: auto;
+      background: var(--white); border: 1px solid var(--border); border-top: 4px solid var(--ink);
+      border-radius: 6px;
+      transition: flex-basis .25s ease, width .25s ease, opacity .2s ease, padding .25s ease;
     }
-    #room-propositions .timeline-sidebar.open { transform: translateX(0); }
+    #room-propositions .timeline-sidebar.open { flex: 0 0 260px; width: 260px; opacity: 1; padding: 1rem 1.1rem; }
     #room-propositions .tl-close { background: none; border: none; font-size: 1.3rem; line-height: 1; color: var(--slate); cursor: pointer; padding: 0 0.2rem; }
     #room-propositions .tl-close:hover { color: var(--ink); }
-    /* When the timeline drawer is open, slide the rail to just right of it
-       so the drawer sits at the far left, left of the entire interface. */
-    #rail { transition: left .28s ease; }
-    #rail.shifted { left: calc(280px + 0.7rem); }
     #room-propositions .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-family: var(--mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); margin-bottom: 0.55rem; white-space: nowrap; }
     #room-propositions .tl-tag { font-size: 0.54rem; color: var(--contested); background: var(--contested-bg); border: 1px solid var(--contested-border); border-radius: 999px; padding: 0.05rem 0.4rem; letter-spacing: 0.08em; }
     #room-propositions .tl-note { font-size: 0.76rem; color: var(--slate); line-height: 1.5; margin-bottom: 1rem; }
@@ -729,9 +721,8 @@
     #room-propositions .expand-icon { transition: transform .15s, color .15s; }
     #room-propositions .prop-card.selected .expand-icon { transform: translateX(2px); color: var(--ink); }
 
-    /* Evidence side panel — sticky column to the LEFT of the claims list */
+    /* Evidence side panel — sticky column to the RIGHT of the claims list */
     #room-propositions .evidence-panel {
-      order: -1;
       flex: 0 0 0; width: 0; overflow: hidden;
       position: sticky; top: 1rem; align-self: flex-start;
       max-height: calc(100vh - 2rem); overflow-y: auto;
@@ -751,11 +742,13 @@
     #room-propositions .ep-title { font-size: 0.95rem; font-weight: 700; color: var(--ink); line-height: 1.4; margin-bottom: 0.3rem; }
     #room-propositions .ep-content .prop-source { margin-bottom: 0.2rem; }
 
-    @media (max-width: 1040px) {
+    @media (max-width: 1280px) {
       #room-propositions .claims-layout { flex-wrap: wrap; }
+      #room-propositions .timeline-sidebar,
       #room-propositions .evidence-panel { position: static; max-height: none; }
+      #room-propositions .timeline-sidebar.open,
       #room-propositions .evidence-panel.open { flex-basis: 100%; width: 100%; }
-      #room-propositions .claims-main { flex-basis: 100%; }
+      #room-propositions .claims-main { flex-basis: 100%; min-width: 0; }
     }
 
     /* ================================================================== */
@@ -1107,7 +1100,6 @@
     $("timeline-sidebar").classList.toggle("open", open);
     $("tl-toggle").classList.toggle("active", open);
     $("tl-toggle").setAttribute("aria-pressed", String(open));
-    $("rail").classList.toggle("shifted", open);
   }
   $("tl-toggle").addEventListener("click", () =>
     setTimeline(!$("timeline-sidebar").classList.contains("open")));
