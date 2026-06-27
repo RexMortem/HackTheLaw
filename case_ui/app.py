@@ -19,9 +19,49 @@ import json
 import os
 import pathlib
 import re
+import sys
+import time
 from datetime import datetime, timezone
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
+
+# Benign on Windows when a browser cancels/aborts a request mid-response.
+_DISCONNECT_ERRORS = (ConnectionResetError, ConnectionAbortedError, BrokenPipeError)
+
+# After an LLM call fails (no credits, no network), skip the LLM (and the EU
+# Cellar fetch) for this many seconds so the UI answers instantly from the
+# grounded offline path. It auto-recovers — the next call after the window
+# retries, and a success just lets the window lapse.
+_LLM_COOLDOWN_SECS = 60.0
+_llm_down_until = 0.0
+
+
+def _llm_in_cooldown() -> bool:
+    return time.monotonic() < _llm_down_until
+
+
+def _llm_mark_down() -> None:
+    global _llm_down_until
+    _llm_down_until = time.monotonic() + _LLM_COOLDOWN_SECS
+
+
+def _log(tag: str, msg: str) -> None:
+    """Server-side debug log, flushed so it appears immediately even when stdout
+    is buffered (e.g. redirected to a file / running under a process manager)."""
+    print(f"  [{tag}] {msg}", flush=True)
+
+
+def _describe_response(msg) -> str:
+    """One-line summary of an Anthropic response for the log: stop reason, the
+    content-block types present, and token usage."""
+    block_types: dict[str, int] = {}
+    for b in getattr(msg, "content", []) or []:
+        block_types[b.type] = block_types.get(b.type, 0) + 1
+    usage = getattr(msg, "usage", None)
+    tin = getattr(usage, "input_tokens", "?")
+    tout = getattr(usage, "output_tokens", "?")
+    return (f"stop_reason={getattr(msg, 'stop_reason', '?')} "
+            f"blocks={block_types or '{}'} tokens(in/out)={tin}/{tout}")
 
 # ---------------------------------------------------------------------------
 # Config
@@ -32,6 +72,11 @@ PORT = int(os.environ.get("PORT", "8001"))
 # Resolve paths relative to the repo root (parent of this file's directory).
 _HERE = pathlib.Path(__file__).parent
 REPO_ROOT = _HERE.parent
+# Launching as `python case_ui/app.py` puts case_ui/ on sys.path, not the repo
+# root, so the lazy `import caselib` (in the chat/summary handlers) would fail.
+# Put the repo root on the path so caselib is importable from any launch dir.
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 OUT_DIR = REPO_ROOT / "out"
 STATIC_DIR = _HERE
 DATA_DIR = _HERE / "data"
@@ -194,14 +239,15 @@ def _offline_chat_reply(user_msg: str, matrix: list) -> str:
     if not top:  # fall back to the riskiest propositions
         top = [r for r in matrix if r.get("status") in ("MISSING", "undermined")][:3]
 
-    lines = ["Second Chair is offline (no API credits), but here is what the "
-             "proof matrix shows on point:"]
+    lines = ["Second Chair is offline (LLM unavailable — check the server log "
+             "for the cause), but here is what the proof matrix shows on point:"]
     for row in top:
         p = row["proposition"]
         lines.append(f"• [{p.get('id')}] ({row.get('status')}) {p.get('text')}")
     if not top:
         lines.append("• No matching propositions found in the bundle.")
-    lines.append("Add Anthropic API credits to chat with the full associate.")
+    lines.append("Set ANTHROPIC_API_KEY (and restart the server) to chat with "
+                 "the full associate.")
     return "\n".join(lines)
 
 
@@ -211,9 +257,18 @@ def _chat_reply(messages: list, matrix: list) -> tuple[str, str]:
     user_msgs = [m for m in messages if m.get("role") == "user"]
     last_user = user_msgs[-1].get("content", "") if user_msgs else ""
 
+    # Recently failed — answer instantly from the grounded offline path.
+    if _llm_in_cooldown():
+        _log("chat", f"in LLM cooldown ({_llm_down_until - time.monotonic():.0f}s "
+                     "left) — returning offline reply")
+        return _offline_chat_reply(last_user, matrix), "offline"
+
     try:
         import caselib  # lazy: anthropic SDK + .env
-        client = caselib.get_client()
+        # No retries on the interactive path: if the call errors (e.g. no credits
+        # or no network), fail fast to the grounded offline reply instead of
+        # making the user wait through SDK backoff.
+        client = caselib.get_client().with_options(max_retries=0)
         stats = _build_summary(matrix)["stats"] if matrix else {"counts": {}}
         c = stats.get("counts", {})
         system = (
@@ -235,20 +290,35 @@ def _chat_reply(messages: list, matrix: list) -> tuple[str, str]:
             for m in messages
             if m.get("role") in ("user", "assistant") and m.get("content")
         ]
+        _log("chat", f"-> calling LLM: model={caselib.MODEL} msgs={len(api_messages)} "
+                     f"matrix={len(matrix)} rows last_user={last_user[:80]!r}")
+        t0 = time.monotonic()
         msg = client.messages.create(
             model=caselib.MODEL,
-            max_tokens=1200,
+            # Generous budget: adaptive thinking can consume most of a small cap
+            # and leave no room for the answer (stop_reason=max_tokens, empty
+            # text) — which previously showed up as a silent "offline".
+            max_tokens=4000,
             thinking={"type": "adaptive"},
             # Cache the case digest: it's identical across every turn of a chat.
             system=[{"type": "text", "text": system,
                      "cache_control": {"type": "ephemeral"}}],
             messages=api_messages,
         )
+        dt = time.monotonic() - t0
+        _log("chat", f"<- LLM responded in {dt:.1f}s: {_describe_response(msg)}")
         text = "\n".join(b.text for b in msg.content if b.type == "text").strip()
         if text:
+            _log("chat", f"OK: returning {len(text)} chars (source=claude)")
             return text, "claude"
+        # Reached the model but got no text (e.g. all budget spent on thinking,
+        # stop_reason=max_tokens). This was previously silent — log it loudly.
+        _log("chat", f"WARNING empty text despite stop_reason="
+                     f"{getattr(msg, 'stop_reason', '?')}; falling back to offline. "
+                     "Consider raising max_tokens.")
     except Exception as exc:
-        print(f"  [chat] LLM unavailable: {type(exc).__name__}: {exc}")
+        _log("chat", f"LLM unavailable: {type(exc).__name__}: {exc}")
+        _llm_mark_down()
 
     return _offline_chat_reply(last_user, matrix), "offline"
 
@@ -349,11 +419,16 @@ def _generate_narrative(matrix: list, stats: dict) -> dict | None:
     """Call Claude (web search + EU Cellar context) to produce a high-level,
     accurate narrative of what the case is about. Returns a dict with headline,
     paragraphs and the EU sources used — or None if the LLM call fails."""
+    if _llm_in_cooldown():  # recently failed — skip the LLM (and Cellar) fast
+        _log("summary", f"in LLM cooldown ({_llm_down_until - time.monotonic():.0f}s "
+                        "left) — skipping LLM, using deterministic fallback")
+        return None
     try:
         import caselib  # lazy: pulls in the anthropic SDK + loads ./.env
-        client = caselib.get_client()
+        client = caselib.get_client().with_options(max_retries=0)
     except Exception as exc:
-        print(f"  [summary] LLM unavailable: {type(exc).__name__}: {exc}")
+        _log("summary", f"LLM unavailable: {type(exc).__name__}: {exc}")
+        _llm_mark_down()
         return None
 
     # Compact digest of the pleaded case for the model.
@@ -362,7 +437,10 @@ def _generate_narrative(matrix: list, stats: dict) -> dict | None:
         f"({p.get('type')}, {p.get('party')}, status={row.get('status')}) {p.get('text')}"
         for row in matrix
     )
+    t_cellar = time.monotonic()
     sources = _cellar_search(_case_keywords(matrix))
+    _log("summary", f"EU Cellar retrieval: {len(sources)} sources "
+                    f"in {time.monotonic() - t_cellar:.1f}s")
     if sources:
         cellar_block = "\n".join(
             f"- {s['title']}" + (f" (CELEX {s['celex']})" if s["celex"] else "")
@@ -407,9 +485,12 @@ def _generate_narrative(matrix: list, stats: dict) -> dict | None:
     user_content = [{"type": "text", "text": user,
                      "cache_control": {"type": "ephemeral"}}]
     messages = [{"role": "user", "content": user_content}]
+    _log("summary", f"-> calling LLM: model={caselib.MODEL} matrix={len(matrix)} rows "
+                    "(web_search enabled)")
     try:
         final = None
-        for _ in range(6):  # resume across web-search server-tool pauses
+        t0 = time.monotonic()
+        for i in range(6):  # resume across web-search server-tool pauses
             msg = client.messages.create(
                 model=caselib.MODEL,
                 max_tokens=2000,
@@ -420,6 +501,7 @@ def _generate_narrative(matrix: list, stats: dict) -> dict | None:
                          "cache_control": {"type": "ephemeral"}}],
                 messages=messages,
             )
+            _log("summary", f"   turn {i + 1}: {_describe_response(msg)}")
             if msg.stop_reason == "pause_turn":
                 messages = [
                     {"role": "user", "content": user_content},
@@ -429,14 +511,20 @@ def _generate_narrative(matrix: list, stats: dict) -> dict | None:
                 continue
             final = msg
             break
+        dt = time.monotonic() - t0
         text = "\n".join(b.text for b in final.content if b.type == "text")
+        _log("summary", f"<- LLM done in {dt:.1f}s: {len(text)} chars of text")
     except Exception as exc:
-        print(f"  [summary] generation failed: {type(exc).__name__}: {exc}")
+        _log("summary", f"generation failed: {type(exc).__name__}: {exc}")
+        _llm_mark_down()
         return None
 
     headline, paragraphs = _parse_narrative(text)
     if not paragraphs:
+        _log("summary", "WARNING parsed 0 paragraphs from the model text; "
+                        "using deterministic fallback")
         return None
+    _log("summary", f"OK: headline + {len(paragraphs)} paragraphs (source=claude)")
     return {"headline": headline, "paragraphs": paragraphs, "sources": sources}
 
 
@@ -526,6 +614,8 @@ class Handler(BaseHTTPRequestHandler):
             self._serve_file(STATIC_DIR / "index.html", "text/html; charset=utf-8")
         elif path == "/api/matrix":
             self._api_matrix()
+        elif path == "/api/graph":
+            self._api_graph()
         elif path == "/api/summary":
             self._api_summary()
         elif path == "/api/status":
@@ -558,12 +648,15 @@ class Handler(BaseHTTPRequestHandler):
             self._404()
             return
         data = filepath.read_bytes()
-        self.send_response(200)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(data)))
-        self._cors_headers()
-        self.end_headers()
-        self.wfile.write(data)
+        try:
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(data)))
+            self._cors_headers()
+            self.end_headers()
+            self.wfile.write(data)
+        except _DISCONNECT_ERRORS:
+            pass  # client went away mid-response
 
     # ---- API ----------------------------------------------------------------
 
@@ -597,6 +690,27 @@ class Handler(BaseHTTPRequestHandler):
             "matrix": matrix,
         }))
 
+    def _api_graph(self):
+        """GET /api/graph — the case as a graph (propositions + evidence nodes,
+        SUPPORTS/UNDERMINES/NEUTRAL edges) for the Case Graph view and Neo4j.
+
+        Derived live from the matrix via graph_export so it always matches the
+        current data; cacheable since it changes only when the matrix changes.
+        """
+        matrix, err = _load_matrix()
+        if err:
+            self._json_response(503, json.dumps({"ok": False, "error": err}))
+            return
+        try:
+            import graph_export  # repo root is on sys.path (see top of file)
+            graph = graph_export.build_graph(matrix)
+        except Exception as exc:  # never let a graph error take down the app
+            print(f"  [graph] build failed: {type(exc).__name__}: {exc}")
+            self._json_response(500, json.dumps(
+                {"ok": False, "error": f"graph build failed: {exc}"}))
+            return
+        self._json_cacheable(json.dumps({"ok": True, **graph}), max_age=300)
+
     def _api_summary(self):
         """GET /api/summary — AI case summary.
 
@@ -613,7 +727,12 @@ class Handler(BaseHTTPRequestHandler):
             return
         params = parse_qs(urlparse(self.path).query)
         refresh = params.get("refresh", ["0"])[0] in ("1", "true", "yes")
+        _log("summary", f"GET /api/summary received (refresh={refresh})")
+        t0 = time.monotonic()
         summary = _summary_response(matrix, refresh=refresh)
+        _log("summary", f"GET /api/summary done in {time.monotonic() - t0:.1f}s "
+                        f"-> generated_by={summary.get('generated_by')} "
+                        f"cached={summary.get('cached')}")
         payload = json.dumps({"ok": True, **summary})
         self._json_cacheable(payload, max_age=300)
 
@@ -641,7 +760,10 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         matrix, _err = _load_matrix()
+        _log("chat", f"POST /api/chat received: {len(messages)} message(s)")
+        t0 = time.monotonic()
         reply, source = _chat_reply(messages, matrix or [])
+        _log("chat", f"POST /api/chat done in {time.monotonic() - t0:.1f}s -> source={source}")
         self._json_response(200, json.dumps({"ok": True, "reply": reply, "source": source}))
 
     def _api_status(self):
@@ -709,12 +831,15 @@ class Handler(BaseHTTPRequestHandler):
 
     def _json_response(self, status: int, payload: str):
         data = payload.encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(data)))
-        self._cors_headers()
-        self.end_headers()
-        self.wfile.write(data)
+        try:
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
+            self._cors_headers()
+            self.end_headers()
+            self.wfile.write(data)
+        except _DISCONNECT_ERRORS:
+            pass
 
     def _json_cacheable(self, payload: str, max_age: int = 300):
         """Send JSON with caching headers (ETag + Cache-Control), honouring
@@ -722,22 +847,25 @@ class Handler(BaseHTTPRequestHandler):
         data = payload.encode("utf-8")
         etag = '"%s"' % hashlib.sha256(data).hexdigest()[:16]
 
-        if self.headers.get("If-None-Match") == etag:
-            self.send_response(304)
+        try:
+            if self.headers.get("If-None-Match") == etag:
+                self.send_response(304)
+                self.send_header("ETag", etag)
+                self.send_header("Cache-Control", f"public, max-age={max_age}")
+                self._cors_headers()
+                self.end_headers()
+                return
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
             self.send_header("ETag", etag)
             self.send_header("Cache-Control", f"public, max-age={max_age}")
             self._cors_headers()
             self.end_headers()
-            return
-
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(data)))
-        self.send_header("ETag", etag)
-        self.send_header("Cache-Control", f"public, max-age={max_age}")
-        self._cors_headers()
-        self.end_headers()
-        self.wfile.write(data)
+            self.wfile.write(data)
+        except _DISCONNECT_ERRORS:
+            pass
 
     def _cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -751,8 +879,22 @@ class Handler(BaseHTTPRequestHandler):
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+class Server(ThreadingHTTPServer):
+    """Threaded so a slow LLM call (chat/summary) can't block other requests,
+    and so a crash in one request thread never takes the process down."""
+
+    daemon_threads = True
+    allow_reuse_address = True
+
+    def handle_error(self, request, client_address):
+        # A client that hangs up mid-response is normal — don't log a traceback.
+        if isinstance(sys.exc_info()[1], _DISCONNECT_ERRORS):
+            return
+        super().handle_error(request, client_address)
+
+
 def main():
-    server = HTTPServer(("", PORT), Handler)
+    server = Server(("", PORT), Handler)
     print(f"Proof Matrix running at http://localhost:{PORT}")
     print(f"Data directory: {OUT_DIR.resolve()}")
     print(f"Goals file: {GOALS_FILE.resolve()}")
