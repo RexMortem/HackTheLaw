@@ -1,0 +1,38 @@
+# Secrets — never bake into the image (compose passes them via env_file at runtime).
+.env
+.env.*
+!.env.example
+
+# Python cruft
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.venv-viz/
+
+# Manim / media render output (heavy, regenerable)
+media/
+viz/media/
+
+# Pipeline outputs / caches (regenerable; app falls back to case_ui/data snapshot)
+out/
+*.npz
+
+# Large / source data + archives
+dataset/
+*.zip
+converted/
+bundle_md/
+out2_deprecated_pdf_jsonl/
+research/
+
+# VCS / editor / OS
+.git/
+.gitignore
+.vscode/
+.claude/
+.DS_Store
+Thumbs.db
+
+# Docs not needed at runtime
+*.md

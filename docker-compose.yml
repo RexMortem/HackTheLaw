@@ -1,0 +1,21 @@
+services:
+  proof-matrix:
+    build: .
+    image: proof-matrix
+    ports:
+      - "8001:8001"
+    environment:
+      # Bind port inside the container (app.py reads $PORT).
+      PORT: "8001"
+    # Secrets (ANTHROPIC_API_KEY, VOYAGE_API_KEY, PERPLEXITY_API_KEY, NEO4J_*)
+    # are read from .env — copy .env.example to .env and fill it in.
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,os; urllib.request.urlopen('http://localhost:'+os.environ.get('PORT','8001')+'/api/status').read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

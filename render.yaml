@@ -4,7 +4,7 @@
 # then set the ANTHROPIC_API_KEY secret (it is intentionally not stored here).
 services:
   - type: web
-    name: proof-matrix
+    name: proof-matrix-rexmortem
     runtime: python
     plan: free
     # Render injects $PORT; app.py reads it. Binds 0.0.0.0 already.
