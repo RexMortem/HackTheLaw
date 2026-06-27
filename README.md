@@ -5,7 +5,7 @@ Our entry for the CMS Pleading-to-Proof challenge. It takes a litigation bundle
 pleaded allegation and denial, maps each one to the available evidence, and
 labels it **supported**,
 **contested**, **undermined**, or **missing**. The result is a pleading-to-proof
-matrix with a trial-readiness score, an AI case summary, and a built-in
+matrix with an AI case summary, grounding-guard citation checks, and a built-in
 litigation assistant you can chat with.
 
 ---
@@ -22,15 +22,27 @@ python case_ui/app.py
 Then open **http://localhost:8001**.
 
 It works out of the box: a sample proof matrix is bundled with the repo
-(`case_ui/data/matrix.json`), so the matrix, filters, goals, and risk view all
-run with no API key and no pipeline run.
+(`case_ui/data/matrix.json`), so the matrix, filters, goals, case graph, timeline,
+and risk views all run with no API keys and no pipeline run.
 
-To enable the AI case summary and the Second Chair chat assistant, set an
-Anthropic API key first (these features degrade gracefully without one):
+### API keys (all optional)
+
+Richer features call external services. Copy the template and fill in whatever you
+have; every key is optional and each feature degrades gracefully without it:
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...      # PowerShell: $env:ANTHROPIC_API_KEY="..."
+cp .env.example .env      # .env is gitignored; the app and pipeline load it automatically
 ```
+
+| Key | Enables | Without it |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | AI case summary, Second Chair chat, LLM extraction and classification | Heuristic extraction; deterministic, matrix-derived answers |
+| `PERPLEXITY_API_KEY` | Live supporting and contrary authority in argument generation and the stress test | Arguments and stress test still run, without external authority |
+| `VOYAGE_API_KEY` | Legal-tuned embeddings for `build_matrix.py --retriever embeddings` or `hybrid` | BM25 retrieval, the default |
+| `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` | Loading the case graph into Neo4j Aura (`neo4j_load.py`) for graph analytics | The in-app Case Graph still works; analytics are computed locally |
+
+On Windows PowerShell you can also set a key inline for one session:
+`$env:ANTHROPIC_API_KEY="sk-ant-..."`.
 
 ### Regenerate the matrix from the source bundle (optional)
 
@@ -38,10 +50,9 @@ The bundled matrix is pre-computed. To rebuild it from the raw `.docx` bundle,
 run the **preprocessing step first**, then the pipeline:
 
 ```bash
-pip install -r requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...
+pip install -r requirements.txt   # set ANTHROPIC_API_KEY in .env (see API keys above)
 
-# PREPROCESSING — run this BEFORE the app/pipeline. It is NOT part of the app;
+# PREPROCESSING: run this BEFORE the app/pipeline. It is NOT part of the app;
 # it converts the .docx case bundle into LLM-readable Markdown, once.
 python convert_docx.py     # dataset/<bundle>/*.docx -> bundle_md/*.md
 
@@ -68,7 +79,7 @@ LLM results are always preferred, and heuristic fallbacks are never cached, so a
 later run with credits re-extracts those documents with the model.)
 
 > **Preprocessing is a separate, offline step.** `convert_docx.py` is never
-> invoked by the running app — the app only reads the matrix produced downstream.
+> invoked by the running app; it only reads the matrix produced downstream.
 > Re-run it only when the source `.docx` bundle changes.
 
 ---
@@ -90,8 +101,7 @@ is no evidence at all.
 
 On top of that matrix, the web app lets a lawyer state what they care about
 (e.g. "contradictions in the Defence", "allegations with no witness support")
-and instantly filters the case to those points. A header trial-readiness score
-rolls the whole bundle into one number. An AI case summary explains, in plain
+and instantly filters the case to those points. An AI case summary explains, in plain
 English, what the dispute is actually about, grounded by a live web search and by
 relevant EU legal materials, and folds in the proof figures. And "Second Chair",
 an embedded AI associate, answers free-text questions about the case, citing the
@@ -208,9 +218,9 @@ step) serving a single-page vanilla HTML/CSS/JS UI (`case_ui/index.html`).
   a coverage strip ("4 match: 2 supported, 1 undermined, 1 missing"). Matching is
   keyword-based (no LLM call). Goals auto-save (debounced) to
   `case_ui/data/goals.json`.
-- **Trial readiness:** a single header score. `supported` counts 1.0,
-  `contested` 0.5, `undermined` and `missing` 0.0, averaged over all
-  propositions.
+- **Grounding-guard checks:** every citation is verified against the bundle
+  (the source exists and the quoted text matches it) and shown with a checkmark,
+  so a reviewer never opens a citation that does not hold.
 - **Matrix views:** Full Matrix and Risk & Gaps tabs, status filters, free-text
   search, and expandable evidence drawers showing verbatim quotes and citations.
 
@@ -223,12 +233,13 @@ is absent, which is why it runs out of the box and on a deploy host where `out/`
 
 | Method | Path | Description |
 |---|---|---|
-| `GET`  | `/api/matrix`  | Full matrix + summary stats |
+| `GET`  | `/api/matrix`  | Full matrix + summary stats, with a grounding-guard verdict on every citation |
+| `GET`  | `/api/verify`  | Grounding-guard run over the whole matrix (citation existence + quote match) |
 | `GET`  | `/api/graph`   | Case graph (proposition + evidence nodes, support/undermine edges) for the Case Graph view and Neo4j |
 | `GET`  | `/api/summary` | AI case summary (cached; `?refresh=1` to regenerate) |
 | `GET`  | `/api/arguments` | Claude-drafted arguments linked to propositions/evidence, with Perplexity authority (cached; `?refresh=1`) |
 | `GET`  | `/api/stress`  | Case-theory stress-test report across six lenses (`?adversarial=1` adds the LLM red-team) |
-| `GET`  | `/api/quantum` | Preliminary quantum assessment — competing valuation methodologies linked to propositions (cached; `?refresh=1`) |
+| `GET`  | `/api/quantum` | Preliminary quantum assessment: competing valuation methodologies linked to propositions (cached; `?refresh=1`) |
 | `GET`  | `/api/status`  | Health check (data present, goals exist) |
 | `GET`  | `/api/goals`   | Saved goals (`{}` if none) |
 | `POST` | `/api/goals`   | Save goals; body `{"goals": [{id, text}, ...]}` |
@@ -279,26 +290,26 @@ out/matrix.json ─graph_export.py─▶ out/graph.json    (→ /api/graph → C
 - **Model:** `(:Evidence)-[:SUPPORTS|UNDERMINES|NEUTRAL {confidence, rationale,
   quote}]->(:Proposition)`. Proposition nodes carry `status` and a
   `contradicted` flag (evidence cuts both ways); evidence nodes carry `degree`
-  (props touched) and `carries` (props it actually supports/undermines — the
+  (props touched) and `carries` (props it actually supports/undermines, the
   load-bearing signal).
 - **Case Graph view** (UI rail → *Case Graph*): a dependency-free, canvas
-  force-directed render using focus+context — propositions are the prominent
+  force-directed render using focus+context. Propositions are the prominent
   spine and evidence is a faint cloud that lights up when you hover or click a
   proposition (toggle *All evidence* for the full picture). Edges are
   green=supports / red=undermines (neutral toggleable). Drag to pull apart, click
   a proposition to open it in the matrix.
 - **Graph analytics** (computed in pure Python in `graph_export.py`, so they ship
   in `graph.json` with no database; the same metrics are written by Neo4j GDS
-  when you load — see below):
-  - **PageRank** — node priority (drives ranking; not shown prominently).
-  - **Communities / issue clusters** — label-propagation over a graph that also
+  when you load, see below):
+  - **PageRank:** node priority (drives ranking; not shown prominently).
+  - **Communities / issue clusters:** label-propagation over a graph that also
     links propositions sharing a witness, so related allegations group into
     issues. *Colour → Issue cluster* recolours the graph; a side panel lists them.
-  - **Articulation points + single points of failure** — the *Weak points*
+  - **Articulation points + single points of failure:** the *Weak points*
     toggle (and a side panel) surface evidence whose removal fragments the case
-    or that is the *sole* support for a proposition — the Case Collapse view.
-- **Load into Neo4j** (optional, wins the Neo4j tool prize and unlocks graph
-  analytics — centrality, single-points-of-failure, contradiction queries):
+    or that is the *sole* support for a proposition (the Case Collapse view).
+- **Load into Neo4j** (optional; unlocks graph analytics such as centrality,
+  single-points-of-failure, and contradiction queries):
   ```bash
   pip install neo4j
   export NEO4J_URI=neo4j+s://<id>.databases.neo4j.io   # Aura
@@ -316,7 +327,7 @@ standalone script (writes `out/*.json` + a `case_ui/data/` snapshot) and a web
 endpoint, and each degrades gracefully without an API key.
 
 - **Proposition dependencies** (`derive_dependencies.py`): Claude maps the
-  *logical* structure of the case — `A DEPENDS_ON B` when B is a premise of A
+  *logical* structure of the case: `A DEPENDS_ON B` when B is a premise of A
   (duty → breach → causation → loss). `graph_export.py` adds these as
   `DEPENDS_ON` edges (the dashed blue spine in the Case Graph) and runs Tarjan
   **strongly-connected-components** over them to detect **circular reasoning**
@@ -330,17 +341,17 @@ endpoint, and each degrades gracefully without an API key.
   Cellar** adds persuasive **EU authority** (CJEU decisions / directives, with
   CELEX ids) matched to the legal concepts each argument raises.
 - **Stress test** (`stress_test.py` → `/api/stress`, Case Builder): a battery of
-  checks grouped by the challenge's six capability lenses — extraction integrity,
+  checks grouped by the challenge's six capability lenses: extraction integrity,
   evidence classification, source-grounding, contradiction & gap detection,
   prioritised human-review items, and case-theory stress-testing (single points
   of failure, weak premises with dependents, arguments resting on unsupported
   ground, circular reasoning). It also surfaces persuasive **EU Cellar
   authority** that could help fill a gap or undermined proposition. It returns a
   robustness score and severity-ranked findings. `?adversarial=1` adds a
-  **red-team** pass — Claude as opposing counsel attacks each argument and
+  **red-team** pass: Claude as opposing counsel attacks each argument and
   Perplexity finds **contrary** authority.
 - **Quantum assessment** (`quantum_gen.py` → `/api/quantum`, Quantum room):
-  Claude produces a preliminary **damages** triage — 3-5 competing valuation
+  Claude produces a preliminary **damages** triage of 3-5 competing valuation
   methodologies (lost profits, wasted expenditure, diminution in value,
   restitutionary, etc.), each with a headline figure, confidence, risk level and
   recovery likelihood, and **linked to the propositions** that must succeed for
@@ -353,7 +364,7 @@ endpoint, and each degrades gracefully without an API key.
 drag-and-drop propositions into a strategy, add a case-theory note, run the stress
 test inline, and **export a strategy-plan PDF** (selected propositions with
 status and evidence, the relevant arguments with authority, and the stress-test
-findings — printed from a self-contained document via the browser, no server-side
+findings, printed from a self-contained document via the browser, with no server-side
 PDF dependency). The built case persists to `case_ui/data/case.json`.
 
 Pre-generate everything for a no-wait demo (and to snapshot for deploy):
@@ -368,8 +379,8 @@ python stress_test.py             # print the stress report (--adversarial for r
 
 **Perplexity** is reached via `caselib.perplexity_chat` (stdlib `urllib`, no extra
 dependency); set `PERPLEXITY_API_KEY` in `.env`. Without it, arguments still
-generate and the stress test still runs — only the supporting/contrary-authority
-enrichment is skipped.
+generate and the stress test still runs; only the supporting and contrary
+authority enrichment is skipped.
 
 ### Deployment (Render)
 
@@ -377,8 +388,8 @@ enrichment is skipped.
 
 - Build `pip install -r requirements.txt`, start `python case_ui/app.py`.
 - The server reads `$PORT` (Render-injected) and binds all interfaces.
-- `ANTHROPIC_API_KEY` and `VOYAGE_API_KEY` are dashboard secrets (`sync: false`),
-  never committed.
+- `ANTHROPIC_API_KEY`, `PERPLEXITY_API_KEY`, and `VOYAGE_API_KEY` are dashboard
+  secrets (`sync: false`), never committed.
 - Health check at `/api/status`.
 
 Because `out/` is gitignored and absent on the host, the app serves the
@@ -414,7 +425,7 @@ propositions, provenance-checked quotes, the four-bucket matrix).
 fully released, the official data came as a new bundle of `.docx` files,
 different documents and a different format from the PDFs we'd planned against. So
 we had to pivot the ingestion layer: a new preprocessing step, `convert_docx.py`,
-reads the `.docx` bundle into `bundle_md/`, which the pipeline now consumes — and
+reads the `.docx` bundle into `bundle_md/`, which the pipeline now consumes, and
 we kept the extraction, matrix, and UI work we'd already built on top.
 
 As a result, the original PDF path is deprecated. The PDF-to-JSON `.jsonl`
