@@ -569,7 +569,7 @@
     #room-propositions .row-hint {
       font-family: var(--mono);
       font-size: 0.62rem; font-weight: 600; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--slate-2); margin: -0.3rem 0 1.1rem;
+      text-transform: uppercase; color: var(--slate-2); margin: -0.2rem 0 0.7rem;
     }
 
     /* Card: coloured TOP border per status (replaces the left accent) */
@@ -690,7 +690,7 @@
     #room-propositions .room-head .tl-toggle.active { background: #fff; color: var(--ink); border-color: #fff; }
 
     #room-propositions .claims-layout { display: flex; align-items: flex-start; gap: 1.25rem; }
-    #room-propositions .claims-main { flex: 1 1 auto; min-width: 520px; }
+    #room-propositions .claims-main { flex: 1 1 auto; min-width: 0; }
 
     /* Left timeline column — in-flow, expands the layout left (no overlay) */
     #room-propositions .timeline-sidebar {
@@ -742,7 +742,10 @@
     #room-propositions .ep-title { font-size: 0.95rem; font-weight: 700; color: var(--ink); line-height: 1.4; margin-bottom: 0.3rem; }
     #room-propositions .ep-content .prop-source { margin-bottom: 0.2rem; }
 
-    @media (max-width: 1280px) {
+    /* Keep panels side-by-side on desktop; only stack on small/mobile widths
+       where three columns genuinely can't fit. Prevents the panels from
+       "jumping" to the top/bottom when the window is resized. */
+    @media (max-width: 900px) {
       #room-propositions .claims-layout { flex-wrap: wrap; }
       #room-propositions .timeline-sidebar,
       #room-propositions .evidence-panel { position: static; max-height: none; }
@@ -793,8 +796,10 @@
     #room-propositions .room-body {
       max-width: none;
       margin: 0;
-      padding: 1.1rem 2rem 4rem 5.75rem;
+      padding: 0.7rem 2rem 4rem 5.75rem;
     }
+    #room-propositions .tabs { margin-bottom: 1rem; }
+    #room-propositions .filters-bar { margin-bottom: 0.85rem; }
 
     /* Header restyled to the paper / ink / mono aesthetic */
     #room-propositions .room-head {
