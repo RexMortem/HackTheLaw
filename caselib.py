@@ -19,7 +19,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field, asdict
 from typing import Iterable
 
-MODEL = "claude-opus-4-8"
+MODEL = "claude-sonnet-4-6"
 
 
 def load_dotenv(path: str = ".env") -> None:

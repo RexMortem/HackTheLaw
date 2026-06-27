@@ -40,11 +40,14 @@ def extract_text_from_pdf(path, ocr_if_needed=True, dpi=300):
 
     # Fallback: full-file OCR if possible
     if ocr_if_needed and convert_from_path and pytesseract:
-        images = convert_from_path(path, dpi=dpi)
-        for i, img in enumerate(images, start=1):
-            text = pytesseract.image_to_string(img)
-            yield i, text, True
-        return
+        try:
+            images = convert_from_path(path, dpi=dpi)
+            for i, img in enumerate(images, start=1):
+                text = pytesseract.image_to_string(img)
+                yield i, text, True
+            return
+        except Exception:
+            pass
 
     # Last resort: single empty page
     yield 1, "", False

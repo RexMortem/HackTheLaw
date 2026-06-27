@@ -152,7 +152,7 @@ Key design choices, in brief:
 - **Structured outputs** (`output_config.format`) for schema-valid records.
 - **Batch API** (50% cheaper) for per-document extraction, with **prompt
   caching** on the shared instruction prefix.
-- **Model:** `claude-opus-4-8`, adaptive thinking, `effort: high`.
+- **Model:** `claude-sonnet-4-6`, adaptive thinking, `effort: high`.
 
 **Retrieval and scoring knobs**
 
@@ -211,7 +211,7 @@ is absent, which is why it runs out of the box and on a deploy host where `out/`
 1. Pick legal-concept search terms that actually appear in the pleadings.
 2. Query the **EU Publications Office Cellar** SPARQL endpoint (public, no auth)
    for relevant English-language legal materials.
-3. Call Claude (`claude-opus-4-8`, adaptive thinking) with the pleaded
+3. Call Claude (`claude-sonnet-4-6`, adaptive thinking) with the pleaded
    propositions, the proof-matrix figures, and the retrieved EU materials, plus
    the **`web_search` tool** to identify and ground the real-world dispute.
 4. Parse the model's `HEADLINE:` and paragraph format and return it with the
