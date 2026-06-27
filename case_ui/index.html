@@ -603,10 +603,10 @@
     .placeholder-spine .line { width: 60px; height: 2px; background: var(--border); }
 
     /* ---- Case Graph ---- */
-    .graph-room-body { max-width: 1280px; margin: 0 auto; padding: 1.1rem 2rem 2rem; }
+    .graph-room-body { max-width: none; margin: 0; padding: 0.75rem 1rem 1rem; }
     .graph-shell {
-      display: grid; grid-template-columns: 1fr 290px; gap: 1.1rem;
-      height: calc(100vh - 132px); min-height: 460px;
+      display: grid; grid-template-columns: 1fr 290px; gap: 1rem;
+      height: calc(100vh - 104px); min-height: 460px;
     }
     .graph-stage {
       position: relative; background:
@@ -641,6 +641,18 @@
       background: var(--white); border: 1px solid var(--border); border-radius: 999px;
       padding: 0.18rem 0.4rem; outline: none;
     }
+    .graph-zoom {
+      position: absolute; bottom: 0.75rem; right: 0.75rem; z-index: 6;
+      display: flex; flex-direction: column; gap: 0.3rem;
+    }
+    .gz-btn {
+      width: 32px; height: 32px; font-size: 1.05rem; font-weight: 700; line-height: 1;
+      color: var(--navy); background: rgba(255,255,255,.9); backdrop-filter: blur(6px);
+      border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+      box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center;
+      transition: all .15s; user-select: none;
+    }
+    .gz-btn:hover { border-color: var(--navy-3); background: #f0f4ff; }
     .cl-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0; border-top: 1px solid var(--border); cursor: pointer; }
     .cl-item:first-of-type { border-top: none; }
     .cl-item:hover { background: var(--bg); }
@@ -732,6 +744,10 @@
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="9" r="2"/><circle cx="9" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M6.8 6.7 17 8.6M7.3 7.6 8.6 16M10.8 17.3 15.4 17.5M17.6 16.1 18.5 11"/></svg>
     <span class="tip">Case Graph</span>
   </button>
+  <button class="rail-btn" data-room="builder">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 11h7v9h-7zM4 14h7v6H4z"/></svg>
+    <span class="tip">Case Builder</span>
+  </button>
 </nav>
 
 <!-- ============================== ORB =============================== -->
@@ -783,6 +799,12 @@
         <div class="opt-name">Case Graph</div>
         <div class="opt-desc">Pleadings wired to the evidence that proves or breaks them.</div>
         <div class="opt-stat" id="stat-graph"><span class="muted">loading…</span></div>
+      </button>
+      <button class="opt-card" data-room="builder">
+        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 11h7v9h-7zM4 14h7v6H4z"/></svg></span>
+        <div class="opt-name">Case Builder</div>
+        <div class="opt-desc">Drag propositions into a strategy, stress-test it, export the plan.</div>
+        <div class="opt-stat" id="stat-builder"><span class="muted">build &amp; stress-test</span></div>
       </button>
     </div>
     </div><!-- /.hero-intro -->
@@ -929,6 +951,20 @@
         <div id="arg-defendant"></div>
       </div>
     </div>
+
+    <section class="args-section" id="args-section">
+      <div class="args-head">
+        <div>
+          <div class="case-summary-label">AI-drafted arguments</div>
+          <h2 class="args-title">The arguments each side can run — linked to the evidence</h2>
+        </div>
+        <button class="gc-btn" id="args-refresh" title="Regenerate with Claude + Perplexity">↻ Regenerate</button>
+      </div>
+      <p class="arg-intro">Each argument is drafted by Claude from the proof matrix and shows the
+        propositions it <strong>relies on</strong> and the <strong>evidence</strong> that carries it —
+        click a chip to open it. Supporting <strong>authority</strong> is found live via Perplexity.</p>
+      <div id="args-list"><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div></div>
+    </section>
   </div>
 </section>
 
@@ -954,8 +990,13 @@
           <label class="gc-toggle"><input type="checkbox" id="g-labels" checked> Labels</label>
           <button class="gc-btn" id="g-reset">Re-layout</button>
         </div>
-        <div class="graph-hint">Drag nodes · hover for detail · click a proposition to open it</div>
+        <div class="graph-hint">Drag nodes · drag canvas to pan · scroll / pinch to zoom · click a proposition to open it</div>
         <canvas id="graph-canvas"></canvas>
+        <div class="graph-zoom">
+          <button class="gz-btn" id="g-zoom-in" title="Zoom in" aria-label="Zoom in">+</button>
+          <button class="gz-btn" id="g-zoom-out" title="Zoom out" aria-label="Zoom out">&minus;</button>
+          <button class="gz-btn" id="g-zoom-reset" title="Reset view" aria-label="Reset view">⤢</button>
+        </div>
         <div class="graph-legend" id="graph-legend">
           <span class="legend-item"><span class="legend-dot" style="background:var(--supported)"></span>Supported</span>
           <span class="legend-item"><span class="legend-dot" style="background:var(--contested)"></span>Contested</span>
@@ -964,6 +1005,7 @@
           <span class="legend-item"><span class="legend-dot" style="background:#cbd5e1;border:1px solid #94a3b8"></span>Evidence</span>
           <span class="legend-item"><span class="legend-line" style="background:var(--supported)"></span>supports</span>
           <span class="legend-item"><span class="legend-line" style="background:var(--undermined)"></span>undermines</span>
+          <span class="legend-item"><span class="legend-line" style="background:#2563eb;border-top:1px dashed #2563eb"></span>depends on</span>
           <span class="legend-item" id="legend-weak" style="display:none"><span class="legend-dot" style="background:transparent;border:2px dashed #b91c1c"></span>weak point</span>
         </div>
         <div class="graph-tooltip" id="graph-tooltip"></div>
@@ -986,6 +1028,52 @@
           <div id="g-clusters"><p class="gp-detail-empty">Switch “Colour” to <em>Issue cluster</em> to group propositions that share witnesses.</p></div>
         </div>
       </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= ROOM: BUILDER ========================= -->
+<section id="room-builder" class="view room">
+  <div class="room-head">
+    <div><h1>Case Builder</h1><div class="sub">Assemble a strategy, stress-test it, export the plan</div></div>
+    <div class="spacer"></div>
+    <div class="readiness-mini"><span class="lbl" style="color:var(--slate-2);font-size:.8rem">Robustness</span>
+      <span class="score" id="builder-score">—</span></div>
+    <button class="gc-btn" id="builder-stress" style="color:#fff;background:var(--navy-3);border-color:var(--navy-3)">Run stress test</button>
+    <button class="gc-btn" id="builder-export">⬇ Export plan (PDF)</button>
+  </div>
+  <div class="room-body">
+    <div class="builder-grid">
+      <!-- palette -->
+      <div class="builder-pane">
+        <div class="builder-pane-head">
+          <h3>Propositions</h3>
+          <input type="text" id="builder-search" class="search-input" placeholder="Search…" style="max-width:140px;padding-left:.6rem">
+        </div>
+        <p class="builder-hint">Drag a proposition into your strategy →</p>
+        <div class="palette-list" id="palette-list"></div>
+      </div>
+
+      <!-- case board -->
+      <div class="builder-pane builder-board" id="case-dropzone">
+        <div class="builder-pane-head">
+          <h3>Your strategy</h3>
+          <span class="result-count" id="case-count">0 selected</span>
+        </div>
+        <input type="text" id="case-title" class="case-title-input" placeholder="Strategy title (e.g. Claimants' case on Horizon reliability)">
+        <textarea id="case-theory" class="case-theory-input" placeholder="Case theory / strategy notes — the story you'll tell the court…"></textarea>
+        <div class="dropzone-hint" id="dropzone-hint">Drop propositions here to build your case.</div>
+        <div class="case-items" id="case-items"></div>
+      </div>
+
+      <!-- stress panel -->
+      <div class="builder-pane">
+        <div class="builder-pane-head"><h3>Stress test</h3>
+          <label class="gc-toggle" style="font-size:.72rem"><input type="checkbox" id="stress-adversarial"> Red-team</label>
+        </div>
+        <p class="builder-hint">Probes the case theory across six lenses. <strong>Red-team</strong> adds Claude opposing counsel + Perplexity contrary authority.</p>
+        <div id="stress-panel"><p class="gp-detail-empty">Run the stress test to surface gaps, contradictions and single points of failure.</p></div>
+      </div>
     </div>
   </div>
 </section>
@@ -1294,14 +1382,31 @@
   }
 
   // ------------------------------------------------------------------ matrix load
+  // ---- client-side cache (localStorage), best-effort ----
+  const LS_MATRIX = "pm:matrix:v1";
+  function lsGet(key) {
+    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : null; }
+    catch (_) { return null; }
+  }
+  function lsSet(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) { /* quota/unavailable */ }
+  }
+
   async function loadMatrix() {
+    // Stale-while-revalidate: paint instantly from the cached matrix, then
+    // fetch fresh and update. Also keeps the UI usable if the server is down.
+    const cached = lsGet(LS_MATRIX);
+    if (cached && cached.ok && !_matrixLoaded) {
+      try { applyData(cached); } catch (_) { /* fall through to network */ }
+    }
     try {
       const resp = await fetch("api/matrix");
       const data = await resp.json();
-      if (!data.ok) { showError(data.error || "Unknown error."); return; }
+      if (!data.ok) { if (!cached) showError(data.error || "Unknown error."); return; }
+      lsSet(LS_MATRIX, data);
       applyData(data);
     } catch (e) {
-      showError("Could not reach the server. Is case_ui/app.py running on port 8001?");
+      if (!cached) showError("Could not reach the server. Is case_ui/app.py running on port 8001?");
     }
   }
 
@@ -1597,7 +1702,7 @@
   // A dependency-free force-directed view of the same graph we load into Neo4j:
   // proposition nodes wired to the evidence that supports / undermines them.
   const STATUS_COLOR = { supported: "#16a34a", contested: "#d97706", undermined: "#dc2626", MISSING: "#6b7280" };
-  const REL_COLOR = { SUPPORTS: "#16a34a", UNDERMINES: "#dc2626", NEUTRAL: "#cbd5e1" };
+  const REL_COLOR = { SUPPORTS: "#16a34a", UNDERMINES: "#dc2626", NEUTRAL: "#cbd5e1", DEPENDS_ON: "#2563eb" };
   // Distinct hues for the top issue clusters; the long tail of singletons greys out.
   const CLUSTER_PALETTE = ["#2563eb", "#16a34a", "#d97706", "#9333ea", "#0891b2", "#db2777", "#65a30d", "#e11d48"];
   function clusterColor(c) { return (c == null || c < 0) ? "#cbd5e1" : (c < CLUSTER_PALETTE.length ? CLUSTER_PALETTE[c] : "#94a3b8"); }
@@ -1624,6 +1729,7 @@
       showNeutral: false, showLabels: true, colourMode: "status", showWeak: false, showEvidence: false,
       alpha: 0, raf: 0, drag: null, downAt: null, moved: false,
       hover: null, selected: null,
+      scale: 1, tx: 0, ty: 0, panning: null, pinch: null,   // view transform (screen = world*scale + t)
     };
     $("g-count-prop").textContent = G.stats.propositions || 0;
     $("g-count-ev").textContent = G.stats.evidence || 0;
@@ -1697,7 +1803,7 @@
 
   function step() {
     const n = G.nodes, cx = G.W / 2, cy = G.H / 2, a = G.alpha;
-    const REPULSION = 1400, GRAVITY = 0.018, DAMP = 0.86;
+    const REPULSION = 2300, GRAVITY = 0.015, DAMP = 0.86, SEP_PAD = 14;
     for (let i = 0; i < n.length; i++) {
       const p = n[i];
       for (let j = i + 1; j < n.length; j++) {
@@ -1710,7 +1816,7 @@
       }
     }
     G.links.forEach(l => {
-      const rest = l.s.kind === "proposition" && l.t.kind === "proposition" ? 120 : 64;
+      const rest = l.s.kind === "proposition" && l.t.kind === "proposition" ? 150 : 78;
       let dx = l.t.x - l.s.x, dy = l.t.y - l.s.y;
       const d = Math.sqrt(dx * dx + dy * dy) || 0.01;
       const f = (d - rest) * 0.045 * a;
@@ -1726,6 +1832,23 @@
       p.x = Math.max(m, Math.min(G.W - m, p.x));
       p.y = Math.max(m, Math.min(G.H - m, p.y));
     });
+    // Hard minimum-separation pass: keep node disks from overlapping, even at
+    // rest (position-based, so it holds after the simulation cools).
+    for (let i = 0; i < n.length; i++) {
+      const p = n[i];
+      for (let j = i + 1; j < n.length; j++) {
+        const q = n[j];
+        let dx = q.x - p.x, dy = q.y - p.y;
+        let d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        const min = p.r + q.r + SEP_PAD;
+        if (d < min) {
+          const push = (min - d) / d * 0.5;
+          const ox = dx * push, oy = dy * push;
+          if (p.fx == null) { p.x -= ox; p.y -= oy; }
+          if (q.fx == null) { q.x += ox; q.y += oy; }
+        }
+      }
+    }
   }
 
   function nodeFill(node) {
@@ -1734,6 +1857,19 @@
     return node.undermines > node.supports ? "#fca5a5" : "#cbd5e1";
   }
   function isWeak(node) { return node.articulation || (node.spof_props && node.spof_props.length); }
+
+  function drawArrow(ctx, s, t) {
+    const dx = t.x - s.x, dy = t.y - s.y, d = Math.hypot(dx, dy) || 1;
+    const ux = dx / d, uy = dy / d;
+    const ex = t.x - ux * (t.r + 2), ey = t.y - uy * (t.r + 2);
+    ctx.beginPath(); ctx.moveTo(s.x + ux * (s.r + 1), s.y + uy * (s.r + 1)); ctx.lineTo(ex, ey); ctx.stroke();
+    const ah = 5;                                   // solid arrowhead (fill ignores dash)
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(ex - ux * ah - uy * ah * 0.55, ey - uy * ah + ux * ah * 0.55);
+    ctx.lineTo(ex - ux * ah + uy * ah * 0.55, ey - uy * ah - ux * ah * 0.55);
+    ctx.closePath(); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+  }
 
   // Focus+context: propositions are always prominent; evidence is a faint cloud
   // that only lights up when a proposition (or the evidence itself) is engaged.
@@ -1748,11 +1884,28 @@
 
   function draw() {
     const ctx = G.ctx; if (!ctx) return;
+    // Clear in device space, then draw everything through the pan/zoom transform.
+    ctx.setTransform(G.dpr, 0, 0, G.dpr, 0, 0);
     ctx.clearRect(0, 0, G.W, G.H);
+    ctx.setTransform(G.dpr * G.scale, 0, 0, G.dpr * G.scale, G.dpr * G.tx, G.dpr * G.ty);
     const focus = G.hover || G.selected;
     const lit = focus ? G.adj[focus] : null;
 
+    // DEPENDS_ON (proposition -> premise): the logical spine, drawn dashed blue.
+    if (!G.showWeak) {
+      ctx.setLineDash([4, 3]); ctx.strokeStyle = REL_COLOR.DEPENDS_ON;
+      G.links.forEach(l => {
+        if (l.rel !== "DEPENDS_ON") return;
+        const engaged = focus && lit.has(l.s.id) && lit.has(l.t.id);
+        ctx.globalAlpha = engaged ? 0.85 : (focus ? 0.08 : 0.4);
+        ctx.lineWidth = engaged ? 2 : 1.3;
+        drawArrow(ctx, l.s, l.t);
+      });
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+    }
+
     G.links.forEach(l => {
+      if (l.rel === "DEPENDS_ON") return;     // drawn above
       const a = Math.min(alphaFor(l.s, focus, lit), alphaFor(l.t, focus, lit));
       const engaged = focus ? (lit.has(l.s.id) && lit.has(l.t.id)) : false;
       ctx.globalAlpha = engaged ? (0.3 + l.conf * 0.5) : a * (G.showEvidence || focus ? 0.5 : 0.25);
@@ -1829,8 +1982,31 @@
 
   function evtPos(e) {
     const r = G.canvas.getBoundingClientRect();
-    const t = e.touches ? e.touches[0] : e;
+    const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
     return { x: t.clientX - r.left, y: t.clientY - r.top };
+  }
+
+  // ---- pan / zoom view transform ----
+  const Z_MIN = 0.2, Z_MAX = 6;
+  function clampZoom(s) { return Math.max(Z_MIN, Math.min(Z_MAX, s)); }
+  // Screen px -> world (graph) coords, the inverse of the draw() transform.
+  function toWorld(p) { return { x: (p.x - G.tx) / G.scale, y: (p.y - G.ty) / G.scale }; }
+  // Zoom by `factor`, keeping the world point under screen (sx, sy) anchored.
+  function zoomAt(sx, sy, factor) {
+    const ns = clampZoom(G.scale * factor);
+    if (ns === G.scale) return;
+    G.tx = sx - (sx - G.tx) * (ns / G.scale);
+    G.ty = sy - (sy - G.ty) * (ns / G.scale);
+    G.scale = ns;
+    draw();
+  }
+  function resetView() { G.scale = 1; G.tx = 0; G.ty = 0; draw(); }
+  function pinchInfo(e) {
+    const r = G.canvas.getBoundingClientRect();
+    const a = e.touches[0], b = e.touches[1];
+    const ax = a.clientX - r.left, ay = a.clientY - r.top;
+    const bx = b.clientX - r.left, by = b.clientY - r.top;
+    return { dist: Math.hypot(bx - ax, by - ay) || 1, cx: (ax + bx) / 2, cy: (ay + by) / 2 };
   }
 
   function wireGraphControls() {
@@ -1844,35 +2020,85 @@
       $("legend-weak").style.display = G.showWeak ? "inline-flex" : "none";
       draw();
     });
-    $("g-reset").addEventListener("click", () => { G.nodes.forEach(n => { n.x = n.y = null; }); seedLayout(); reheat(1); });
+    // Re-layout also resets the view so the fresh layout is centred & framed.
+    $("g-reset").addEventListener("click", () => { G.nodes.forEach(n => { n.x = n.y = null; }); resetView(); seedLayout(); reheat(1); });
+    $("g-zoom-in").addEventListener("click", () => zoomAt(G.W / 2, G.H / 2, 1.25));
+    $("g-zoom-out").addEventListener("click", () => zoomAt(G.W / 2, G.H / 2, 0.8));
+    $("g-zoom-reset").addEventListener("click", resetView);
 
-    canvas.addEventListener("mousedown", e => {
-      const p = evtPos(e); const n = nodeAt(p.x, p.y);
+    // --- press: grab a node, or start panning the canvas ---
+    function onDown(e) {
+      const p = evtPos(e); const w = toWorld(p); const n = nodeAt(w.x, w.y);
       G.downAt = p; G.moved = false;
       if (n) { G.drag = n; n.fx = n.x; n.fy = n.y; reheat(0.3); }
-    });
-    window.addEventListener("mousemove", e => {
+      else { G.panning = { x: p.x, y: p.y, tx: G.tx, ty: G.ty }; canvas.style.cursor = "grabbing"; }
+    }
+    // --- move: drag a node, pan, or hover ---
+    function onMove(e) {
       if (!G) return;
       const p = evtPos(e);
       if (G.drag) {
         if (Math.hypot(p.x - G.downAt.x, p.y - G.downAt.y) > 3) G.moved = true;
-        G.drag.fx = Math.max(0, Math.min(G.W, p.x)); G.drag.fy = Math.max(0, Math.min(G.H, p.y));
+        const w = toWorld(p);
+        G.drag.fx = Math.max(0, Math.min(G.W, w.x)); G.drag.fy = Math.max(0, Math.min(G.H, w.y));
         reheat(0.3); return;
       }
+      if (G.panning) {
+        if (Math.hypot(p.x - G.downAt.x, p.y - G.downAt.y) > 3) G.moved = true;
+        G.tx = G.panning.tx + (p.x - G.panning.x);
+        G.ty = G.panning.ty + (p.y - G.panning.y);
+        draw(); return;
+      }
       if (_currentView !== "graph") return;
-      const n = nodeAt(p.x, p.y);
+      const w = toWorld(p);
+      const n = nodeAt(w.x, w.y);
       canvas.style.cursor = n ? "pointer" : "grab";
       if (n !== G.hoverNode) { G.hoverNode = n; G.hover = n ? n.id : null; draw(); }
-      if (n) { showTip(n, e); } else { tip.classList.remove("show"); }
-    });
-    window.addEventListener("mouseup", e => {
-      if (!G || !G.drag) return;
+      if (n) { showTip(n); } else { tip.classList.remove("show"); }
+    }
+    // --- release: finish a pan, or treat a no-move press as a click ---
+    function onUp() {
+      if (!G) return;
+      if (G.panning) { G.panning = null; canvas.style.cursor = "grab"; return; }
+      if (!G.drag) return;
       const n = G.drag; G.drag = null; n.fx = n.fy = null;
-      if (!G.moved) selectNode(n.id);   // a click, not a drag
+      if (!G.moved) selectNode(n.id);
+    }
+
+    canvas.addEventListener("mousedown", e => { e.preventDefault(); onDown(e); });
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+
+    // wheel / trackpad zoom, anchored at the cursor
+    canvas.addEventListener("wheel", e => {
+      e.preventDefault();
+      zoomAt(evtPos(e).x, evtPos(e).y, Math.exp(-e.deltaY * 0.0015));
+    }, { passive: false });
+
+    // touch: one finger drags/pans, two fingers pinch-zoom (and pan together)
+    canvas.addEventListener("touchstart", e => {
+      if (e.touches.length === 2) { G.drag = null; G.panning = null; G.pinch = pinchInfo(e); }
+      else if (e.touches.length === 1) { onDown(e); }
+      e.preventDefault();
+    }, { passive: false });
+    canvas.addEventListener("touchmove", e => {
+      if (!G) return;
+      if (e.touches.length === 2 && G.pinch) {
+        const ps = pinchInfo(e);
+        zoomAt(ps.cx, ps.cy, ps.dist / G.pinch.dist);
+        G.tx += ps.cx - G.pinch.cx; G.ty += ps.cy - G.pinch.cy; draw();
+        G.pinch = ps;
+      } else { onMove(e); }
+      e.preventDefault();
+    }, { passive: false });
+    canvas.addEventListener("touchend", e => {
+      if (!G) return;
+      if (e.touches.length < 2) G.pinch = null;
+      if (e.touches.length === 0) onUp();
     });
   }
 
-  function showTip(n, e) {
+  function showTip(n) {
     const tip = $("graph-tooltip");
     const stage = $("graph-stage"); const r = stage.getBoundingClientRect();
     let html;
@@ -1890,8 +2116,9 @@
     }
     tip.innerHTML = html;
     tip.classList.add("show");
-    const tx = Math.min(n.x + 16, r.width - tip.offsetWidth - 8);
-    const ty = Math.min(n.y + 14, r.height - tip.offsetHeight - 8);
+    const sx = n.x * G.scale + G.tx, sy = n.y * G.scale + G.ty;   // world -> screen
+    const tx = Math.min(sx + 16, r.width - tip.offsetWidth - 8);
+    const ty = Math.min(sy + 14, r.height - tip.offsetHeight - 8);
     tip.style.left = Math.max(8, tx) + "px"; tip.style.top = Math.max(8, ty) + "px";
   }
 
@@ -1910,6 +2137,9 @@
         + '<div class="tt-meta" style="color:var(--slate);font-size:.76rem">' + (n.party || "—") + ' · ' + n.type
         + ' · ' + n.supports + ' supporting / ' + n.undermines + ' adverse'
         + (n.sole_witness ? ' · sole witness: ' + esc(n.sole_witness) : '') + '</div>'
+        + ((n.depends_on && n.depends_on.length)
+            ? '<div class="tt-meta" style="color:#2563eb;font-size:.74rem;margin-top:.3rem">depends on ' + n.depends_on.join(", ") + '</div>' : '')
+        + (n.in_cycle ? '<div class="tt-meta" style="color:var(--undermined);font-weight:700;font-size:.74rem">⚠ part of a circular-reasoning loop</div>' : '')
         + weak
         + '<div class="d-open" data-open="' + n.id + '">Open in matrix →</div></div>';
       box.querySelector(".d-open").addEventListener("click", () => openProposition(n.id));

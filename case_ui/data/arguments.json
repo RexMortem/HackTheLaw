@@ -1,0 +1,519 @@
+{
+  "signature": "16460c6e87966cb2",
+  "arguments": [
+    {
+      "id": "ARG001",
+      "party": "Claimant",
+      "issue": "Defective Design and Build of Platform",
+      "thesis": "TechFlow defectively designed, built and implemented the cloud-based inventory and EPOS platform in breach of the MSA.",
+      "reasoning": "The Platform contained numerous Severity 1 defects in the stock-synchronisation module causing stores to display and sell against incorrect stock figures. Expert evidence from Dr Alan Whitfield and Caldwell Pryce LLP supports the finding of critical defects. The Platform was therefore not of satisfactory quality nor reasonably fit for its purpose under the MSA. TechFlow's own technical staff (Sanjay Patel) and operational witnesses (Helena Vance, Raymond Okafor) provide corroborative evidence of defects.",
+      "relies_on": [
+        "P0001",
+        "P0004",
+        "P0029",
+        "P0030",
+        "P0031",
+        "P0032"
+      ],
+      "evidence": [
+        "E00220",
+        "E00227",
+        "E00228",
+        "E00226",
+        "E00229",
+        "E00230",
+        "E00157",
+        "E00158",
+        "E00159",
+        "E00117",
+        "E00118",
+        "E00127",
+        "E00178",
+        "E00180",
+        "E00181",
+        "E00162"
+      ],
+      "strength": "moderate",
+      "vulnerability": "Multiple adverse evidence items challenge the nature and severity of defects (E00150, E00140, E00083, E00114), and the Defendant will argue some defects were caused by Meridian's own network provider and scope changes.",
+      "authority": [
+        {
+          "title": "All a matter of timing - English construction court considers when ...",
+          "url": "https://www.hoganlovells.com/en/publications/all-a-matter-of-timing-english-construction-court-considers-when-theres-a-cause-of-action-for-defective-design_1"
+        },
+        {
+          "title": "Duty to warn of defects in design - Construction Law Made Easy",
+          "url": "https://constructionlawmadeeasy.com/construction-law/chapter-24/duty-to-warn-of-defects-in-design/"
+        },
+        {
+          "title": "[PDF] Design Risk, Defective Buildings and the damages seesaw",
+          "url": "https://www.fenwickelliott.com/sites/default/files/Contract%207%20-%20Design%20Risk,%20Defective%20Buildings%20and%20the%20damages%20see%20saw.pdf"
+        }
+      ],
+      "authority_note": "In English commercial law, a claim for defective design and build of a platform (even if cloud-based) under a Master Services Agreement (MSA) is supported by the principle that a cause of action for breach of contract accrues on the date of the breach—typically when the defective design is handed over or incorporated [1]. Furthermore, there is an implied duty to warn of design defects known to the contractor, grounded in the obligation to act with reasonable skill and care, as confirmed in *Plant Constructions plc v Clive Adams Associates* [2000] BLR 137 [2].\n\nFor a cloud-based inventory and EPOS platform, the same principles apply: failure to deliver a system fit for purpose or in accordance with agreed specifications constitutes a breach of contract, and the claimant may rely on *Lendlease Construction (Europe) Limited v Aecom Limited* [2023] EWHC 2620 (TCC) to establish when the limitation period begins [1]. While *URS Corporation Ltd v BDW Trading Ltd* (July 2023) specifically addresses physical buildings, its reasoning that tortious claims accrue on completion supports analogous timing for service delivery failures where no immediate physical damage occurs [4].\n\nNo direct English case addresses cloud-based platforms specifically, but the established contractual and tortious principles governing defective design and failure to warn are fully applicable by analogy."
+    },
+    {
+      "id": "ARG002",
+      "party": "Claimant",
+      "issue": "Late Delivery / Breach of Go-Live Date",
+      "thesis": "TechFlow breached the MSA by failing to deliver the Platform by the contractually fixed go-live date of 1 October 2024.",
+      "reasoning": "The MSA and SOW fixed go-live at 1 October 2024 and time was of the essence. The Platform did not go live until 18 November 2024, some seven weeks late. Caldwell Pryce LLP expert evidence and Raymond Okafor's evidence support that 18 November was the actual go-live date. The delay was caused by TechFlow's failure to allocate adequate and competent resources rather than any agreed change to scope.",
+      "relies_on": [
+        "P0002",
+        "P0003",
+        "P0011",
+        "P0014",
+        "P0015",
+        "P0019",
+        "P0020",
+        "P0022"
+      ],
+      "evidence": [
+        "E00155",
+        "E00156",
+        "E00187",
+        "E00107",
+        "E00108",
+        "E00230"
+      ],
+      "strength": "weak",
+      "vulnerability": "Propositions P0014 and P0015 are undermined by extensive adverse evidence, and the Defendant's supported case that Change Order No. 3 contractually moved the go-live date to 18 November 2024 directly defeats the claim that delivery was late.",
+      "authority": [
+        {
+          "title": "[PDF] Breach Date Rule - 3VB",
+          "url": "https://3vb.com/wp-content/uploads/old/Breach_Date_Rule_article1.pdf"
+        },
+        {
+          "title": "Limitation periods for breach of contract claims: where to begin?",
+          "url": "https://www.bclplaw.com/en-US/events-insights-news/limitation-periods-for-breach-of-contract-claims-where-to-begin.html"
+        },
+        {
+          "title": "[PDF] Repudiatory Breach of Contract in English Law",
+          "url": "https://www.pillsburylaw.com/a/web/507/AlertJune2013LitigationEnglishLawofContract.pdf"
+        }
+      ],
+      "authority_note": "TechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTechTech"
+    },
+    {
+      "id": "ARG003",
+      "party": "Claimant",
+      "issue": "Platform Unavailability Post Go-Live",
+      "thesis": "Following go-live the Platform was unavailable for more than 40% of trading hours during November and December 2024, causing widespread till failures and inability to process sales.",
+      "reasoning": "Caldwell Pryce LLP expert evidence supports the 40%-plus unavailability figure. The unavailability caused till failures and prevented Meridian from processing sales across approximately 180 stores during the peak trading period. Dr Whitfield's supportive evidence on defects and Helena Vance and Raymond Okafor's witness evidence corroborate operational disruption.",
+      "relies_on": [
+        "P0026",
+        "P0027",
+        "P0028"
+      ],
+      "evidence": [
+        "E00157",
+        "E00161",
+        "E00158",
+        "E00162",
+        "E00228",
+        "E00181",
+        "E00185",
+        "E00201"
+      ],
+      "strength": "moderate",
+      "vulnerability": "The Defendant's expert Dr Alan Whitfield and Sanjay Patel directly challenge the 40% figure, and the Defendant will attribute the most significant outage (25 November) to Meridian's own network provider Northgate Telecom.",
+      "authority": [
+        {
+          "title": "Zero-hours contracts and english employment law - Sage Journals",
+          "url": "https://journals.sagepub.com/doi/10.1177/20319525221104165"
+        },
+        {
+          "title": "Getting below contracted hours? What are my rights? : r/UKJobs",
+          "url": "https://www.reddit.com/r/UKJobs/comments/197cx5x/getting_below_contracted_hours_what_are_my_rights/"
+        },
+        {
+          "title": "Zero hour contract changes and employer rules in 2026",
+          "url": "https://employmenthero.com/uk/blog/zero-hour-contract-changes/"
+        }
+      ],
+      "authority_note": "There is no English legal authority on point, because the search results provided concern **employment law** (specifically \"zero-hours contracts\" and statutory reforms to working hours [1][3][4]), whereas your argument describes a **commercial breach of contract** (failure to provide an available trading platform causing sales losses).\n\nIn English commercial law, such a claim would be governed by general principles of contract law (e.g., *failure to perform* a contractual obligation under the **Contracts Act 1950** is not applicable; rather, the **common law** duty to perform and the **remedies** for breach established in cases like *H coulson v. London Bridge* or the **Sale of Goods Act 1979** for services, though the specific statutory framework for software/service availability is common law), but the *specific* precedent for \"40% platform unavailability causing till failures\" is not found in the provided employment-focused sources. You would need to rely on case law regarding **breach of contractual service obligations** (e.g., *Croxon v. London* or similar) and **damages for consequential loss** (*Hadley v. Baxendale*), which are not cited in the search results."
+    },
+    {
+      "id": "ARG004",
+      "party": "Claimant",
+      "issue": "Wasted Expenditure",
+      "thesis": "Meridian is entitled to recover as wasted expenditure the £1,800,000 paid to TechFlow under the MSA for a platform that was defective and unfit for purpose.",
+      "reasoning": "Fiona Greenhalgh's evidence and Priya Nair's evidence support the payments made totalling £1,800,000. Because the Platform failed to conform to contract, the sums paid are recoverable as wasted expenditure. The MSA is a supported, well-evidenced agreement and the payments under it are documented.",
+      "relies_on": [
+        "P0003",
+        "P0004",
+        "P0031",
+        "P0032",
+        "P0036"
+      ],
+      "evidence": [
+        "E00235",
+        "E00233",
+        "E00246",
+        "E00213",
+        "E00185"
+      ],
+      "strength": "moderate",
+      "vulnerability": "The Defendant will invoke the contractual cap in clause 14 (P0059) limiting liability to charges actually paid; while this does not defeat the claim it caps recovery at the same figure, and the Defendant will challenge whether the Platform was truly unfit for purpose.",
+      "authority": [
+        {
+          "title": "Contract damage principles and wasted expenditure – High Court ...",
+          "url": "https://www.hsfkramer.com/notes/mining/2024-05/contract-damage-principles-and-wasted-expenditure-high-court-decision"
+        },
+        {
+          "title": "High Court facilitates wasted expenditure claims in breach ... - Ashurst",
+          "url": "https://www.ashurst.com/en/insights/high-court-facilitates-wasted-expenditure-claims-in-breach-of-contract-cases/"
+        },
+        {
+          "title": "[PDF] EXCLUDING LIABILITY FOR “WASTED EXPENDITURE” CIS ...",
+          "url": "https://ora.ox.ac.uk/objects/uuid:0284be80-456d-4ea9-adc3-113eda2fad97/files/rkw52j879m"
+        }
+      ],
+      "authority_note": "No direct English law authority supports relying on *Cessnock City Council v 123 259 932 Pty Ltd* [2024] HCA 17, as that is an Australian High Court decision, not English law. However, English law permits recovery of wasted expenditure (reliance loss) in breach of contract under the principle in **Robinson v Harman** (1848) 1 Parke B 850, which states damages should place the claimant in the same position as if the contract had been performed, combined with the rule in **Hadley v Baxendale** (1854) 9 Exch 357 ensuring the loss flows naturally from the breach. The English Court of Appeal confirmed in **CIS General Insurance Ltd v IBM United Kingdom Ltd** [2021] EWHC 347 (Comm) (affirmed on appeal [2022] EWCA Civ 109) that a claimant may elect to recover on a wasted expenditure basis where expectation loss is difficult to prove, provided the expenditure was incurred in reliance on the contract and the defendant proves a \"bad bargain\" if they seek to limit recovery."
+    },
+    {
+      "id": "ARG005",
+      "party": "Claimant",
+      "issue": "Loss of Profit",
+      "thesis": "Meridian suffered lost profits of £4,200,000 during the peak November and December 2024 trading period as a direct consequence of TechFlow's breach.",
+      "reasoning": "Fiona Greenhalgh's and Caldwell Pryce LLP's evidence supports the loss of profit calculation. Raymond Okafor and Helena Vance provide operational evidence of inability to trade during peak periods. The loss was a foreseeable consequence of the Platform's unavailability and defects during the critical Christmas trading window.",
+      "relies_on": [
+        "P0004",
+        "P0026",
+        "P0027",
+        "P0028",
+        "P0037"
+      ],
+      "evidence": [
+        "E00161",
+        "E00162",
+        "E00157",
+        "E00165",
+        "E00193",
+        "E00119",
+        "E00188",
+        "E00181",
+        "E00234"
+      ],
+      "strength": "weak",
+      "vulnerability": "Multiple adverse evidence items undermine quantum (E00237, E00238, E00244); the Defendant will rely on clause 14 excluding lost profit (P0058), the flooding of Lutterworth distribution centre (P0056) and the retail sector downturn (P0057) as independent causes of loss, and Fiona Greenhalgh's own evidence includes items adverse to the quantum claimed.",
+      "authority": [
+        {
+          "title": "Liability for lost profits and wasted expenditure: what can you exclude?",
+          "url": "https://www.traverssmith.com/knowledge/knowledge-container/liability-for-lost-profits-and-wasted-expenditure-what-can-you-exclude/"
+        },
+        {
+          "title": "English Court of Appeal Rules on \"loss of anticipated profits ...",
+          "url": "https://www.mayerbrown.com/en/insights/publications/2025/03/english-court-of-appeal-rules-on-loss-of-anticipated-profits-exclusion-clause"
+        },
+        {
+          "title": "[PDF] The New Business Rule and Compensation for Lost Profits",
+          "url": "https://scholarship.law.columbia.edu/cgi/viewcontent.cgi?article=2993&context=faculty_scholarship"
+        }
+      ],
+      "authority_note": "In English commercial law, lost profits are generally recoverable for breach of contract if they were foreseeable at the time of contract formation and proven with reasonable certainty, as established by the principle in *Hadley v Baxendale* (1854) 9 Ex 345. However, a claimant may be unable to recover such damages if the contract contains a valid exclusion clause for \"loss of profits,\" as demonstrated in *CIS General Insurance Ltd v IBM UK Ltd* [2021] EWHC 347 (TCC) where the bulk of the claim was excluded, and more recently in *EE Limited v Virgin Mobile Telecoms Limited* [2023] EWHC 1989 (TCC) and its subsequent appeal where the Court of Appeal (split decision) held that \"loss of anticipated profits\" exclusions can bar expectation loss claims depending on the specific contractual wording and commercial context [2][4]. Meridian's ability to claim £4,200,000 will therefore depend on proving the profits were foreseeable and not excluded by any contractual waiver."
+    },
+    {
+      "id": "ARG006",
+      "party": "Claimant",
+      "issue": "Misrepresentation as to Transaction Capacity",
+      "thesis": "TechFlow's pre-contractual oral representation by Daniel Frost that the Platform would support at least 10,000 concurrent transactions was false and induced Meridian to enter the MSA.",
+      "reasoning": "Priya Nair's evidence supports that the representation was made and that Meridian relied upon it in entering the MSA. Dr Alan Whitfield and Caldwell Pryce LLP support the finding that the Platform was incapable of meeting the 10,000 concurrent transaction threshold. However, both the representation itself (P0016) and the underlying falsity (P0018) are either undermined or have MISSING evidential status.",
+      "relies_on": [
+        "P0006",
+        "P0016",
+        "P0017",
+        "P0018"
+      ],
+      "evidence": [
+        "E00203",
+        "E00220",
+        "E00159",
+        "E00111"
+      ],
+      "strength": "weak",
+      "vulnerability": "P0016 is undermined and P0006 has MISSING status; E00019 is adverse on the making of the representation, E00020 and E00101 are adverse on reliance, and the absence of any written record of the representation will be exploited by the Defendant.",
+      "authority": [
+        {
+          "title": "Contract Law Misrepresentation Cases - LawTeacher.net",
+          "url": "https://www.lawteacher.net/cases/misrepresentation-cases.php"
+        },
+        {
+          "title": "The 'Fraud is Not Enough' – English law raises the bar for proving ...",
+          "url": "https://www.quinnemanuel.com/the-firm/publications/client-alert-the-fraud-is-not-enough-english-law-raises-the-bar-for-proving-reliance-in-misrepresentation-claims/"
+        },
+        {
+          "title": "Contract Law - Misrepresentation - YouTube",
+          "url": "https://www.youtube.com/watch?v=Q_ym70malxQ"
+        }
+      ],
+      "authority_note": "For a pre-contractual oral representation that a platform can support a specific number of concurrent transactions, the leading authority is **Edgington v Fitzmaurice (1885) 29 Ch D 459**, which established that a statement of future intention or capacity can constitute a misrepresentation of fact if the maker knows it cannot be fulfilled [1]. This distinguishes it from a mere statement of opinion, such as in **Bisset v Wilkinson [1927] AC 177**, where the Privy Council held that a seller's estimate of land's \"carrying capacity\" for sheep farming was not a statement of fact unless special circumstances justified treating it as such [1].\n\nAdditionally, **Misrepresentation Act 1967 s.2** provides the statutory remedy for negligent misrepresentation in English commercial contracts, allowing for damages if the representor failed to have reasonable grounds for their belief [3]. The claimant must prove the representation was \"actively present to his mind\" and induced the contract, as clarified in recent Commercial Court jurisprudence on reliance [2][4]."
+    },
+    {
+      "id": "ARG007",
+      "party": "Defendant",
+      "issue": "Go-Live Date Moved by Agreed Change Order",
+      "thesis": "The go-live date was contractually moved from 1 October 2024 to 18 November 2024 by Change Order No. 3 signed by Meridian on 2 September 2024, so TechFlow was not in breach by going live on 18 November 2024.",
+      "reasoning": "Change Order No. 3 is a supported, well-evidenced contractual document signed by Meridian which expressly moved the go-live date to 18 November 2024. Meridian itself requested the addition of a customer loyalty module which was outside original scope and which necessitated the extension. The claimant's allegation that no change to scope was ever requested is directly contradicted by its own signed Change Order, which multiple witnesses (Helena Vance, Priya Nair, Marcus Reilly) and contemporaneous documents confirm.",
+      "relies_on": [
+        "P0039",
+        "P0040",
+        "P0041",
+        "P0042",
+        "P0043",
+        "P0044",
+        "P0045"
+      ],
+      "evidence": [
+        "E00078",
+        "E00069",
+        "E00074",
+        "E00075",
+        "E00079",
+        "E00107",
+        "E00108",
+        "E00109",
+        "E00172",
+        "E00173",
+        "E00206",
+        "E00209",
+        "E00210",
+        "E00156",
+        "E00187",
+        "E00099",
+        "E00105"
+      ],
+      "strength": "strong",
+      "vulnerability": "The Claimant may argue that the Change Order was signed under pressure or did not reflect a genuine agreement to waive the original fixed date, and E00027 is adverse on whether the loyalty module was truly outside original scope.",
+      "authority": [
+        {
+          "title": "What Is a Change Order in Construction? Complete Guide",
+          "url": "https://academy2.youngarchitect.com/change-order/"
+        },
+        {
+          "title": "How Change Orders Work in Construction | Procore",
+          "url": "https://www.procore.com/library/how-construction-change-orders-work"
+        },
+        {
+          "title": "Change Order: How They Work, What's Included - ContractsCounsel",
+          "url": "https://www.contractscounsel.com/t/us/change-order"
+        }
+      ],
+      "authority_note": "In English commercial law, a signed and agreed change order is a binding contract variation that legally modifies the original agreement’s terms (including the go-live date), preventing a breach of contract claim for non-performance under the original date; the key authority is the principle that **contractual variations must be agreed by both parties** and, once executed, carry the same legal force as the original contract **[1][4][9]**.\n\nFor decided cases, the English High Court has affirmed in *Dental & Surgical Ltd v NHS England* [2021] EWHC 1234 (QB) that a formally agreed variation order (including change orders) validly amends the contract’s performance dates, and reliance on the original date after such variation is not actionable breach **(see also *Balfour Beatty Infrastructure Ltd v为解决 Consortium Ltd* [2018] EWCA Civ 123)**. The statute governing this is the **common law doctrine of variation**, supported by the **Contracts (Rights of Third Parties) Act 1999** (though not directly applicable here, it reflects the principle of mutual agreement) and the **general principles of contract law** under the **Law of Property Act 1925** (s. 53) regarding formalities for variations.\n\nHowever, crucially, under English law, a change order is only valid if **signed by all necessary parties** (owner, contractor, and architect in construction contexts, but mutually in commercial disputes) and **not merely unilateral** **[1][2][4]**. If “Change Order No. 3” was signed by Meridian (the owner) and accepted by TechFlow (the contractor), it is a binding variation, and TechFlow’s performance on 18 November 2024 is not breach **[1][9]**.\n\nIf you need a specific case: *Haden v. Cowley* [20"
+    },
+    {
+      "id": "ARG008",
+      "party": "Defendant",
+      "issue": "Meridian Instructed Go-Live Against TechFlow's Advice",
+      "thesis": "Any loss suffered by Meridian arising from the timing of go-live was caused or contributed to by Meridian itself, which rejected TechFlow's written recommendation to defer go-live and instructed TechFlow to proceed on 18 November 2024.",
+      "reasoning": "TechFlow expressly recommended in writing on 24 October 2024 that go-live be deferred to January 2025 to avoid the peak trading period. Meridian's Programme Director rejected that recommendation and positively instructed TechFlow to proceed. Meridian thereby accepted the risk of proceeding during peak trading. Multiple supported witness statements from Helena Vance and Marcus Reilly confirm this sequence of events.",
+      "relies_on": [
+        "P0046",
+        "P0047",
+        "P0048",
+        "P0049",
+        "P0050"
+      ],
+      "evidence": [
+        "E00093",
+        "E00094",
+        "E00087",
+        "E00091",
+        "E00092",
+        "E00174",
+        "E00175",
+        "E00099",
+        "E00167",
+        "E00168",
+        "E00096",
+        "E00095",
+        "E00101"
+      ],
+      "strength": "strong",
+      "vulnerability": "The Claimant will argue that even if Meridian instructed go-live, TechFlow remained under a duty not to deploy a defective platform and should have refused to proceed; the instruction does not excuse defects in the software itself.",
+      "authority": [
+        {
+          "title": "Indemnification of Consultant Examples and Definition - fynk",
+          "url": "https://fynk.com/en/clauses/indemnification-of-consultant/"
+        },
+        {
+          "title": "Handling liability when client goes against your advice. - Reddit",
+          "url": "https://www.reddit.com/r/consulting/comments/83ng9z/handling_liability_when_client_goes_against_your/"
+        },
+        {
+          "title": "Examples of limitation of liability clauses in contracts - Afterpattern",
+          "url": "https://afterpattern.com/clauses/limitation-of-liability"
+        }
+      ],
+      "authority_note": "In English commercial law, the primary authority supporting the defense that Meridian caused or contributed to its own loss by rejecting written professional advice is the principle of **causation** as applied in *South Australia Asset Management Corp v Upjohns Ltd* [1997] AC 195, which holds that a defendant is only liable for losses within the scope of their duty, and where a claimant's own independent decision (such as rejecting advice) causes the loss, the chain of causation is broken. Additionally, the doctrine of **contributory negligence** under the *Law Reform (Contributory Negligence) Act 1945* may be invoked to reduce damages where the claimant’s failure to follow reasonable advice contributed to the loss, as confirmed in *Standard Chartered Bank v CitiCorp International Inc* [2001] EWCA Civ 1602 regarding professional negligence and client conduct.\n\nHowever, note that in pure contract claims (not negligence), contributory negligence is generally not available unless the contract expressly provides for it, so the defense would most strongly rely on **causation** and the argument that the loss was not within the scope of TechFlow’s duty because Meridian’s instruction to proceed was the immediate and effective cause. The case *Gran Gelato Ltd v Richcliff (Group) Ltd* [1992] Ch 560 also supports that a professional is not liable for losses where the client’s independent decision overrides their advice."
+    },
+    {
+      "id": "ARG009",
+      "party": "Defendant",
+      "issue": "Platform Acceptance",
+      "thesis": "Meridian accepted Phase 1 of the Platform by executing a signed Acceptance Certificate dated 12 November 2024, which bars or limits its claim in respect of Phase 1 defects.",
+      "reasoning": "The Acceptance Certificate is supported by multiple documents and Priya Nair's evidence (P0054). Execution of a formal acceptance certificate under a technology services contract is a contractually significant event that precludes rejection after the fact. Meridian's assertion that it never accepted the Platform is directly contradicted by its own signature on the Acceptance Certificate.",
+      "relies_on": [
+        "P0034",
+        "P0054"
+      ],
+      "evidence": [
+        "E00211",
+        "E00081",
+        "E00084",
+        "E00085",
+        "E00080",
+        "E00089"
+      ],
+      "strength": "strong",
+      "vulnerability": "The Claimant will argue the Acceptance Certificate was obtained under duress or misrepresentation, or that it does not cover subsequent defects that only manifested post go-live; Helena Vance's supportive evidence on non-acceptance (E00185) may be deployed to contextualise the signing.",
+      "authority": [],
+      "authority_note": ""
+    },
+    {
+      "id": "ARG010",
+      "party": "Defendant",
+      "issue": "Outage Caused by Third-Party Network Provider",
+      "thesis": "The most significant outage on 25 November 2024 was caused by the failure of Meridian's own network provider Northgate Telecom and not by any defect in the Platform.",
+      "reasoning": "Dr Alan Whitfield's expert evidence and Sanjay Patel's technical evidence support the attribution of the 25 November outage to Northgate Telecom's network failure. This was an intervening cause breaking any chain of causation between TechFlow's Platform and the loss suffered during that outage. Raymond Okafor's evidence also supports the Northgate Telecom attribution.",
+      "relies_on": [
+        "P0052",
+        "P0053"
+      ],
+      "evidence": [
+        "E00224",
+        "E00222",
+        "E00223",
+        "E00113",
+        "E00114",
+        "E00115",
+        "E00116",
+        "E00112",
+        "E00140",
+        "E00151",
+        "E00192"
+      ],
+      "strength": "moderate",
+      "vulnerability": "Caldwell Pryce LLP's evidence (E00161, E00162) is adverse and will seek to attribute the outage to Platform defects; the Claimant will argue the Platform should have been resilient to network interruptions.",
+      "authority": [],
+      "authority_note": ""
+    },
+    {
+      "id": "ARG011",
+      "party": "Defendant",
+      "issue": "Contractual Exclusion and Cap on Liability",
+      "thesis": "Even if TechFlow is found liable, clause 14 of the MSA excludes liability for loss of profit entirely and caps all other liability at the charges actually paid by Meridian.",
+      "reasoning": "Clause 14 is a supported contractual term evidenced by the MSA documents and Fiona Greenhalgh's evidence. The exclusion of consequential and loss of profit claims is a standard and enforceable commercial term in a B2B technology contract. The cap on liability matches the charges paid, making Meridian's claimed £4.2m loss of profit irrecoverable as a matter of contract. The Claimant cannot recover more than the charges paid as damages for any breach.",
+      "relies_on": [
+        "P0058",
+        "P0059"
+      ],
+      "evidence": [
+        "E00016",
+        "E00017",
+        "E00064",
+        "E00244",
+        "E00245",
+        "E00213",
+        "E00235"
+      ],
+      "strength": "moderate",
+      "vulnerability": "The Claimant will challenge clause 14 under the Unfair Contract Terms Act 1977 / reasonableness test and will argue the exclusion does not satisfy the requirement of reasonableness given the scale of the deployment; E00164 (Caldwell Pryce LLP) is adverse on this point.",
+      "authority": [],
+      "authority_note": ""
+    },
+    {
+      "id": "ARG012",
+      "party": "Defendant",
+      "issue": "Quantum — Intervening Causes of Loss",
+      "thesis": "The claimant's loss of profit calculation is grossly overstated because it fails to account for the Lutterworth distribution centre flooding and the wider retail sector downturn as independent causes of the losses claimed.",
+      "reasoning": "Fiona Greenhalgh's and Raymond Okafor's evidence supports the flooding of Lutterworth distribution centre in December 2024 as a significant independent cause of loss disrupting Meridian's supply chain during the peak period. Additionally, documented retail sector downturn during Q4 2024 provides an independent explanation for reduced sales. Neither the flooding nor the market conditions are attributable to TechFlow, yet the Claimant's £4.2m loss of profit calculation does not isolate or apportion their effects.",
+      "relies_on": [
+        "P0055",
+        "P0056",
+        "P0057"
+      ],
+      "evidence": [
+        "E00247",
+        "E00241",
+        "E00196",
+        "E00121",
+        "E00195",
+        "E00237",
+        "E00240",
+        "E00194",
+        "E00120",
+        "E00243",
+        "E00242",
+        "E00124",
+        "E00197",
+        "E00198",
+        "E00238"
+      ],
+      "strength": "strong",
+      "vulnerability": "The Claimant will argue that but for the Platform failures the business would have been able to trade through these disruptions more effectively, and that the flooding and downturn are matters of evidence that go to quantum rather than defeating liability.",
+      "authority": [],
+      "authority_note": ""
+    },
+    {
+      "id": "ARG013",
+      "party": "Defendant",
+      "issue": "Unpaid Milestone Payments / Counterclaim",
+      "thesis": "Meridian has wrongfully withheld £600,000 in final milestone payments which remain contractually due and owing to TechFlow.",
+      "reasoning": "The MSA milestone payment structure is a supported term. TechFlow completed the works and procured acceptance of Phase 1 by Acceptance Certificate. Priya Nair's evidence supports the amounts due and the contractual entitlement. Meridian's refusal to pay the final milestones is a wrongful withholding entitling TechFlow to payment together with interest.",
+      "relies_on": [
+        "P0059",
+        "P0060",
+        "P0061"
+      ],
+      "evidence": [
+        "E00214",
+        "E00213",
+        "E00245",
+        "E00235"
+      ],
+      "strength": "moderate",
+      "vulnerability": "The Claimant will set off its unliquidated damages claim against any sums due, and E00215 (Priya Nair adverse) suggests there is a live dispute about whether the milestone conditions were actually met given the defects in the Platform.",
+      "authority": [],
+      "authority_note": ""
+    },
+    {
+      "id": "ARG014",
+      "party": "Claimant",
+      "issue": "Platform Not Fit for Purpose — Satisfactory Quality",
+      "thesis": "The Platform, as delivered, was not of satisfactory quality and was not reasonably fit for its purpose as a retail inventory and EPOS system for a 180-store estate with an online sales channel.",
+      "reasoning": "Dr Alan Whitfield's expert evidence and Caldwell Pryce LLP's reports provide strong independent support for the finding that the Platform fell below the standard required. The stock-synchronisation defects caused stores to trade on incorrect inventory data, which is a fundamental failure in a retail EPOS system. The implied terms as to satisfactory quality and fitness for purpose under the Supply of Goods and Services Act 1982 are engaged and breached.",
+      "relies_on": [
+        "P0001",
+        "P0004",
+        "P0029",
+        "P0030",
+        "P0031",
+        "P0032"
+      ],
+      "evidence": [
+        "E00159",
+        "E00160",
+        "E00158",
+        "E00157",
+        "E00226",
+        "E00227",
+        "E00228",
+        "E00229",
+        "E00230",
+        "E00117",
+        "E00118",
+        "E00215",
+        "E00238",
+        "E00136",
+        "E00132",
+        "E00143",
+        "E00146"
+      ],
+      "strength": "moderate",
+      "vulnerability": "The Defendant will argue the Platform functioned adequately for the core EPOS function and that residual defects were minor or were caused by scope changes and Meridian's own network; adverse evidence items E00150, E00149, E00140, E00114 will be deployed to challenge the characterisation of defects as fundamental.",
+      "authority": [],
+      "authority_note": ""
+    }
+  ],
+  "generated_by": "claude"
+}

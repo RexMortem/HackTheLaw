@@ -85,6 +85,11 @@ GOALS_FILE = DATA_DIR / "goals.json"
 # Cached AI case summary (narrative + retrieved EU legal sources), keyed by a
 # signature of the matrix so we only re-call the LLM when the case data changes.
 SUMMARY_FILE = DATA_DIR / "summary.json"
+# Cached generated arguments (Claude + Perplexity authority) and the saved
+# "built case" — both keyed/stored like the summary so the LLM only runs when
+# the case changes.
+ARGUMENTS_FILE = DATA_DIR / "arguments.json"
+CASE_FILE = DATA_DIR / "case.json"
 
 # EU Publications Office — Cellar SPARQL endpoint (public, no auth). Used to
 # retrieve potentially relevant EU legal materials to ground the AI summary.
@@ -600,6 +605,71 @@ def _save_goals(payload: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Generated arguments (Claude + Perplexity), cached by matrix signature.
+# ---------------------------------------------------------------------------
+def _arguments_response(matrix: list, refresh: bool = False) -> dict:
+    """Return the linked-arguments payload, using the disk cache while the matrix
+    is unchanged. The LLM (and Perplexity authority lookups) only run on refresh
+    or a case change. Empty/unavailable results are not cached, so they retry."""
+    sig = _matrix_signature(matrix)
+    if not refresh and ARGUMENTS_FILE.exists():
+        try:
+            with open(ARGUMENTS_FILE, encoding="utf-8") as fh:
+                cached = json.load(fh)
+            if cached.get("signature") == sig and cached.get("arguments"):
+                return {**cached, "cached": True}
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    try:
+        import arguments_gen
+        result = arguments_gen.generate_arguments(matrix)
+    except Exception as exc:
+        _log("arguments", f"generation failed: {type(exc).__name__}: {exc}")
+        result = {"arguments": [], "generated_by": "unavailable"}
+
+    record = {"signature": sig, **result}
+    if result.get("arguments") and result.get("generated_by") == "claude":
+        try:
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            with open(ARGUMENTS_FILE, "w", encoding="utf-8") as fh:
+                json.dump(record, fh, ensure_ascii=False, indent=2)
+        except OSError:
+            pass
+    return {**record, "cached": False}
+
+
+def _load_arguments_cached() -> list:
+    """Return the cached generated arguments (no LLM call) for the stress test
+    to attack; [] if none have been generated yet."""
+    if ARGUMENTS_FILE.exists():
+        try:
+            with open(ARGUMENTS_FILE, encoding="utf-8") as fh:
+                return (json.load(fh) or {}).get("arguments", [])
+        except (json.JSONDecodeError, OSError):
+            pass
+    return []
+
+
+def _load_case() -> dict:
+    """Load the saved 'built case' (selected propositions/evidence + notes)."""
+    if CASE_FILE.exists():
+        try:
+            with open(CASE_FILE, encoding="utf-8") as fh:
+                return json.load(fh)
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {}
+
+
+def _save_case(payload: dict) -> dict:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(CASE_FILE, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, ensure_ascii=False, indent=2)
+    return payload
+
+
+# ---------------------------------------------------------------------------
 # HTTP handler
 # ---------------------------------------------------------------------------
 class Handler(BaseHTTPRequestHandler):
@@ -618,10 +688,16 @@ class Handler(BaseHTTPRequestHandler):
             self._api_graph()
         elif path == "/api/summary":
             self._api_summary()
+        elif path == "/api/arguments":
+            self._api_arguments()
+        elif path == "/api/stress":
+            self._api_stress()
         elif path == "/api/status":
             self._api_status()
         elif path == "/api/goals":
             self._api_goals_get()
+        elif path == "/api/case":
+            self._api_case_get()
         else:
             self._404()
 
@@ -633,6 +709,8 @@ class Handler(BaseHTTPRequestHandler):
             self._api_goals_post()
         elif path == "/api/chat":
             self._api_chat()
+        elif path == "/api/case":
+            self._api_case_post()
         else:
             self._404()
 
@@ -680,7 +758,9 @@ class Handler(BaseHTTPRequestHandler):
             1,
         )
 
-        self._json_response(200, json.dumps({
+        # Cacheable: the matrix is static between pipeline runs, so let the
+        # browser cache it (ETag gives a cheap 304 when it hasn't changed).
+        self._json_cacheable(json.dumps({
             "ok": True,
             "summary": {
                 "total": total,
@@ -688,7 +768,7 @@ class Handler(BaseHTTPRequestHandler):
                 "trial_readiness": readiness,
             },
             "matrix": matrix,
-        }))
+        }), max_age=60)
 
     def _api_graph(self):
         """GET /api/graph — the case as a graph (propositions + evidence nodes,
@@ -735,6 +815,69 @@ class Handler(BaseHTTPRequestHandler):
                         f"cached={summary.get('cached')}")
         payload = json.dumps({"ok": True, **summary})
         self._json_cacheable(payload, max_age=300)
+
+    def _api_arguments(self):
+        """GET /api/arguments — Claude-drafted arguments linked to the
+        propositions and evidence they rely on, with Perplexity authority.
+        Cached by matrix signature; ?refresh=1 regenerates."""
+        matrix, err = _load_matrix()
+        if err:
+            self._json_response(503, json.dumps({"ok": False, "error": err}))
+            return
+        params = parse_qs(urlparse(self.path).query)
+        refresh = params.get("refresh", ["0"])[0] in ("1", "true", "yes")
+        _log("arguments", f"GET /api/arguments (refresh={refresh})")
+        t0 = time.monotonic()
+        result = _arguments_response(matrix, refresh=refresh)
+        _log("arguments", f"-> {len(result.get('arguments', []))} arguments "
+                          f"({result.get('generated_by')}) in {time.monotonic() - t0:.1f}s")
+        self._json_cacheable(json.dumps({"ok": True, **result}), max_age=60)
+
+    def _api_stress(self):
+        """GET /api/stress — run the case-theory stress-test suite over the
+        matrix (and the saved built case, if any). ?adversarial=1 adds the LLM
+        red-team + Perplexity contrary-authority checks (slower)."""
+        matrix, err = _load_matrix()
+        if err:
+            self._json_response(503, json.dumps({"ok": False, "error": err}))
+            return
+        params = parse_qs(urlparse(self.path).query)
+        adversarial = params.get("adversarial", ["0"])[0] in ("1", "true", "yes")
+        try:
+            import stress_test
+            report = stress_test.run(matrix, case=_load_case(),
+                                     arguments=_load_arguments_cached(),
+                                     adversarial=adversarial)
+        except Exception as exc:
+            _log("stress", f"failed: {type(exc).__name__}: {exc}")
+            self._json_response(500, json.dumps(
+                {"ok": False, "error": f"stress test failed: {exc}"}))
+            return
+        self._json_response(200, json.dumps({"ok": True, **report}))
+
+    def _api_case_get(self):
+        """GET /api/case — the saved built case (selected propositions/evidence)."""
+        case = _load_case()
+        self._json_response(200, json.dumps({"ok": True, "has_case": bool(case),
+                                             "case": case}))
+
+    def _api_case_post(self):
+        """POST /api/case — persist the built case. Body is the case object."""
+        length = int(self.headers.get("Content-Length", 0))
+        if length == 0:
+            self._json_response(400, json.dumps({"ok": False, "error": "Empty body"}))
+            return
+        try:
+            payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            self._json_response(400, json.dumps({"ok": False, "error": f"Invalid JSON: {exc}"}))
+            return
+        if not isinstance(payload, dict):
+            self._json_response(400, json.dumps({"ok": False, "error": "Body must be an object"}))
+            return
+        payload["saved_at"] = datetime.now(timezone.utc).isoformat()
+        _save_case(payload)
+        self._json_response(200, json.dumps({"ok": True, "saved": payload}))
 
     def _api_chat(self):
         """POST /api/chat — converse with 'Second Chair', grounded in the matrix.

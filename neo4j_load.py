@@ -106,6 +106,14 @@ MERGE (e)-[r:%s]->(p)
 SET r.confidence = row.confidence, r.rationale = row.rationale, r.quote = row.quote
 """
 
+# DEPENDS_ON links proposition -> premise proposition (the logical structure).
+_MERGE_DEPENDS = """
+UNWIND $rows AS row
+MATCH (a:Proposition {id: row.source}), (b:Proposition {id: row.target})
+MERGE (a)-[r:DEPENDS_ON]->(b)
+SET r.rationale = row.rationale
+"""
+
 
 def load(graph: dict, wipe: bool = False, analytics: bool = False) -> None:
     try:
@@ -140,7 +148,10 @@ def load(graph: dict, wipe: bool = False, analytics: bool = False) -> None:
             session.run(_MERGE_PROPS, rows=props)
             session.run(_MERGE_EVIDENCE, rows=evidence)
             for rel, rows in edges_by_type.items():
-                session.run(_MERGE_EDGES % rel, rows=rows)
+                if rel == "DEPENDS_ON":
+                    session.run(_MERGE_DEPENDS, rows=rows)
+                else:
+                    session.run(_MERGE_EDGES % rel, rows=rows)
             if analytics:
                 run_gds_analytics(session)
     finally:

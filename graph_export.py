@@ -61,7 +61,7 @@ def _short(text: str, n: int = 90) -> str:
 def _probative_adjacency(node_ids: set, edges: list) -> dict[str, set]:
     adj: dict[str, set] = {n: set() for n in node_ids}
     for e in edges:
-        if e["relation"] == "NEUTRAL":
+        if e["relation"] not in ("SUPPORTS", "UNDERMINES"):
             continue
         a, b = e["source"], e["target"]
         if a in adj and b in adj and a != b:
@@ -161,8 +161,72 @@ def _articulation_points(node_ids: list, adj: dict) -> set:
     return ap
 
 
+def _strongly_connected_components(node_ids: list, out_adj: dict) -> list[list]:
+    """Tarjan's SCC over a DIRECTED graph (out_adj[u] = set of successors).
+    Components of size > 1 (or a self-loop) are cycles — here, circular
+    reasoning in the proposition dependency graph."""
+    index = {}
+    low = {}
+    on_stack = set()
+    stack = []
+    counter = [0]
+    result = []
+
+    def strongconnect(v0):
+        work = [(v0, iter(sorted(out_adj.get(v0, ()))))]
+        index[v0] = low[v0] = counter[0]; counter[0] += 1
+        stack.append(v0); on_stack.add(v0)
+        while work:
+            v, it = work[-1]
+            recurse = False
+            for w in it:
+                if w not in index:
+                    index[w] = low[w] = counter[0]; counter[0] += 1
+                    stack.append(w); on_stack.add(w)
+                    work.append((w, iter(sorted(out_adj.get(w, ())))))
+                    recurse = True
+                    break
+                elif w in on_stack:
+                    low[v] = min(low[v], index[w])
+            if recurse:
+                continue
+            if low[v] == index[v]:
+                comp = []
+                while True:
+                    w = stack.pop(); on_stack.discard(w); comp.append(w)
+                    if w == v:
+                        break
+                result.append(comp)
+            work.pop()
+            if work:
+                low[work[-1][0]] = min(low[work[-1][0]], low[v])
+
+    for v in sorted(node_ids):
+        if v not in index:
+            strongconnect(v)
+    return result
+
+
+def load_dependencies(path: str | None = None) -> list[dict]:
+    """Load proposition dependency edges (from derive_dependencies.py), preferring
+    the live output, then the committed snapshot. Returns [] if none exist —
+    dependencies are an optional enrichment, so the graph works without them."""
+    candidates = ([path] if path else
+                  [_HERE / "out" / "dependencies.json",
+                   _HERE / "case_ui" / "data" / "dependencies.json"])
+    for c in candidates:
+        if c and pathlib.Path(c).exists():
+            try:
+                with open(c, encoding="utf-8") as fh:
+                    return (json.load(fh) or {}).get("dependencies", [])
+            except (json.JSONDecodeError, OSError):
+                return []
+    return []
+
+
 def build_graph(matrix: list, include_neutral: bool = True,
-                min_confidence: float = 0.0) -> dict:
+                min_confidence: float = 0.0,
+                dependencies: list | None = None) -> dict:
     """Build {nodes, edges, stats} from a loaded matrix list.
 
     include_neutral / min_confidence let callers thin the graph; we keep
@@ -262,6 +326,11 @@ def build_graph(matrix: list, include_neutral: bool = True,
     nodes = list(prop_nodes.values()) + list(ev_nodes.values())
     analytics = _annotate_analytics(prop_nodes, ev_nodes, edges)
 
+    # Proposition dependency layer (optional) + circular-reasoning detection.
+    if dependencies is None:
+        dependencies = load_dependencies()
+    dep_info = _add_dependencies(prop_nodes, edges, dependencies)
+
     stats = {
         "propositions": len(prop_nodes),
         "evidence": len(ev_nodes),
@@ -279,8 +348,45 @@ def build_graph(matrix: list, include_neutral: bool = True,
             key=lambda d: (-d["degree"], -d["supports"]),
         )[:10],
         **analytics,
+        **dep_info,
     }
     return {"nodes": nodes, "edges": edges, "stats": stats}
+
+
+def _add_dependencies(prop_nodes: dict, edges: list, dependencies: list) -> dict:
+    """Append DEPENDS_ON edges (proposition -> premise) and detect circular
+    reasoning via strongly-connected components. Mutates edges/prop_nodes;
+    returns summary stats."""
+    for n in prop_nodes.values():
+        n["depends_on"] = []
+        n["in_cycle"] = False
+
+    out_adj: dict[str, set] = {pid: set() for pid in prop_nodes}
+    n_dep = 0
+    for d in dependencies or []:
+        a, b = d.get("from"), d.get("to")
+        if a in prop_nodes and b in prop_nodes and a != b:
+            edges.append({"source": a, "target": b, "relation": "DEPENDS_ON",
+                          "confidence": 1.0, "rationale": d.get("rationale", ""),
+                          "quote": ""})
+            out_adj[a].add(b)
+            prop_nodes[a]["depends_on"].append(b)
+            n_dep += 1
+
+    cycles = [sorted(c) for c in _strongly_connected_components(list(prop_nodes), out_adj)
+              if len(c) > 1]
+    for comp in cycles:
+        for pid in comp:
+            prop_nodes[pid]["in_cycle"] = True
+
+    return {
+        "dependencies": n_dep,
+        "circular_reasoning": [
+            {"members": comp,
+             "texts": [_short(prop_nodes[p]["text"], 60) for p in comp]}
+            for comp in cycles
+        ],
+    }
 
 
 def _annotate_analytics(prop_nodes: dict, ev_nodes: dict, edges: list) -> dict:
@@ -441,13 +547,21 @@ def to_cypher(graph: dict) -> str:
             )
     lines.append("")
     for e in graph["edges"]:
-        lines.append(
-            "MATCH (e:Evidence {id: %s}), (p:Proposition {id: %s}) "
-            "MERGE (e)-[r:%s]->(p) SET r.confidence=%s, r.rationale=%s, r.quote=%s;" % (
-                _lit(e["source"]), _lit(e["target"]), e["relation"],
-                _lit(e["confidence"]), _lit(e["rationale"]), _lit(e["quote"]),
+        if e["relation"] == "DEPENDS_ON":   # proposition -> premise proposition
+            lines.append(
+                "MATCH (a:Proposition {id: %s}), (b:Proposition {id: %s}) "
+                "MERGE (a)-[r:DEPENDS_ON]->(b) SET r.rationale=%s;" % (
+                    _lit(e["source"]), _lit(e["target"]), _lit(e["rationale"]),
+                )
             )
-        )
+        else:                               # evidence -> proposition
+            lines.append(
+                "MATCH (e:Evidence {id: %s}), (p:Proposition {id: %s}) "
+                "MERGE (e)-[r:%s]->(p) SET r.confidence=%s, r.rationale=%s, r.quote=%s;" % (
+                    _lit(e["source"]), _lit(e["target"]), e["relation"],
+                    _lit(e["confidence"]), _lit(e["rationale"]), _lit(e["quote"]),
+                )
+            )
     return "\n".join(lines) + "\n"
 
 

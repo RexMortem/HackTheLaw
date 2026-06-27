@@ -639,7 +639,30 @@ def _params(system: str, user: str, schema: dict, max_tokens: int) -> dict:
 
 
 def run_sync(client, system: str, user: str, schema: dict, max_tokens: int = 16000) -> dict:
-    msg = client.messages.create(**_params(system, user, schema, max_tokens))
+    # Stream: with adaptive thinking + a large max_tokens (evidence uses 32k) the
+    # SDK rejects a non-streaming call ("Streaming is required for operations that
+    # may take longer than 10 minutes"). Streaming has no such limit; we just
+    # accumulate and read the final message.
+    with client.messages.stream(**_params(system, user, schema, max_tokens)) as stream:
+        msg = stream.get_final_message()
+    return json.loads(_text_block(msg))
+
+
+def run_json(client, system: str, user: str, schema: dict,
+             max_tokens: int = 8000) -> dict:
+    """Structured-output call WITHOUT extended thinking — fast and cheap, for
+    generative tasks (arguments, dependencies, stress red-team) where the heavy
+    `effort: high` + adaptive-thinking path in run_sync would burn the whole
+    token budget on reasoning and return no JSON. The model emits the schema
+    directly."""
+    msg = client.messages.create(
+        model=MODEL,
+        max_tokens=max_tokens,
+        output_config={"format": {"type": "json_schema", "schema": schema}},
+        system=[{"type": "text", "text": system,
+                 "cache_control": {"type": "ephemeral"}}],
+        messages=[{"role": "user", "content": user}],
+    )
     return json.loads(_text_block(msg))
 
 
