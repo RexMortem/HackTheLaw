@@ -872,6 +872,49 @@
     .qd-list.weaknesses li::before { background: var(--undermined); }
     .qd-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
 
+    /* ---- Case tray (toggle + drag target, available across rooms) ---- */
+    #case-toggle {
+      position: fixed; bottom: 1.5rem; left: 1.5rem; z-index: 46;
+      display: none; align-items: center; gap: .45rem; cursor: pointer; user-select: none;
+      background: var(--white); color: var(--navy); border: 1px solid var(--border);
+      border-radius: 999px; padding: .5rem .95rem .5rem .8rem; font-size: .85rem; font-weight: 700;
+      box-shadow: var(--shadow-md); transition: transform .15s, box-shadow .15s, border-color .15s;
+    }
+    #case-toggle.show { display: inline-flex; }
+    #case-toggle:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--navy-3); }
+    #case-toggle svg { color: var(--navy-3); }
+    .ct-count { background: var(--navy); color: #fff; border-radius: 999px; font-size: .72rem; font-weight: 800;
+      min-width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0 .3rem; }
+    .ct-count-inline { background: #e2e8f0; color: #475569; border-radius: 999px; font-size: .7rem; font-weight: 800; padding: .05rem .4rem; margin-left: .3rem; }
+
+    #case-tray {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 320px; max-width: 90vw; z-index: 47;
+      background: var(--white); border-left: 1px solid var(--border); box-shadow: -8px 0 30px rgba(15,31,61,.14);
+      transform: translateX(100%); transition: transform .25s cubic-bezier(.4,0,.2,1);
+      display: flex; flex-direction: column;
+    }
+    #case-tray.show { transform: none; }
+    .ct-head { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.1rem;
+      border-bottom: 1px solid var(--border); font-size: .8rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--slate); }
+    .ct-x { border: none; background: none; font-size: 1.5rem; line-height: 1; color: var(--slate-2); cursor: pointer; }
+    .ct-x:hover { color: var(--navy); }
+    .ct-drop { flex: 1; overflow-y: auto; padding: .9rem 1rem; transition: background .15s, outline-color .15s; outline: 2px dashed transparent; outline-offset: -8px; }
+    .ct-drop.dragover { background: #f0f4ff; outline-color: var(--navy-3); }
+    .ct-hint { font-size: .82rem; color: var(--slate-2); text-align: center; padding: 1.6rem .5rem; border: 1px dashed var(--border); border-radius: 8px; }
+    .ct-items { display: flex; flex-direction: column; gap: .5rem; }
+    .ct-item { border: 1px solid var(--border); border-radius: 8px; padding: .5rem .6rem; background: var(--white); border-left: 4px solid var(--missing); position: relative; }
+    .ct-item.status-supported { border-left-color: var(--supported); }
+    .ct-item.status-contested { border-left-color: var(--contested); }
+    .ct-item.status-undermined { border-left-color: var(--undermined); }
+    .ct-item.status-MISSING { border-left-color: var(--missing); }
+    .ct-item .ci-id { font-size: .66rem; font-weight: 700; font-family: "SFMono-Regular", Consolas, monospace; color: var(--slate-2); }
+    .ct-item .ci-text { font-size: .78rem; color: #1e293b; line-height: 1.35; margin-top: .1rem; }
+    .ct-item .ci-remove { position: absolute; top: .35rem; right: .45rem; border: none; background: none; cursor: pointer; color: var(--slate-2); font-size: .95rem; line-height: 1; }
+    .ct-item .ci-remove:hover { color: var(--undermined); }
+    .ct-foot { padding: .8rem 1rem; border-top: 1px solid var(--border); }
+    /* while dragging a proposition, nudge the toggle to signal it's a target */
+    body.dragging-prop #case-toggle.show { box-shadow: 0 0 0 4px rgba(37,58,99,.25), var(--shadow-lg); border-color: var(--navy-3); }
+
     @media (max-width: 760px) {
       .q-figure { font-size: 1.7rem; }
       .hero-title { font-size: 2.3rem; }
@@ -916,6 +959,25 @@
   <span class="orb-core"></span>
   <span class="orb-label">Second Chair<small>ask anything</small></span>
 </div>
+
+<!-- ===================== CASE TRAY (toggle) ====================== -->
+<button id="case-toggle" title="Toggle your case">
+  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7h18v13H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+  <span>Case</span><span class="ct-count" id="ct-count">0</span>
+</button>
+<aside id="case-tray" aria-label="Your case">
+  <div class="ct-head">
+    <span>Your case <span class="ct-count-inline" id="ct-count-2">0</span></span>
+    <button class="ct-x" id="ct-close" aria-label="Close">×</button>
+  </div>
+  <div class="ct-drop" id="ct-drop">
+    <div class="ct-hint" id="ct-hint">Drag propositions here to build your case.</div>
+    <div class="ct-items" id="ct-items"></div>
+  </div>
+  <div class="ct-foot">
+    <button class="gc-btn" id="ct-open-builder" style="width:100%">Open Case Builder →</button>
+  </div>
+</aside>
 
 <!-- Shared source-citation popover (positioned by JS near the clicked icon) -->
 <div id="cite-pop" class="cite-pop" role="tooltip"></div>
@@ -1321,6 +1383,9 @@
     $("rail").classList.toggle("show", inApp || heroChatting);
     const inRoom = ROOMS.includes(name);
     $("orb").classList.toggle("show", inRoom);
+    // Case tray toggle: available in every room (drag propositions onto it).
+    $("case-toggle").classList.toggle("show", inRoom);
+    if (!inRoom) closeTray();
 
     document.querySelectorAll(".rail-btn").forEach(b =>
       b.classList.toggle("active", b.dataset.room === name));
@@ -1657,6 +1722,7 @@
 
     renderMatrix();
     renderRisk();
+    loadCase();   // matrix is ready, so the tray can render saved propositions
   }
 
   function showError(msg) {
@@ -1784,6 +1850,15 @@
     const card = document.createElement("div");
     card.className = "prop-card status-" + status;
     card.dataset.propId = p.id;
+    // draggable into the Case tray (and the Case Builder dropzone)
+    card.draggable = true;
+    card.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", p.id);
+      e.dataTransfer.effectAllowed = "copy";
+      document.body.classList.add("dragging-prop");
+      if (typeof openTray === "function") openTray();
+    });
+    card.addEventListener("dragend", () => document.body.classList.remove("dragging-prop"));
 
     const header = document.createElement("div");
     header.className = "card-header";
@@ -2577,14 +2652,7 @@
   async function ensureBuilder() {
     if (_builderInit) return;
     _builderInit = true;
-    try {
-      const resp = await fetch("api/case");
-      const data = await resp.json();
-      if (data && data.ok && data.case && data.case.propositions) {
-        _case = { title: data.case.title || "", theory: data.case.theory || "",
-                  propositions: data.case.propositions || [] };
-      }
-    } catch (_) {}
+    await loadCase();                 // shared with the tray (loads once)
     $("case-title").value = _case.title;
     $("case-theory").value = _case.theory;
     renderPalette(""); renderCase();
@@ -2636,14 +2704,69 @@
   }
 
   function addToCase(pid) {
-    if (_case.propositions.includes(pid)) return;
+    if (!pid || _case.propositions.includes(pid)) return;
     _case.propositions.push(pid);
-    renderCase(); renderPalette($("builder-search").value); saveCaseDebounced();
+    refreshCaseViews(); saveCaseDebounced();
   }
   function removeFromCase(pid) {
     _case.propositions = _case.propositions.filter(x => x !== pid);
-    renderCase(); renderPalette($("builder-search").value); saveCaseDebounced();
+    refreshCaseViews(); saveCaseDebounced();
   }
+  // Re-render every surface that shows the case: Builder (if open) + the tray.
+  function refreshCaseViews() {
+    renderTray();
+    if (_builderInit) { renderCase(); renderPalette($("builder-search").value); }
+  }
+
+  // ---- Case tray (toggleable; a drop target available in every room) ----
+  let _caseLoaded = false;
+  async function loadCase() {
+    if (_caseLoaded) return;
+    _caseLoaded = true;
+    try {
+      const resp = await fetch("api/case");
+      const data = await resp.json();
+      if (data && data.ok && data.case && data.case.propositions) {
+        _case = { title: data.case.title || "", theory: data.case.theory || "",
+                  propositions: data.case.propositions || [] };
+      }
+    } catch (_) {}
+    renderTray();
+  }
+
+  function renderTray() {
+    const n = _case.propositions.length;
+    $("ct-count").textContent = n;
+    $("ct-count-2").textContent = n;
+    $("ct-hint").style.display = n ? "none" : "block";
+    const box = $("ct-items"); box.innerHTML = "";
+    _case.propositions.forEach(pid => {
+      const row = caseRow(pid); if (!row) return;
+      const p = row.proposition;
+      const item = document.createElement("div");
+      item.className = "ct-item status-" + row.status;
+      item.innerHTML = '<button class="ci-remove" title="Remove">×</button>'
+        + '<div class="ci-id">' + pid + ' · ' + (row.status === "MISSING" ? "Missing" : cap(row.status)) + '</div>'
+        + '<div class="ci-text">' + esc(p.text.length > 130 ? p.text.slice(0, 129) + "…" : p.text) + '</div>';
+      item.querySelector(".ci-remove").addEventListener("click", () => removeFromCase(pid));
+      box.appendChild(item);
+    });
+  }
+
+  function openTray() { $("case-tray").classList.add("show"); }
+  function closeTray() { $("case-tray").classList.remove("show"); }
+  (function wireTray() {
+    $("case-toggle").addEventListener("click", () => $("case-tray").classList.toggle("show"));
+    $("ct-close").addEventListener("click", closeTray);
+    $("ct-open-builder").addEventListener("click", () => { closeTray(); go("builder"); });
+    const drop = $("ct-drop");
+    drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("dragover"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("dragover"));
+    drop.addEventListener("drop", e => {
+      e.preventDefault(); drop.classList.remove("dragover");
+      addToCase(e.dataTransfer.getData("text/plain"));
+    });
+  })();
 
   function saveCaseDebounced() {
     clearTimeout(_saveCaseT);
