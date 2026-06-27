@@ -1409,8 +1409,7 @@
       Second Chair sees
       <b id="ctx-props">…</b> claims <span class="sep">·</span>
       the bundle <span class="sep">·</span>
-      <b id="ctx-eu">8</b> EU sources <span class="sep">·</span>
-      <b id="ctx-ready">…</b> trial readiness
+      <b id="ctx-eu">8</b> EU sources
     </div>
 
     <div class="cards" id="cards">
@@ -2015,7 +2014,6 @@
 
     // hero context + card stats
     $("ctx-props").textContent  = matrix.length;
-    $("ctx-ready").textContent  = summary.trial_readiness + "%";
     $("stat-propositions").innerHTML = matrix.length + " <span class='muted'>claims ·</span> " + summary.trial_readiness + "% <span class='muted'>ready</span>";
     const ctx = $("context-row");
     ctx.classList.add("scan");
