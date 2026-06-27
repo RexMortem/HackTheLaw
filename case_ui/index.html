@@ -881,20 +881,18 @@
 
   <!-- Second Chair logo (top-left) -->
   <div class="hero-logo" aria-label="Second Chair">
-    <svg class="sc-mark" viewBox="0 0 48 58" fill="none" aria-hidden="true">
+    <svg class="sc-mark" viewBox="0 0 56 56" fill="none" aria-hidden="true">
       <defs>
-        <linearGradient id="scGrad" x1="2" y1="2" x2="46" y2="56" gradientUnits="userSpaceOnUse">
+        <linearGradient id="scGrad" x1="8" y1="6" x2="46" y2="52" gradientUnits="userSpaceOnUse">
           <stop offset="0" stop-color="#5cb98a"/>
           <stop offset="1" stop-color="#2f7d56"/>
         </linearGradient>
       </defs>
-      <g stroke="url(#scGrad)" stroke-width="3">
-        <rect x="3"  y="4"  width="16" height="34"/>
-        <rect x="14" y="11" width="16" height="34"/>
-        <rect x="25" y="18" width="16" height="34"/>
-        <path d="M3 24 H19"/>
-        <path d="M14 31 H30"/>
-        <path d="M25 38 H41"/>
+      <g stroke="url(#scGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <!-- chair 1: back post + seat + front leg (side profile) -->
+        <path d="M12 8 V46 M12 29 H26 V46"/>
+        <!-- chair 2: staggered behind -->
+        <path d="M30 14 V50 M30 35 H44 V50"/>
       </g>
     </svg>
     <span class="sc-word"><span>Second</span><span>Chair</span></span>
