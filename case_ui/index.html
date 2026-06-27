@@ -1498,10 +1498,6 @@
     <div class="stat-pill"><span class="dot" style="background:#d97706"></span><span class="count" id="count-contested">0</span><span class="lbl">Contested</span></div>
     <div class="stat-pill"><span class="dot" style="background:#dc2626"></span><span class="count" id="count-undermined">0</span><span class="lbl">Undermined</span></div>
     <div class="stat-pill"><span class="dot" style="background:#9ca3af"></span><span class="count" id="count-missing">0</span><span class="lbl">Missing</span></div>
-    <div class="readiness-mini">
-      <span class="score" id="readiness-score">0%</span>
-      <div class="readiness-bar"><div class="readiness-fill" id="readiness-fill" style="width:0%"></div></div>
-    </div>
   </div>
   <div class="room-body">
    <div class="claims-layout">
@@ -2009,8 +2005,6 @@
     $("count-contested").textContent   = summary.counts.contested || 0;
     $("count-undermined").textContent  = summary.counts.undermined || 0;
     $("count-missing").textContent     = summary.counts.MISSING || 0;
-    $("readiness-score").textContent   = summary.trial_readiness + "%";
-    $("readiness-fill").style.width    = summary.trial_readiness + "%";
 
     $("tab-badge-matrix").textContent = matrix.length;
     const riskCount = matrix.filter(r => r.status === "MISSING" || r.status === "undermined").length;
