@@ -536,6 +536,135 @@
       .arg-cols { grid-template-columns: 1fr; }
       .room-head { padding-left: 4.6rem; }
     }
+
+    /* ================================================================== */
+    /* Figma "Claims & Defenses" restyle — scoped to the Propositions room */
+    /* ================================================================== */
+    #room-propositions {
+      /* muted, earthy status palette (overrides global tokens in-scope) */
+      --supported:  #3f9d6d; --supported-bg:  #eef6f0; --supported-border:  #c8e3d3;
+      --contested:  #d9942b; --contested-bg:  #fbf3e2; --contested-border:  #efd9af;
+      --undermined: #cf4a45; --undermined-bg: #fbeceb; --undermined-border: #f1c8c5;
+      --missing:    #908d82; --missing-bg:    #f3f1ea; --missing-border:    #ddd9cc;
+      --border:     #ddd9cc;
+      --ink:        #1c1b18;
+      --paper-2:    #f7f5ee;
+      --radius-sm:  3px;
+      --mono: "SFMono-Regular", "JetBrains Mono", "Roboto Mono", Consolas, "Liberation Mono", Menlo, monospace;
+      background: #f1efe7; /* paper / cream canvas */
+    }
+
+    /* Click-any-row hint (mono motif) */
+    #room-propositions .row-hint {
+      font-family: var(--mono);
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--slate-2); margin: -0.3rem 0 1.1rem;
+    }
+
+    /* Card: coloured TOP border per status (replaces the left accent) */
+    #room-propositions .prop-card {
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--border);
+    }
+    #room-propositions .prop-card.status-supported  { border-top-color: var(--supported);  border-left: 1px solid var(--border); }
+    #room-propositions .prop-card.status-contested  { border-top-color: var(--contested);  border-left: 1px solid var(--border); }
+    #room-propositions .prop-card.status-undermined { border-top-color: var(--undermined); border-left: 1px solid var(--border); }
+    #room-propositions .prop-card.status-MISSING    { border-top-color: var(--missing);    border-left: 1px solid var(--border); }
+    #room-propositions .card-header { gap: 1rem; }
+    #room-propositions .card-right  { gap: 0.55rem; }
+
+    /* CLAIM / DEFENSE black pill */
+    #room-propositions .kind-pill {
+      display: inline-flex; align-items: center; gap: 0.32rem;
+      background: var(--ink); color: #fff;
+      font-family: var(--mono); font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.2rem 0.5rem; border-radius: 3px;
+    }
+    #room-propositions .kind-pill svg { width: 11px; height: 11px; }
+    #room-propositions .prop-type-badge { font-family: var(--mono); background: var(--paper-2); border: 1px solid var(--border); color: var(--slate); }
+    #room-propositions .prop-id { font-family: var(--mono); }
+    #room-propositions .prop-text { font-size: 0.95rem; font-weight: 600; color: var(--ink); line-height: 1.45; }
+
+    /* Score box (right side) */
+    #room-propositions .score-box {
+      flex-shrink: 0; width: 86px; min-height: 62px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border-radius: 4px; color: #fff; line-height: 1; padding: 0.45rem 0.4rem; align-self: flex-start;
+    }
+    #room-propositions .score-box .num { font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em; }
+    #room-propositions .score-box .lbl { font-family: var(--mono); font-size: 0.56rem; font-weight: 700; letter-spacing: 0.1em; margin-top: 0.3rem; }
+    #room-propositions .score-box.supported  { background: var(--supported); }
+    #room-propositions .score-box.contested  { background: var(--contested); }
+    #room-propositions .score-box.undermined { background: var(--undermined); }
+    #room-propositions .score-box.MISSING    { background: var(--missing); }
+
+    /* Evidence Map (tiles + segmented bar + S/U/N/M legend) */
+    #room-propositions .evidence-map { margin-top: 0.85rem; }
+    #room-propositions .map-title { font-family: var(--mono); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--slate-2); margin-bottom: 0.45rem; }
+    #room-propositions .map-tiles { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 0.6rem; }
+    #room-propositions .ev-tile { width: 20px; height: 20px; border-radius: 3px; cursor: default; transition: transform .1s ease; }
+    #room-propositions .ev-tile:hover { transform: scale(1.15); }
+    #room-propositions .ev-tile.supportive { background: var(--supported); }
+    #room-propositions .ev-tile.adverse    { background: var(--undermined); }
+    #room-propositions .ev-tile.neutral    { background: var(--contested); }
+    #room-propositions .ev-tile.missing    { background: transparent; border: 1.5px dashed var(--slate-2); }
+    #room-propositions .map-more { font-size: 0.7rem; color: var(--slate-2); margin-left: 0.15rem; }
+    #room-propositions .map-bar-row { display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; }
+    #room-propositions .seg-bar { flex: 1; min-width: 140px; height: 8px; border-radius: 4px; overflow: hidden; display: flex; background: var(--missing-bg); }
+    #room-propositions .seg { height: 100%; }
+    #room-propositions .seg.s { background: var(--supported); }
+    #room-propositions .seg.n { background: var(--contested); }
+    #room-propositions .seg.u { background: var(--undermined); }
+    #room-propositions .seg.m { background: #d8d4c7; }
+    #room-propositions .map-legend { display: flex; gap: 0.7rem; flex-shrink: 0; }
+    #room-propositions .leg { display: flex; align-items: center; gap: 0.3rem; font-family: var(--mono); font-size: 0.66rem; font-weight: 700; color: var(--slate); }
+    #room-propositions .leg .sw { width: 9px; height: 9px; border-radius: 2px; }
+    #room-propositions .leg .sw.s { background: var(--supported); }
+    #room-propositions .leg .sw.n { background: var(--contested); }
+    #room-propositions .leg .sw.u { background: var(--undermined); }
+    #room-propositions .leg .sw.m { background: #d8d4c7; }
+
+    /* Grouped evidence drawer */
+    #room-propositions .ev-group { border-radius: 5px; padding: 0.65rem 0.8rem; margin-bottom: 0.6rem; }
+    #room-propositions .ev-group:last-child { margin-bottom: 0; }
+    #room-propositions .ev-group.supportive { background: var(--supported-bg); }
+    #room-propositions .ev-group.adverse    { background: var(--undermined-bg); }
+    #room-propositions .ev-group.neutral    { background: var(--missing-bg); }
+    #room-propositions .ev-group-head { display: flex; align-items: center; gap: 0.4rem; font-family: var(--mono); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.4rem; }
+    #room-propositions .ev-group-head .sw { width: 10px; height: 10px; border-radius: 2px; }
+    #room-propositions .ev-group.supportive .ev-group-head { color: var(--supported); }
+    #room-propositions .ev-group.supportive .ev-group-head .sw { background: var(--supported); }
+    #room-propositions .ev-group.adverse .ev-group-head { color: var(--undermined); }
+    #room-propositions .ev-group.adverse .ev-group-head .sw { background: var(--undermined); }
+    #room-propositions .ev-group.neutral .ev-group-head { color: var(--slate); }
+    #room-propositions .ev-group.neutral .ev-group-head .sw { background: var(--missing); }
+    #room-propositions .ev-row { display: flex; gap: 0.55rem; padding: 0.55rem 0; border-top: 1px solid rgba(40,38,30,.07); }
+    #room-propositions .ev-row:first-of-type { border-top: none; padding-top: 0.1rem; }
+    #room-propositions .ev-doc-icon { flex-shrink: 0; color: var(--slate-2); width: 16px; height: 16px; margin-top: 0.1rem; }
+    #room-propositions .ev-row-main { flex: 1; min-width: 0; }
+    #room-propositions .ev-row-title { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
+    #room-propositions .ev-row-sub { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 0.12rem; }
+    #room-propositions .ev-group.supportive .ev-row-sub { color: var(--supported); }
+    #room-propositions .ev-group.adverse .ev-row-sub    { color: var(--undermined); }
+    #room-propositions .ev-group.neutral .ev-row-sub    { color: var(--slate-2); }
+
+    /* Evidence-tile hover tooltip (appended to <body>) */
+    #ev-tooltip {
+      position: fixed; z-index: 1000; pointer-events: none;
+      background: #1c1b18; color: #fff;
+      font-family: "SFMono-Regular", "JetBrains Mono", "Roboto Mono", Consolas, Menlo, monospace;
+      font-size: 0.68rem; letter-spacing: 0.02em; line-height: 1.35;
+      padding: 0.32rem 0.55rem; border-radius: 4px;
+      box-shadow: 0 4px 10px -2px rgba(40,38,30,.4); max-width: 280px;
+      opacity: 0; transform: translateY(3px); transition: opacity .12s ease, transform .12s ease;
+    }
+    #ev-tooltip.show { opacity: 1; transform: translateY(0); }
+    #ev-tooltip .tip-rel { display: inline-block; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-right: 0.4rem; }
+    #ev-tooltip .tip-rel.supportive { color: #7ee0aa; }
+    #ev-tooltip .tip-rel.adverse    { color: #f3a3a0; }
+    #ev-tooltip .tip-rel.neutral    { color: #ecc98a; }
   </style>
 </head>
 <body>
@@ -688,6 +817,7 @@
       </nav>
 
       <div id="tab-matrix">
+        <div class="row-hint">Click any row for evidence breakdown</div>
         <div class="filters-bar">
           <div class="search-wrap">
             <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1049,8 +1179,181 @@
 
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ""; }
 
+  // ---- Figma restyle: score box + evidence map + grouped drawer ----
+
+  // Status → score-box label + colour class (kept in lock-step with status).
+  const STATUS_BAND = {
+    supported:  { label: "STRONG",   cls: "supported"  },
+    contested:  { label: "MODERATE", cls: "contested"  },
+    undermined: { label: "WEAK",     cls: "undermined" },
+    MISSING:    { label: "MISSING",  cls: "MISSING"    },
+  };
+
+  const SCALES_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M12 3v18M7 21h10M5 7h14M5 7l-2.5 6a3 3 0 0 0 5 0L5 7zm14 0l-2.5 6a3 3 0 0 0 5 0L19 7zM12 3l7 4M12 3L5 7"/></svg>';
+  const DOC_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+
+  // Weighted support share (0–100): supportive vs adverse confidence.
+  function scoreForRow(row) {
+    let sup = 0, adv = 0;
+    (row.links || []).forEach(l => {
+      if (l.relation === "supportive") sup += (l.confidence || 0);
+      else if (l.relation === "adverse") adv += (l.confidence || 0);
+    });
+    if (sup + adv === 0) return 0;
+    return Math.round(100 * sup / (sup + adv));
+  }
+
+  function relCounts(row) {
+    const c = { supportive: 0, adverse: 0, neutral: 0 };
+    (row.links || []).forEach(l => { if (c[l.relation] != null) c[l.relation]++; });
+    return c;
+  }
+
+  function evidenceTitle(link) {
+    const s = link.evidence_source || {};
+    return link.witness || link.evidence_id || s.doc_id || "Evidence";
+  }
+
+  // Shared hover tooltip for evidence-map tiles.
+  let _tipEl = null;
+  function getTip() {
+    if (!_tipEl) { _tipEl = document.createElement("div"); _tipEl.id = "ev-tooltip"; document.body.appendChild(_tipEl); }
+    return _tipEl;
+  }
+  function positionTip(e) {
+    const el = getTip(), pad = 12, r = el.getBoundingClientRect();
+    let x = e.clientX + pad, y = e.clientY + pad;
+    if (x + r.width > window.innerWidth - 8) x = e.clientX - r.width - pad;
+    if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - pad;
+    el.style.left = Math.max(8, x) + "px";
+    el.style.top  = Math.max(8, y) + "px";
+  }
+  function showTileTip(e) {
+    const el = getTip(), rel = this.dataset.rel || "";
+    el.innerHTML = '<span class="tip-rel ' + rel + '">' + (rel === "adverse" ? "Undermining" : cap(rel)) + "</span>";
+    el.appendChild(document.createTextNode(this.dataset.tip || ""));
+    el.classList.add("show");
+    positionTip(e);
+  }
+  function hideTileTip() { if (_tipEl) _tipEl.classList.remove("show"); }
+
+  function buildEvidenceMap(row) {
+    const links = row.links || [], c = relCounts(row);
+    const S = c.supportive, U = c.adverse, N = c.neutral;
+    const M = links.length === 0 ? 1 : 0;
+
+    const wrap = document.createElement("div"); wrap.className = "evidence-map";
+    const title = document.createElement("div"); title.className = "map-title"; title.textContent = "Evidence Map";
+    wrap.appendChild(title);
+
+    const tiles = document.createElement("div"); tiles.className = "map-tiles";
+    if (links.length === 0) {
+      for (let i = 0; i < 3; i++) { const t = document.createElement("span"); t.className = "ev-tile missing"; tiles.appendChild(t); }
+    } else {
+      const order = { supportive: 0, neutral: 1, adverse: 2 };
+      const sorted = links.slice().sort((a, b) => (order[a.relation] ?? 3) - (order[b.relation] ?? 3));
+      const CAP = 16;
+      sorted.slice(0, CAP).forEach(l => {
+        const t = document.createElement("span");
+        t.className = "ev-tile " + l.relation;
+        t.dataset.tip = evidenceTitle(l);
+        t.dataset.rel = l.relation;
+        t.addEventListener("mouseenter", showTileTip);
+        t.addEventListener("mousemove", positionTip);
+        t.addEventListener("mouseleave", hideTileTip);
+        tiles.appendChild(t);
+      });
+      if (sorted.length > CAP) { const more = document.createElement("span"); more.className = "map-more"; more.textContent = "+" + (sorted.length - CAP); tiles.appendChild(more); }
+    }
+    wrap.appendChild(tiles);
+
+    const total = S + N + U + M || 1;
+    const barRow = document.createElement("div"); barRow.className = "map-bar-row";
+    const bar = document.createElement("div"); bar.className = "seg-bar";
+    [["s", S], ["n", N], ["u", U], ["m", M]].forEach(([cls, v]) => {
+      if (v > 0) { const seg = document.createElement("div"); seg.className = "seg " + cls; seg.style.width = (100 * v / total) + "%"; bar.appendChild(seg); }
+    });
+    const legend = document.createElement("div"); legend.className = "map-legend";
+    [["s", "S", S], ["u", "U", U], ["n", "N", N], ["m", "M", M]].forEach(([cls, lab, v]) => {
+      const leg = document.createElement("span"); leg.className = "leg";
+      const sw = document.createElement("span"); sw.className = "sw " + cls;
+      leg.appendChild(sw); leg.appendChild(document.createTextNode(lab + " " + v));
+      legend.appendChild(leg);
+    });
+    barRow.appendChild(bar); barRow.appendChild(legend);
+    wrap.appendChild(barRow);
+    return wrap;
+  }
+
+  function buildDrawer(row) {
+    const drawer = document.createElement("div"); drawer.className = "evidence-drawer";
+    const inner = document.createElement("div"); inner.className = "evidence-inner";
+    const links = row.links || [];
+    if (links.length === 0) {
+      const empty = document.createElement("p"); empty.className = "evidence-empty";
+      empty.textContent = "No evidence links — this proposition has no supportive or adverse material in the bundle.";
+      inner.appendChild(empty);
+    } else {
+      [
+        { key: "supportive", label: "Supporting" },
+        { key: "adverse",    label: "Undermining" },
+        { key: "neutral",    label: "Neutral / Context" },
+      ].forEach(g => {
+        const items = links.filter(l => l.relation === g.key);
+        if (items.length === 0) return;
+        const sec = document.createElement("div"); sec.className = "ev-group " + g.key;
+        const head = document.createElement("div"); head.className = "ev-group-head";
+        const sw = document.createElement("span"); sw.className = "sw";
+        head.appendChild(sw); head.appendChild(document.createTextNode(g.label + " — " + items.length));
+        sec.appendChild(head);
+        items.forEach(l => sec.appendChild(buildEvidenceRow(l)));
+        inner.appendChild(sec);
+      });
+    }
+    drawer.appendChild(inner);
+    return drawer;
+  }
+
+  function buildEvidenceRow(link) {
+    const row = document.createElement("div"); row.className = "ev-row";
+    const icon = document.createElement("span"); icon.className = "ev-doc-icon"; icon.innerHTML = DOC_SVG;
+    row.appendChild(icon);
+
+    const main = document.createElement("div"); main.className = "ev-row-main";
+    const title = document.createElement("div"); title.className = "ev-row-title";
+    title.textContent = link.witness || link.evidence_id || "Evidence";
+    main.appendChild(title);
+
+    const s = link.evidence_source || {};
+    const sub = document.createElement("div"); sub.className = "ev-row-sub";
+    sub.textContent = [link.evidence_id, s.doc_id, s.page ? "p" + s.page : null, s.paragraph ? "¶" + s.paragraph : null].filter(Boolean).join("  ");
+    main.appendChild(sub);
+
+    const confWrap = document.createElement("div"); confWrap.className = "conf-bar-wrap"; confWrap.style.margin = "0.35rem 0";
+    const bar = document.createElement("div"); bar.className = "conf-bar";
+    const fill = document.createElement("div"); fill.className = "conf-fill " + link.relation;
+    fill.style.width = Math.round((link.confidence || 0) * 100) + "%"; bar.appendChild(fill);
+    const confNum = document.createElement("span"); confNum.className = "conf-num"; confNum.textContent = Math.round((link.confidence || 0) * 100) + "%";
+    confWrap.appendChild(bar); confWrap.appendChild(confNum);
+    main.appendChild(confWrap);
+
+    if (link.rationale) { const r = document.createElement("p"); r.className = "ev-rationale"; r.textContent = link.rationale; main.appendChild(r); }
+    if (link.quote) {
+      const q = document.createElement("div"); q.className = "ev-quote"; q.textContent = "“" + link.quote + "”";
+      if (!link.quote_ok) { const w = document.createElement("span"); w.className = "quote-warn"; w.textContent = "  [unverified quote]"; q.appendChild(w); }
+      main.appendChild(q);
+    }
+    row.appendChild(main);
+    return row;
+  }
+
   function buildCard(row) {
     const p = row.proposition, status = row.status;
+    const band = STATUS_BAND[status] || STATUS_BAND.MISSING;
     const card = document.createElement("div");
     card.className = "prop-card status-" + status;
     card.dataset.propId = p.id;
@@ -1061,6 +1364,11 @@
 
     const meta = document.createElement("div"); meta.className = "prop-meta";
     const topRow = document.createElement("div"); topRow.className = "prop-top-row";
+
+    const kind = document.createElement("span"); kind.className = "kind-pill";
+    kind.innerHTML = SCALES_SVG + (p.type === "denial" ? "Defense" : "Claim");
+    topRow.appendChild(kind);
+
     const idEl = document.createElement("span"); idEl.className = "prop-id"; idEl.textContent = p.id;
     const typeEl = document.createElement("span"); typeEl.className = "prop-type-badge"; typeEl.textContent = p.type;
     topRow.appendChild(idEl); topRow.appendChild(typeEl);
@@ -1072,66 +1380,28 @@
 
     meta.appendChild(topRow); meta.appendChild(textEl);
     if (srcEl.textContent) meta.appendChild(srcEl);
+    meta.appendChild(buildEvidenceMap(row));
 
     const right = document.createElement("div"); right.className = "card-right";
-    const badge = document.createElement("span"); badge.className = "status-badge " + status;
-    badge.textContent = status === "MISSING" ? "Missing" : cap(status);
+    const scoreBox = document.createElement("div"); scoreBox.className = "score-box " + band.cls;
+    const num = document.createElement("span"); num.className = "num"; num.textContent = scoreForRow(row);
+    const lbl = document.createElement("span"); lbl.className = "lbl"; lbl.textContent = band.label;
+    scoreBox.appendChild(num); scoreBox.appendChild(lbl);
     const arrow = document.createElement("svg");
     arrow.setAttribute("width", "16"); arrow.setAttribute("height", "16"); arrow.setAttribute("fill", "none");
     arrow.setAttribute("stroke", "currentColor"); arrow.setAttribute("stroke-width", "2"); arrow.setAttribute("viewBox", "0 0 24 24");
     arrow.className = "expand-icon"; arrow.innerHTML = '<polyline points="6 9 12 15 18 9"/>';
-    right.appendChild(badge); right.appendChild(arrow);
+    right.appendChild(scoreBox); right.appendChild(arrow);
 
     header.appendChild(meta); header.appendChild(right);
 
-    const drawer = document.createElement("div"); drawer.className = "evidence-drawer";
-    const inner = document.createElement("div"); inner.className = "evidence-inner";
-    const heading = document.createElement("div"); heading.className = "evidence-heading";
-    const linkCount = row.links ? row.links.length : 0;
-    heading.textContent = "Evidence links (" + linkCount + " retrieved, " + row.n_candidates + " candidates)";
-    inner.appendChild(heading);
-    if (!row.links || row.links.length === 0) {
-      const empty = document.createElement("p"); empty.className = "evidence-empty";
-      empty.textContent = "No evidence links — this proposition has no supportive or adverse material in the bundle.";
-      inner.appendChild(empty);
-    } else {
-      const evList = document.createElement("div"); evList.className = "evidence-list";
-      row.links.forEach(link => evList.appendChild(buildEvidenceItem(link)));
-      inner.appendChild(evList);
-    }
-    drawer.appendChild(inner);
+    const drawer = buildDrawer(row);
     card.appendChild(header); card.appendChild(drawer);
 
     function toggle() { card.classList.toggle("open"); }
     header.addEventListener("click", toggle);
     header.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
     return card;
-  }
-
-  function buildEvidenceItem(link) {
-    const item = document.createElement("div"); item.className = "evidence-item rel-" + link.relation;
-    const topRow = document.createElement("div"); topRow.className = "ev-top-row";
-    const relBadge = document.createElement("span"); relBadge.className = "rel-badge " + link.relation; relBadge.textContent = cap(link.relation);
-    const confWrap = document.createElement("div"); confWrap.className = "conf-bar-wrap";
-    const bar = document.createElement("div"); bar.className = "conf-bar";
-    const fill = document.createElement("div"); fill.className = "conf-fill " + link.relation;
-    fill.style.width = Math.round((link.confidence || 0) * 100) + "%"; bar.appendChild(fill);
-    const confNum = document.createElement("span"); confNum.className = "conf-num"; confNum.textContent = Math.round((link.confidence || 0) * 100) + "%";
-    confWrap.appendChild(bar); confWrap.appendChild(confNum);
-    topRow.appendChild(relBadge); topRow.appendChild(confWrap);
-    if (link.witness) { const w = document.createElement("span"); w.className = "ev-witness"; w.textContent = link.witness; topRow.appendChild(w); }
-
-    const s = link.evidence_source || {};
-    const citation = [link.evidence_id, s.doc_id, s.page ? "p" + s.page : null, s.paragraph ? "¶" + s.paragraph : null].filter(Boolean).join("  ");
-    const citEl = document.createElement("div"); citEl.className = "ev-citation"; citEl.textContent = citation;
-    item.appendChild(topRow); item.appendChild(citEl);
-    if (link.rationale) { const r = document.createElement("p"); r.className = "ev-rationale"; r.textContent = link.rationale; item.appendChild(r); }
-    if (link.quote) {
-      const q = document.createElement("div"); q.className = "ev-quote"; q.textContent = "“" + link.quote + "”";
-      if (!link.quote_ok) { const w = document.createElement("span"); w.className = "quote-warn"; w.textContent = "  [unverified quote]"; q.appendChild(w); }
-      item.appendChild(q);
-    }
-    return item;
   }
 
   // tabs / filters / search
