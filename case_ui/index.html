@@ -758,9 +758,27 @@
     /* HERO overhaul — matches the Claims paper/ink/mono aesthetic          */
     /* ================================================================== */
     #hero {
+      position: relative;
       background:
         radial-gradient(1100px 520px at 50% -10%, #f6f2e6 0%, rgba(246,242,230,0) 60%),
         var(--paper);
+    }
+    /* Second Chair brand lockup, top-left of the front page */
+    .hero-logo {
+      position: absolute; top: 1.6rem; left: 1.9rem; z-index: 2;
+      display: flex; align-items: center; gap: 0.7rem;
+    }
+    .hero-logo .sc-mark { height: 46px; width: auto; display: block; }
+    .hero-logo .sc-word {
+      display: flex; flex-direction: column;
+      font-family: var(--mono); font-size: 0.95rem; font-weight: 700;
+      letter-spacing: 0.32em; text-transform: uppercase;
+      color: var(--ink); line-height: 1.12;
+    }
+    @media (max-width: 760px) {
+      .hero-logo { top: 1rem; left: 1rem; gap: 0.5rem; }
+      .hero-logo .sc-mark { height: 36px; }
+      .hero-logo .sc-word { font-size: 0.8rem; letter-spacing: 0.26em; }
     }
     #hero .hero-eyebrow { font-family: var(--mono); color: var(--slate-2); letter-spacing: 0.2em; }
     #hero .hero-eyebrow b { color: var(--ink); }
@@ -860,8 +878,29 @@
 
 <!-- ============================== HERO ============================= -->
 <section id="hero" class="view active">
+
+  <!-- Second Chair logo (top-left) -->
+  <div class="hero-logo" aria-label="Second Chair">
+    <svg class="sc-mark" viewBox="0 0 48 58" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="scGrad" x1="2" y1="2" x2="46" y2="56" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#5cb98a"/>
+          <stop offset="1" stop-color="#2f7d56"/>
+        </linearGradient>
+      </defs>
+      <g stroke="url(#scGrad)" stroke-width="3">
+        <rect x="3"  y="4"  width="16" height="34"/>
+        <rect x="14" y="11" width="16" height="34"/>
+        <rect x="25" y="18" width="16" height="34"/>
+        <path d="M3 24 H19"/>
+        <path d="M14 31 H30"/>
+        <path d="M25 38 H41"/>
+      </g>
+    </svg>
+    <span class="sc-word"><span>Second</span><span>Chair</span></span>
+  </div>
+
   <div class="hero-inner">
-    <div class="hero-eyebrow">Proof Matrix · <b>Second Chair</b></div>
     <h1 class="hero-title">What do you want to know<br><span class="grad">about this case?</span></h1>
 
     <div class="context-row" id="context-row">
