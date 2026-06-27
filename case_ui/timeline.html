@@ -47,137 +47,193 @@
 -->
 <style>
   :root{
-    --ink:#eef0f3; --ink-2:#ffffff; --surface:#f5f6f8; --line:#d9dde3;
-    --paper:#2b3138; --paper-dim:#5c6470; --paper-faint:#98a0ab;
-    --sup:#1f9d57; --sup-bg:#e8f6ee; --adv:#c5384b; --adv-bg:#fbeaed;
-    --neu:#2f6fd6; --neu-bg:#eaf1fc; --gold:#9c6f15;
+    /* Aurora constellation — dark canvas, glowing evidence */
+    --ink:#070c12; --ink-2:#0e1822; --surface:#10202a; --line:rgba(125,170,158,.18);
+    --paper:#e8f1ee; --paper-dim:#9fb6b0; --paper-faint:#5f7a73;
+    --sup:#34d399; --sup-bg:rgba(52,211,153,.13);
+    --adv:#fb7185; --adv-bg:rgba(251,113,133,.13);
+    --neu:#8aa6c4; --neu-bg:rgba(138,166,196,.13);
+    --gold:#fcd34d;
     --mono:'IBM Plex Mono',monospace; --serif:'Newsreader',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
-  body{background:#e3e6ea;color:var(--paper);font-family:var(--sans);-webkit-font-smoothing:antialiased}
-  /* the timeline is a side PANEL — capped width so it never eats the argument feature's space */
+  body{background:var(--ink);color:var(--paper);font-family:var(--sans);-webkit-font-smoothing:antialiased}
   .app{display:flex;flex-direction:column;height:100vh;background:var(--ink);position:relative;overflow:hidden}
 
-  .top{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);flex:none}
-  .brand{font-family:var(--mono);font-size:13px;letter-spacing:.16em}
-  .brand b{color:var(--paper);font-weight:600}
+  /* ── ambient aurora backdrop (static; minimal motion) ── */
+  .aurora{position:absolute;inset:-20% -10% -10% -10%;z-index:0;pointer-events:none;filter:blur(8px);opacity:.9;
+    background:
+      radial-gradient(46% 32% at 18% 12%, rgba(16,185,129,.30), transparent 70%),
+      radial-gradient(40% 30% at 82% 26%, rgba(13,148,136,.26), transparent 72%),
+      radial-gradient(50% 38% at 30% 72%, rgba(20,120,90,.24), transparent 72%),
+      radial-gradient(44% 34% at 78% 84%, rgba(125,90,180,.16), transparent 74%),
+      radial-gradient(60% 50% at 50% 50%, rgba(8,40,34,.40), transparent 80%);}
+  /* faint starfield */
+  .stars{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.5), transparent),
+      radial-gradient(1px 1px at 75% 18%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1px 1px at 60% 60%, rgba(255,255,255,.35), transparent),
+      radial-gradient(1px 1px at 35% 80%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1px 1px at 88% 70%, rgba(255,255,255,.3), transparent),
+      radial-gradient(1px 1px at 12% 64%, rgba(255,255,255,.3), transparent);}
+  .top,.legend,.body{position:relative;z-index:1}
+
+  .top{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);flex:none;
+    background:linear-gradient(180deg, rgba(10,18,24,.7), rgba(10,18,24,.2));backdrop-filter:blur(6px)}
+  .brand{font-family:var(--mono);font-size:13px;letter-spacing:.16em;color:var(--paper-dim)}
+  .brand b{color:var(--sup);font-weight:600;text-shadow:0 0 12px rgba(52,211,153,.5)}
   .sub{font-family:var(--mono);font-size:10px;color:var(--paper-faint);letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
-  .gchip{font-family:var(--mono);font-size:10.5px;color:var(--paper-dim);border:1px solid var(--line);background:var(--surface);padding:5px 9px;border-radius:999px;letter-spacing:.04em;white-space:nowrap}
+  .gchip{font-family:var(--mono);font-size:10.5px;color:var(--paper-dim);border:1px solid var(--line);background:rgba(255,255,255,.03);padding:5px 9px;border-radius:999px;letter-spacing:.04em;white-space:nowrap}
   .zoom{margin-left:auto;display:flex;gap:4px}
-  .zoom button{background:var(--ink-2);border:1px solid var(--line);color:var(--paper-dim);font-family:var(--mono);font-size:13px;width:26px;height:26px;border-radius:5px;cursor:pointer;line-height:1}
+  .zoom button{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--paper-dim);font-family:var(--mono);font-size:13px;width:26px;height:26px;border-radius:5px;cursor:pointer;line-height:1;transition:all .15s}
   .zoom button#zoomFit{width:auto;padding:0 8px;font-size:10px;letter-spacing:.08em}
-  .zoom button:hover{border-color:var(--gold);color:var(--paper)}
+  .zoom button:hover{border-color:var(--sup);color:var(--sup);box-shadow:0 0 12px rgba(52,211,153,.25)}
 
   .legend{display:flex;gap:13px;padding:8px 16px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--paper-dim);flex:none;flex-wrap:wrap;align-items:center}
   .legend span{display:inline-flex;align-items:center;gap:6px}
-  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;box-shadow:0 0 8px 1px currentColor}
   .selnote{margin-left:auto;color:var(--gold);font-weight:500}
 
-  .scrollwrap{flex:1;min-width:0;overflow-y:auto;position:relative}
+  .scrollwrap{flex:1;min-width:0;overflow-y:auto;position:relative;z-index:1}
   .scrollwrap::-webkit-scrollbar{width:9px}
-  .scrollwrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px}
+  .scrollwrap::-webkit-scrollbar-thumb{background:rgba(125,170,158,.25);border-radius:5px}
 
-  .tl{position:relative;margin:14px 0 30px}
-  .spine{position:absolute;left:96px;top:0;bottom:0;width:2px;background:var(--line)}
+  .tl{position:relative;width:560px;max-width:100%;margin:14px auto 30px}
+  .spine{position:absolute;left:96px;top:0;bottom:0;width:2px;
+    background:linear-gradient(180deg, transparent, rgba(125,170,158,.35) 8%, rgba(125,170,158,.35) 92%, transparent);
+    box-shadow:0 0 12px rgba(52,211,153,.18)}
   .conflictlayer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:visible}
   .tick{position:absolute;left:0;width:88px;text-align:right;font-family:var(--mono);font-size:10px;color:var(--paper-faint);transform:translateY(-50%)}
   .tick::after{content:"";position:absolute;right:-12px;top:50%;width:8px;height:1px;background:var(--line)}
-  .yearcut{position:absolute;left:8px;right:14px;border-top:2px solid var(--line);transform:translateY(-50%)}
-  .yearcut span{position:absolute;left:64px;top:-15px;background:var(--ink);padding:0 12px;font-family:var(--serif);font-size:17px;font-weight:600;color:var(--paper);letter-spacing:.02em}
+  .yearcut{position:absolute;left:8px;right:14px;border-top:1px solid rgba(125,170,158,.25);transform:translateY(-50%)}
+  .yearcut span{position:absolute;left:64px;top:-16px;background:var(--ink);padding:0 12px;font-family:var(--serif);font-size:18px;font-weight:600;color:var(--paper);letter-spacing:.02em;text-shadow:0 0 18px rgba(52,211,153,.35)}
 
-  .ev{position:absolute;left:96px;display:flex;align-items:center;gap:9px;transform:translateY(-50%);cursor:pointer;transition:opacity .15s;height:24px;z-index:3}
-  .ev .dot{width:12px;height:12px;border-radius:50%;flex:none;border:2px solid var(--ink-2);margin-left:-6px;box-shadow:0 0 0 1px var(--line),0 1px 3px rgba(20,28,40,.18);transition:transform .15s,box-shadow .15s}
-  .ev .card{background:transparent;border:1px solid transparent;border-radius:8px;padding:4px 11px;max-width:300px;transition:background .12s,border-color .12s,box-shadow .12s,max-width .12s}
+  .ev{position:absolute;left:96px;display:flex;align-items:center;gap:11px;transform:translateY(-50%);cursor:pointer;transition:opacity .15s;height:24px;z-index:3}
+  /* glowing orb: size (--orb) set per node by how load-bearing the evidence is */
+  .ev .dot{width:var(--orb,12px);height:var(--orb,12px);border-radius:50%;flex:none;border:none;
+    margin-left:calc(var(--orb,12px) / -2);
+    background:radial-gradient(circle at 34% 32%, rgba(255,255,255,.75), currentColor 64%);
+    box-shadow:0 0 10px 1px currentColor, 0 0 22px 3px currentColor;
+    transition:transform .15s,box-shadow .15s;color:var(--neu)}
+  .ev .card{background:transparent;border:1px solid transparent;border-radius:9px;padding:4px 11px;max-width:300px;transition:background .12s,border-color .12s,box-shadow .12s,max-width .12s}
   .ev .line{display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden}
   .ev .eid{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--paper-faint);flex:none}
   .ev .badge{font-family:var(--mono);font-size:9px;flex:none;display:inline-flex;align-items:center;gap:3px}
   .ev .badge.ok{color:var(--sup)} .ev .badge.bad{color:var(--adv)}
   .ev .q{font-family:var(--serif);font-size:14px;color:var(--paper-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  .ev.sup .dot{background:var(--sup)} .ev.adv .dot{background:var(--adv)} .ev.neu .dot{background:var(--neu)}
-  .ev.idle .dot{background:var(--paper-faint)}
+  /* constellation is colourful AT REST — each orb glows in its evidence's relation */
+  .ev.sup .dot{color:var(--sup)} .ev.adv .dot{color:var(--adv)} .ev.neu .dot{color:var(--neu)}
+  .ev.idle .dot{color:var(--paper-faint);box-shadow:0 0 6px 0 currentColor}
 
-  /* hover = transient quote peek (one at a time) */
+  /* hover = transient quote peek + brighter orb (one at a time) */
   .ev:hover{z-index:40;height:auto}
-  .ev:hover .card{background:var(--ink-2);border-color:var(--line);box-shadow:0 6px 20px rgba(20,28,40,.16);max-width:400px}
-  .ev:hover .q{white-space:normal;line-height:1.34}
+  .ev:hover .card{background:rgba(14,24,32,.92);backdrop-filter:blur(10px);border-color:rgba(255,255,255,.14);box-shadow:0 10px 34px rgba(0,0,0,.55);max-width:400px}
+  .ev:hover .q{white-space:normal;line-height:1.34;color:var(--paper)}
 
-  /* lit (selected by the argument feature) — compact colour chip with a coloured edge */
+  /* lit (selected by the argument feature) — coloured glass chip with a glowing edge */
   .ev.lit{z-index:5}
-  .ev.lit .card{background:var(--ink-2);border-color:var(--line);box-shadow:0 2px 8px rgba(20,28,40,.1)}
+  .ev.lit .card{background:rgba(14,24,32,.9);backdrop-filter:blur(8px);border-color:rgba(255,255,255,.1);box-shadow:0 4px 16px rgba(0,0,0,.4)}
   .ev.lit.sup .card{border-left:3px solid var(--sup)}
   .ev.lit.adv .card{border-left:3px solid var(--adv)}
   .ev.lit.neu .card{border-left:3px solid var(--neu)}
-  .ev.lit .dot{transform:scale(1.5);box-shadow:0 0 0 2px var(--ink-2),0 0 14px 2px currentColor}
+  .ev.lit .dot{transform:scale(1.4);box-shadow:0 0 14px 3px currentColor, 0 0 34px 6px currentColor}
   .ev.lit.sup .dot{color:var(--sup)} .ev.lit.adv .dot{color:var(--adv)} .ev.lit.neu .dot{color:var(--neu)}
 
   /* focused = the evidence whose detail panel is open */
-  .ev.focused .dot{transform:scale(1.6);box-shadow:0 0 0 3px var(--ink-2),0 0 0 5px var(--gold)}
-  .ev.focused .card{background:var(--ink-2);border-color:var(--gold)}
+  .ev.focused .dot{transform:scale(1.55);box-shadow:0 0 0 3px var(--ink),0 0 0 5px var(--gold),0 0 26px 5px var(--gold)}
+  .ev.focused .card{background:rgba(14,24,32,.95);border-color:var(--gold)}
 
   /* selection muted (not hidden) — colour does the focusing, context stays readable */
-  .selecting .ev{opacity:.5}
+  .selecting .ev{opacity:.4}
   .selecting .ev .q{color:var(--paper-faint)}
+  .selecting .ev .dot{box-shadow:0 0 5px 0 currentColor}
   .selecting .ev.lit, .selecting .ev.focused{opacity:1}
   .selecting .ev.lit .q{color:var(--paper)}
+  .selecting .ev.lit .dot{box-shadow:0 0 14px 3px currentColor, 0 0 34px 6px currentColor}
   .selecting .ev:hover{opacity:1}
 
-  .undated{margin:0 16px 26px 96px;border-top:1px dashed var(--line);padding-top:10px}
+  .undated{width:560px;max-width:100%;margin:0 auto 26px;padding-left:96px;border-top:1px dashed var(--line);padding-top:10px}
   .undated h4{font-family:var(--mono);font-size:10px;color:var(--paper-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
 
   .empty{padding:46px 22px;text-align:center;color:var(--paper-faint);font-size:13px;line-height:1.7}
   .empty code{font-family:var(--mono);color:var(--paper-dim)}
 
-  /* ── clicked-evidence DETAIL PANEL (slides up over the bottom of the panel) ── */
+  /* ── clicked-evidence DETAIL PANEL — docks on the RIGHT ── */
   .body{flex:1;display:flex;min-height:0}
-  /* detail docks on the RIGHT and shrinks the timeline beside it — it never covers the timeline */
-  .detail{flex:none;width:0;overflow:hidden;background:var(--ink-2);border-left:1px solid var(--line);transition:width .22s ease}
+  .detail{flex:none;width:0;overflow:hidden;background:rgba(10,18,24,.96);backdrop-filter:blur(10px);border-left:1px solid var(--line);transition:width .22s ease}
   .detail.open{width:340px;overflow-y:auto}
   .dpad{position:relative;width:340px;padding:18px 18px 22px}
-  .detail .dclose{position:absolute;top:12px;right:12px;width:26px;height:26px;border:1px solid var(--line);background:var(--surface);
+  .detail .dclose{position:absolute;top:12px;right:12px;width:26px;height:26px;border:1px solid var(--line);background:rgba(255,255,255,.04);
                   border-radius:6px;color:var(--paper-faint);font-size:15px;cursor:pointer;line-height:1}
   .detail .dclose:hover{color:var(--paper);border-color:var(--paper-faint)}
   .drel{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;
         text-transform:uppercase;padding:4px 9px;border-radius:999px}
-  .drel.sup{color:var(--sup);background:var(--sup-bg);border:1px solid #bfe3cd}
-  .drel.adv{color:var(--adv);background:var(--adv-bg);border:1px solid #f0c4cc}
-  .drel.neu{color:var(--neu);background:var(--neu-bg);border:1px solid #c5d9f6}
+  .drel.sup{color:var(--sup);background:var(--sup-bg);border:1px solid rgba(52,211,153,.4)}
+  .drel.adv{color:var(--adv);background:var(--adv-bg);border:1px solid rgba(251,113,133,.4)}
+  .drel.neu{color:var(--neu);background:var(--neu-bg);border:1px solid rgba(138,166,196,.4)}
   .deid{font-family:var(--mono);font-size:10px;color:var(--paper-faint);margin-left:8px}
   .dquote{font-family:var(--serif);font-size:16px;line-height:1.45;color:var(--paper);margin:14px 0 4px}
   .dmeta{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:12px 0;font-size:12.5px}
   .dmeta dt{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--paper-faint);align-self:center}
   .dmeta dd{color:var(--paper-dim)}
-  /* strong grounding status block */
   .dground{display:flex;align-items:flex-start;gap:9px;padding:10px 12px;border-radius:7px;font-size:12.5px;line-height:1.4;margin:6px 0 14px}
-  .dground.ok{background:var(--sup-bg);border:1px solid #bfe3cd;color:#185c36}
-  .dground.bad{background:var(--adv-bg);border:1px solid #f0c4cc;color:#8a1f2e}
+  .dground.ok{background:var(--sup-bg);border:1px solid rgba(52,211,153,.4);color:var(--sup)}
+  .dground.bad{background:var(--adv-bg);border:1px solid rgba(251,113,133,.4);color:var(--adv)}
   .dground .gi{font-size:15px;line-height:1.1}
   .dground b{font-weight:600}
-  .dsrc{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:#fff;background:var(--neu);
-        border:none;border-radius:6px;padding:9px 14px;text-decoration:none;cursor:pointer}
+  .dsrc{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:#04130d;background:var(--sup);
+        border:none;border-radius:6px;padding:9px 14px;text-decoration:none;cursor:pointer;font-weight:600;box-shadow:0 0 18px rgba(52,211,153,.3)}
   .dsrc:hover{filter:brightness(1.07)}
-  .dsrc.disabled{background:var(--surface);color:var(--paper-faint);border:1px dashed var(--line);pointer-events:none}
+  .dsrc.disabled{background:rgba(255,255,255,.05);color:var(--paper-faint);border:1px dashed var(--line);pointer-events:none;box-shadow:none;font-weight:400}
+
+  /* ── polish: keyboard focus, hover, entrance, loading, clear, narrow ── */
+  .ev:focus{outline:none}
+  .ev:focus-visible .card{background:rgba(14,24,32,.92);border-color:var(--sup);box-shadow:0 0 0 2px var(--sup)}
+  .ev:focus-visible .dot{transform:scale(1.35)}
+  .zoom button:focus-visible,.dclose:focus-visible,.dsrc:focus-visible,.clearbtn:focus-visible{outline:2px solid var(--sup);outline-offset:2px}
+  .ev:hover .dot{transform:scale(1.28)}
+  @keyframes evIn{from{opacity:0;transform:translateY(-50%) translateX(-8px)}to{opacity:1;transform:translateY(-50%)}}
+  .tl.enter .ev{animation:evIn .34s cubic-bezier(.2,.7,.3,1) both}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:72px 20px;color:var(--paper-faint);font-family:var(--mono);font-size:11px;letter-spacing:.1em}
+  .spinner{width:28px;height:28px;border:2.5px solid var(--line);border-top-color:var(--sup);border-radius:50%;animation:spin .8s linear infinite}
+  .clearbtn{display:none;margin-left:10px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--paper-dim);font-family:var(--mono);font-size:10px;letter-spacing:.05em;padding:3px 10px;border-radius:999px;cursor:pointer}
+  .selecting .clearbtn{display:inline-flex;align-items:center;gap:5px}
+  .clearbtn:hover{border-color:var(--gold);color:var(--paper)}
+  .kbd-hint{font-family:var(--mono);font-size:9.5px;color:var(--paper-faint);letter-spacing:.04em}
+  @media (max-width:560px){
+    .detail{position:absolute;top:0;right:0;bottom:0;z-index:50;box-shadow:-8px 0 24px rgba(0,0,0,.5)}
+    .detail.open{width:100%}.dpad{width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  }
 </style>
 </head>
 <body>
 <div class="app">
+  <div class="aurora"></div>
+  <div class="stars"></div>
   <div class="top">
     <div class="brand"><b>GROUNDS</b> · TIMELINE</div>
     <div class="sub" id="caseLbl">loading…</div>
-    <div class="zoom"><button id="zoomOut" title="Zoom out (compress time)">−</button><button id="zoomFit" title="Reset zoom">fit</button><button id="zoomIn" title="Zoom in (spread time)">+</button></div>
+    <div class="zoom"><button id="zoomOut" title="Zoom out (compress time)" aria-label="Zoom out">−</button><button id="zoomFit" title="Reset zoom" aria-label="Reset zoom to fit">fit</button><button id="zoomIn" title="Zoom in (spread time)" aria-label="Zoom in">+</button></div>
     <div class="gchip" id="gchip">grounding: —</div>
   </div>
   <div class="legend">
     <span><i style="background:var(--sup)"></i>supportive</span>
     <span><i style="background:var(--adv)"></i>adverse</span>
     <span><i style="background:var(--neu)"></i>neutral</span>
-    <span style="color:var(--paper-faint)">click a dot for its source · highlight from <b style="color:var(--paper-dim)">Arguments</b></span>
-    <span class="selnote" id="selnote"></span>
+    <span style="color:var(--paper-faint)">click a dot for its source · <span class="kbd-hint">↑↓ navigate · ⏎ open · esc close · ⌘scroll zoom</span></span>
+    <span class="selnote" id="selnote" aria-live="polite"></span>
+    <button class="clearbtn" id="clearSel" title="Clear selection (Esc)">✕ clear</button>
   </div>
 
   <div class="body">
-    <div class="scrollwrap"><div class="tl" id="tl"></div><div id="undated"></div></div>
+    <div class="scrollwrap"><div class="tl" id="tl" role="list" aria-label="Evidence timeline"></div><div id="undated"></div></div>
     <!-- clicked-evidence detail — docks on the RIGHT, does not cover the timeline -->
     <div class="detail" id="detail"><div class="dpad">
       <button class="dclose" id="dclose" title="Close">×</button>
@@ -225,6 +281,7 @@
   // ---------------- load matrix ----------------
   let EV={}, PROP={}, REL={}, CONFLICTS_BY_PROP={};
   async function loadMatrix(){
+    tlEl.innerHTML='<div class="loading"><div class="spinner"></div><div>loading evidence…</div></div>';
     let data=null;
     for(const url of ['/api/matrix','./matrix.json','./data/matrix.json']){
       try{ const r=await fetch(url,{cache:'no-store'}); if(r.ok){ const j=await r.json(); data=j.matrix||j; if(Array.isArray(data)&&data.length) break; } }catch(e){}
@@ -250,12 +307,21 @@
                   url:l.source_url||l.url||s.url||''}; }
       });
     });
+    // importance (distinct propositions citing each evidence) + a default relation,
+    // so the constellation is colourful and orbs are sized by how load-bearing they are.
+    const rc={};
+    Object.keys(EV).forEach(id=>{ EV[id].degree=0; rc[id]={supportive:0,adverse:0,neutral:0}; });
+    for(const pid in REL){ for(const id in REL[pid]){ if(EV[id]){ EV[id].degree++; rc[id][REL[pid][id]]=(rc[id][REL[pid][id]]||0)+1; } } }
+    Object.keys(EV).forEach(id=>{ const c=rc[id];
+      EV[id].rel = c.supportive>=c.adverse ? (c.supportive>0?'supportive':'neutral') : 'adverse'; });
   }
 
   // ---------------- render ----------------
   const tlEl=document.getElementById('tl'), undatedEl=document.getElementById('undated');
   const PXPERDAY=2.6, ROWMIN=34, PAD=40, SPINEX=96;
-  let ZOOM=1, lastSel=null, nodeById={}, yById={}, conflictSvg=null;
+  let ZOOM=1, lastSel=null, nodeById={}, yById={}, conflictSvg=null, _firstRender=true;
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SCROLL = REDUCED ? 'auto' : 'smooth';
   function render(){
     tlEl.innerHTML=''; undatedEl.innerHTML=''; nodeById={}; yById={};
     const all=Object.values(EV);
@@ -290,6 +356,7 @@
       const box=undatedEl.querySelector('.undated');
       undated.forEach(e=>{ const n=mkEv(e,null); n.style.position='static'; n.style.transform='none'; n.style.marginBottom='8px'; box.appendChild(n); });
     }
+    if(_firstRender){ _firstRender=false; tlEl.classList.add('enter'); setTimeout(()=>tlEl.classList.remove('enter'), 440); }
     reapply();
   }
   function reapply(){ if(!lastSel) return;
@@ -300,12 +367,18 @@
     drawConflicts(lastSel.conflicts);
   }
   function mkEv(e,y){
-    const div=document.createElement('div'); div.className='ev idle'; if(y!=null) div.style.top=y+'px';
-    div.dataset.eid=e.id; nodeById[e.id]=div;
+    const relc=e.rel==='supportive'?'sup':e.rel==='adverse'?'adv':e.rel==='neutral'?'neu':'neu';
+    const div=document.createElement('div'); div.className='ev '+relc; if(y!=null) div.style.top=y+'px';
+    div.dataset.eid=e.id; div.dataset.rel=e.rel||'neutral';
+    div.style.setProperty('--orb', (9 + Math.min(e.degree||0,6)*2.4).toFixed(0)+'px');  // load-bearing = bigger
+    nodeById[e.id]=div;
+    div.tabIndex=0; div.setAttribute('role','listitem');
+    div.setAttribute('aria-label', e.id+(e.witness?' · '+e.witness:'')+': '+(e.quote?trim(e.quote,90):'no quote'));
     div.innerHTML='<span class="dot"></span><div class="card">'
       +'<div class="line"><span class="eid">'+esc(e.id)+'</span>'
         +'<span class="q">'+esc(trim(e.quote,200)||'(no quote)')+'</span></div></div>';
     div.addEventListener('click',()=>openDetail(e));
+    div.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); openDetail(e); } });
     return div;
   }
   function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
@@ -352,18 +425,19 @@
       src.textContent='↓ Open source document'+(e.page?' · p.'+e.page:''); }
     else { src.className='dsrc disabled'; src.removeAttribute('href'); src.textContent='source file not linked'; src.style.display='inline-flex'; }
     detail.classList.add('open');
+    const _dc=document.getElementById('dclose'); if(_dc) _dc.focus();
     try{ window.parent && window.parent!==window && window.parent.postMessage({source:'grounds-timeline',type:'evidence-click',evidence_id:e.id},'*'); }catch(_){}
     document.dispatchEvent(new CustomEvent('grounds:evidence-click',{detail:{evidence_id:e.id}}));
   }
-  function closeDetail(){ detail.classList.remove('open'); focusedId=null;
-    document.querySelectorAll('.ev.focused').forEach(n=>n.classList.remove('focused')); }
+  function closeDetail(){ const ret=focusedId&&nodeById[focusedId]; detail.classList.remove('open'); focusedId=null;
+    document.querySelectorAll('.ev.focused').forEach(n=>n.classList.remove('focused')); if(ret) ret.focus(); }
   document.getElementById('dclose').onclick=closeDetail;
 
   // ---------------- highlight API ----------------
   function setRelClass(node,rel){ node.classList.remove('sup','adv','neu','idle');
     node.classList.add(rel==='supportive'?'sup':rel==='adverse'?'adv':rel==='neutral'?'neu':'idle'); }
   function clearHighlight(){ lastSel=null; document.body.classList.remove('selecting');
-    Object.values(nodeById).forEach(n=>{n.classList.remove('lit'); setRelClass(n,'idle');});
+    Object.values(nodeById).forEach(n=>{n.classList.remove('lit'); setRelClass(n, n.dataset.rel||'neutral');});
     drawConflicts(null); document.getElementById('selnote').textContent=''; }
   function applyHighlight(map,label,conflicts){ lastSel={map,label,conflicts};
     document.body.classList.add('selecting');
@@ -373,7 +447,7 @@
     if(focusedId && nodeById[focusedId]) nodeById[focusedId].classList.add('focused');
     drawConflicts(conflicts);
     document.getElementById('selnote').textContent=label?label+' · '+n+' lit':'';
-    if(first) first.scrollIntoView({behavior:'smooth',block:'center'});
+    if(first) first.scrollIntoView({behavior:SCROLL,block:'center'});
   }
   const API={
     highlightProposition(pid){ const m=REL[pid]; if(!m){ console.warn('Grounds: unknown proposition',pid); return; }
@@ -406,6 +480,24 @@
   document.getElementById('zoomOut').onclick=()=>setZoom(ZOOM/1.3);
   document.getElementById('zoomFit').onclick=()=>setZoom(1);
   document.querySelector('.scrollwrap').addEventListener('wheel',e=>{ if(e.ctrlKey||e.metaKey){ e.preventDefault(); setZoom(ZOOM*(e.deltaY<0?1.12:0.9)); } },{passive:false});
+
+  // ---------------- clear-selection + keyboard navigation ----------------
+  const _clr=document.getElementById('clearSel'); if(_clr) _clr.addEventListener('click', clearHighlight);
+  function _rows(){ return Array.from(tlEl.querySelectorAll('.ev')).concat(Array.from(undatedEl.querySelectorAll('.ev'))); }
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){ if(detail.classList.contains('open')) closeDetail(); else if(lastSel) clearHighlight(); return; }
+    if(e.key==='+'||e.key==='='){ e.preventDefault(); setZoom(ZOOM*1.3); return; }
+    if(e.key==='-'||e.key==='_'){ e.preventDefault(); setZoom(ZOOM/1.3); return; }
+    if(e.key==='0'){ setZoom(1); return; }
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      const rows=_rows(); if(!rows.length) return;
+      const a=document.activeElement, onRow=a&&a.classList&&a.classList.contains('ev');
+      if(!onRow){ if(e.key==='ArrowDown'){ e.preventDefault(); rows[0].focus(); rows[0].scrollIntoView({block:'center',behavior:SCROLL}); } return; }
+      e.preventDefault(); let i=rows.indexOf(a);
+      i = e.key==='ArrowDown' ? Math.min(rows.length-1,i+1) : Math.max(0,i-1);
+      rows[i].focus(); rows[i].scrollIntoView({block:'center',behavior:SCROLL});
+    }
+  });
 
   // ---------------- inline demo (replaced by real matrix.json) ----------------
   const DEMO=[
