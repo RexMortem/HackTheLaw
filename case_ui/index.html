@@ -780,6 +780,43 @@
     #hero .send-btn:hover { filter: brightness(1.4); }
     #hero .starter { background: var(--white); border-color: var(--border); color: var(--slate); }
     #hero .starter:hover { border-color: var(--ink); background: var(--paper-2); color: var(--ink); }
+
+    /* ================================================================== */
+    /* Claims room: full-width matrix + paper/ink/mono header              */
+    /* ================================================================== */
+    /* Full-width body so the matrix fills the space under the header
+       (was centered at 1280px, leaving a big empty band on wide screens).
+       Left padding clears the fixed rail and aligns with the header title. */
+    #room-propositions .room-body {
+      max-width: none;
+      margin: 0;
+      padding: 1.1rem 2rem 4rem 5.75rem;
+    }
+
+    /* Header restyled to the paper / ink / mono aesthetic */
+    #room-propositions .room-head {
+      background: var(--paper);
+      color: var(--ink);
+      border-bottom: 3px solid var(--ink);
+    }
+    #room-propositions .room-head h1 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+    #room-propositions .room-head .sub {
+      font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate-2); margin-top: 0.2rem;
+    }
+    #room-propositions .room-head .tl-toggle {
+      background: var(--white); border: 1px solid var(--border); color: var(--ink);
+    }
+    #room-propositions .room-head .tl-toggle:hover { background: var(--paper-2); }
+    #room-propositions .room-head .tl-toggle.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+    /* Stat pills + readiness restyled for the light header */
+    #room-propositions .room-head .stat-pill { background: var(--white); border: 1px solid var(--border); }
+    #room-propositions .room-head .stat-pill .count { color: var(--ink); }
+    #room-propositions .room-head .stat-pill .lbl { color: var(--slate); font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.04em; text-transform: uppercase; }
+    #room-propositions .room-head .readiness-mini .score { color: var(--ink); }
+    #room-propositions .room-head .readiness-bar { background: var(--border); }
+    #room-propositions .room-head .readiness-fill { background: linear-gradient(90deg, #3f9d6d, #5cb98a); }
   </style>
 </head>
 <body>
