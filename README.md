@@ -8,6 +8,8 @@ labels it **supported**,
 matrix with an AI case summary, grounding-guard citation checks, and a built-in
 litigation assistant you can chat with.
 
+**Live demo:** https://proof-matrix-rexmortem.onrender.com/
+
 ---
 
 ## Run it
@@ -384,7 +386,8 @@ authority enrichment is skipped.
 
 ### Deployment (Render)
 
-`render.yaml` defines a free Render web service:
+Live at **https://proof-matrix-rexmortem.onrender.com/**. `render.yaml` defines a
+free Render web service:
 
 - Build `pip install -r requirements.txt`, start `python case_ui/app.py`.
 - The server reads `$PORT` (Render-injected) and binds all interfaces.
