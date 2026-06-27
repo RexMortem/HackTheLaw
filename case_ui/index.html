@@ -40,6 +40,12 @@
       --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
       --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
       --shadow-lg: 0 20px 40px -12px rgba(15,31,61,.35);
+
+      /* Figma "Claims & Evidential Foundations" theme (additive) */
+      --ink:     #1c1b18;
+      --paper:   #f1efe7;
+      --paper-2: #f7f5ee;
+      --mono: "SFMono-Regular", "JetBrains Mono", "Roboto Mono", Consolas, "Liberation Mono", Menlo, monospace;
     }
 
     html { font-size: 15px; }
@@ -136,9 +142,10 @@
     /* Option cards */
     .cards {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 1rem;
-      margin-bottom: 1.6rem;
+      max-width: 620px;
+      margin: 0 auto 1.6rem;
     }
     .opt-card {
       position: relative;
@@ -536,6 +543,239 @@
       .arg-cols { grid-template-columns: 1fr; }
       .room-head { padding-left: 4.6rem; }
     }
+
+    /* ================================================================== */
+    /* Figma "Claims & Defenses" restyle — scoped to the Propositions room */
+    /* ================================================================== */
+    #room-propositions {
+      /* muted, earthy status palette (overrides global tokens in-scope) */
+      --supported:  #3f9d6d; --supported-bg:  #eef6f0; --supported-border:  #c8e3d3;
+      --contested:  #d9942b; --contested-bg:  #fbf3e2; --contested-border:  #efd9af;
+      --undermined: #cf4a45; --undermined-bg: #fbeceb; --undermined-border: #f1c8c5;
+      --missing:    #908d82; --missing-bg:    #f3f1ea; --missing-border:    #ddd9cc;
+      --border:     #ddd9cc;
+      --ink:        #1c1b18;
+      --paper-2:    #f7f5ee;
+      --radius-sm:  3px;
+      --mono: "SFMono-Regular", "JetBrains Mono", "Roboto Mono", Consolas, "Liberation Mono", Menlo, monospace;
+      background: #f1efe7; /* paper / cream canvas */
+    }
+
+    /* Click-any-row hint (mono motif) */
+    #room-propositions .row-hint {
+      font-family: var(--mono);
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--slate-2); margin: -0.3rem 0 1.1rem;
+    }
+
+    /* Card: coloured TOP border per status (replaces the left accent) */
+    #room-propositions .prop-card {
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--border);
+    }
+    #room-propositions .prop-card.status-supported  { border-top-color: var(--supported);  border-left: 1px solid var(--border); }
+    #room-propositions .prop-card.status-contested  { border-top-color: var(--contested);  border-left: 1px solid var(--border); }
+    #room-propositions .prop-card.status-undermined { border-top-color: var(--undermined); border-left: 1px solid var(--border); }
+    #room-propositions .prop-card.status-MISSING    { border-top-color: var(--missing);    border-left: 1px solid var(--border); }
+    #room-propositions .card-header { gap: 1rem; }
+    #room-propositions .card-right  { gap: 0.55rem; }
+
+    /* CLAIM / DEFENSE black pill */
+    #room-propositions .kind-pill {
+      display: inline-flex; align-items: center; gap: 0.32rem;
+      background: var(--ink); color: #fff;
+      font-family: var(--mono); font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.2rem 0.5rem; border-radius: 3px;
+    }
+    #room-propositions .kind-pill svg { width: 11px; height: 11px; }
+    #room-propositions .prop-type-badge { font-family: var(--mono); background: var(--paper-2); border: 1px solid var(--border); color: var(--slate); }
+    #room-propositions .prop-id { font-family: var(--mono); }
+    #room-propositions .prop-text { font-size: 0.95rem; font-weight: 600; color: var(--ink); line-height: 1.45; }
+
+    /* Score box (right side) */
+    #room-propositions .score-box {
+      flex-shrink: 0; width: 86px; min-height: 62px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border-radius: 4px; color: #fff; line-height: 1; padding: 0.45rem 0.4rem; align-self: flex-start;
+    }
+    #room-propositions .score-box .num { font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em; }
+    #room-propositions .score-box .lbl { font-family: var(--mono); font-size: 0.56rem; font-weight: 700; letter-spacing: 0.1em; margin-top: 0.3rem; }
+    #room-propositions .score-box.supported  { background: var(--supported); }
+    #room-propositions .score-box.contested  { background: var(--contested); }
+    #room-propositions .score-box.undermined { background: var(--undermined); }
+    #room-propositions .score-box.MISSING    { background: var(--missing); }
+
+    /* Evidence Map (tiles + segmented bar + S/U/N/M legend) */
+    #room-propositions .evidence-map { margin-top: 0.85rem; }
+    #room-propositions .map-title { font-family: var(--mono); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--slate-2); margin-bottom: 0.45rem; }
+    #room-propositions .map-tiles { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 0.6rem; }
+    #room-propositions .ev-tile { width: 20px; height: 20px; border-radius: 3px; cursor: default; transition: transform .1s ease; }
+    #room-propositions .ev-tile:hover { transform: scale(1.15); }
+    #room-propositions .ev-tile.supportive { background: var(--supported); }
+    #room-propositions .ev-tile.adverse    { background: var(--undermined); }
+    #room-propositions .ev-tile.neutral    { background: var(--contested); }
+    #room-propositions .ev-tile.missing    { background: transparent; border: 1.5px dashed var(--slate-2); }
+    #room-propositions .map-more { font-size: 0.7rem; color: var(--slate-2); margin-left: 0.15rem; }
+    #room-propositions .map-bar-row { display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; }
+    #room-propositions .seg-bar { flex: 1; min-width: 140px; height: 8px; border-radius: 4px; overflow: hidden; display: flex; background: var(--missing-bg); }
+    #room-propositions .seg { height: 100%; }
+    #room-propositions .seg.s { background: var(--supported); }
+    #room-propositions .seg.n { background: var(--contested); }
+    #room-propositions .seg.u { background: var(--undermined); }
+    #room-propositions .seg.m { background: #d8d4c7; }
+    #room-propositions .map-legend { display: flex; gap: 0.7rem; flex-shrink: 0; }
+    #room-propositions .leg { display: flex; align-items: center; gap: 0.3rem; font-family: var(--mono); font-size: 0.66rem; font-weight: 700; color: var(--slate); }
+    #room-propositions .leg .sw { width: 9px; height: 9px; border-radius: 2px; }
+    #room-propositions .leg .sw.s { background: var(--supported); }
+    #room-propositions .leg .sw.n { background: var(--contested); }
+    #room-propositions .leg .sw.u { background: var(--undermined); }
+    #room-propositions .leg .sw.m { background: #d8d4c7; }
+
+    /* Grouped evidence drawer */
+    #room-propositions .ev-group { border-radius: 5px; padding: 0.65rem 0.8rem; margin-bottom: 0.6rem; }
+    #room-propositions .ev-group:last-child { margin-bottom: 0; }
+    #room-propositions .ev-group.supportive { background: var(--supported-bg); }
+    #room-propositions .ev-group.adverse    { background: var(--undermined-bg); }
+    #room-propositions .ev-group.neutral    { background: var(--missing-bg); }
+    #room-propositions .ev-group-head { display: flex; align-items: center; gap: 0.4rem; font-family: var(--mono); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.4rem; }
+    #room-propositions .ev-group-head .sw { width: 10px; height: 10px; border-radius: 2px; }
+    #room-propositions .ev-group.supportive .ev-group-head { color: var(--supported); }
+    #room-propositions .ev-group.supportive .ev-group-head .sw { background: var(--supported); }
+    #room-propositions .ev-group.adverse .ev-group-head { color: var(--undermined); }
+    #room-propositions .ev-group.adverse .ev-group-head .sw { background: var(--undermined); }
+    #room-propositions .ev-group.neutral .ev-group-head { color: var(--slate); }
+    #room-propositions .ev-group.neutral .ev-group-head .sw { background: var(--missing); }
+    #room-propositions .ev-row { display: flex; gap: 0.55rem; padding: 0.55rem 0; border-top: 1px solid rgba(40,38,30,.07); }
+    #room-propositions .ev-row:first-of-type { border-top: none; padding-top: 0.1rem; }
+    #room-propositions .ev-doc-icon { flex-shrink: 0; color: var(--slate-2); width: 16px; height: 16px; margin-top: 0.1rem; }
+    #room-propositions .ev-row-main { flex: 1; min-width: 0; }
+    #room-propositions .ev-row-title { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
+    #room-propositions .ev-row-sub { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 0.12rem; }
+    #room-propositions .ev-group.supportive .ev-row-sub { color: var(--supported); }
+    #room-propositions .ev-group.adverse .ev-row-sub    { color: var(--undermined); }
+    #room-propositions .ev-group.neutral .ev-row-sub    { color: var(--slate-2); }
+
+    /* Evidence-tile hover tooltip (appended to <body>) */
+    #ev-tooltip {
+      position: fixed; z-index: 1000; pointer-events: none;
+      background: #1c1b18; color: #fff;
+      font-family: "SFMono-Regular", "JetBrains Mono", "Roboto Mono", Consolas, Menlo, monospace;
+      font-size: 0.68rem; letter-spacing: 0.02em; line-height: 1.35;
+      padding: 0.32rem 0.55rem; border-radius: 4px;
+      box-shadow: 0 4px 10px -2px rgba(40,38,30,.4); max-width: 280px;
+      opacity: 0; transform: translateY(3px); transition: opacity .12s ease, transform .12s ease;
+    }
+    #ev-tooltip.show { opacity: 1; transform: translateY(0); }
+    #ev-tooltip .tip-rel { display: inline-block; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-right: 0.4rem; }
+    #ev-tooltip .tip-rel.supportive { color: #7ee0aa; }
+    #ev-tooltip .tip-rel.adverse    { color: #f3a3a0; }
+    #ev-tooltip .tip-rel.neutral    { color: #ecc98a; }
+
+    /* ================================================================== */
+    /* Claims room: timeline sidebar | matrix | evidence side panel        */
+    /* ================================================================== */
+    #room-propositions .room-head .tl-toggle {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
+      color: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      padding: 0.4rem 0.7rem; border-radius: 8px; transition: background .15s, color .15s;
+    }
+    #room-propositions .room-head .tl-toggle:hover { background: rgba(255,255,255,.18); }
+    #room-propositions .room-head .tl-toggle.active { background: #fff; color: var(--ink); border-color: #fff; }
+
+    #room-propositions .claims-layout { display: flex; align-items: flex-start; gap: 1.25rem; }
+    #room-propositions .claims-main { flex: 1 1 auto; min-width: 0; }
+
+    /* Left timeline sidebar (collapsed by default, toggled open) */
+    #room-propositions .timeline-sidebar {
+      flex: 0 0 0; width: 0; overflow: hidden; opacity: 0; padding: 0;
+      position: sticky; top: 1rem;
+      background: var(--white); border: 1px solid var(--border); border-top: 4px solid var(--ink);
+      border-radius: 6px;
+      transition: flex-basis .25s ease, width .25s ease, opacity .2s ease, padding .25s ease;
+    }
+    #room-propositions .timeline-sidebar.open { flex: 0 0 250px; width: 250px; opacity: 1; padding: 1rem 1.1rem; }
+    #room-propositions .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-family: var(--mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); margin-bottom: 0.55rem; white-space: nowrap; }
+    #room-propositions .tl-tag { font-size: 0.54rem; color: var(--contested); background: var(--contested-bg); border: 1px solid var(--contested-border); border-radius: 999px; padding: 0.05rem 0.4rem; letter-spacing: 0.08em; }
+    #room-propositions .tl-note { font-size: 0.76rem; color: var(--slate); line-height: 1.5; margin-bottom: 1rem; }
+    #room-propositions .tl-spine { list-style: none; position: relative; padding-left: 1rem; }
+    #room-propositions .tl-spine::before { content: ""; position: absolute; left: 4px; top: 5px; bottom: 5px; width: 2px; background: var(--border); }
+    #room-propositions .tl-spine li { position: relative; margin-bottom: 0.85rem; }
+    #room-propositions .tl-spine li:last-child { margin-bottom: 0; }
+    #room-propositions .tl-dot { position: absolute; left: -1rem; top: 3px; width: 9px; height: 9px; border-radius: 50%; background: var(--slate-2); border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--border); }
+    #room-propositions .tl-item { font-size: 0.8rem; color: var(--ink); font-weight: 600; }
+    #room-propositions .tl-item small { display: block; font-family: var(--mono); font-size: 0.58rem; font-weight: 500; color: var(--slate-2); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.1rem; }
+
+    /* Card selection states (no more inline drawer) */
+    #room-propositions .prop-card.selected { box-shadow: 0 0 0 2px var(--ink), var(--shadow-md); }
+    #room-propositions .prop-card.flash { box-shadow: 0 0 0 3px var(--contested); }
+    #room-propositions .expand-icon { transition: transform .15s, color .15s; }
+    #room-propositions .prop-card.selected .expand-icon { transform: translateX(2px); color: var(--ink); }
+
+    /* Right evidence side panel (sticky column) */
+    #room-propositions .evidence-panel {
+      flex: 0 0 0; width: 0; overflow: hidden;
+      position: sticky; top: 1rem; align-self: flex-start;
+      max-height: calc(100vh - 2rem); overflow-y: auto;
+      background: var(--white); border: 1px solid var(--border); border-top: 4px solid var(--ink); border-radius: 6px;
+      transition: flex-basis .25s ease, width .25s ease;
+    }
+    #room-propositions .evidence-panel.open { flex: 0 0 372px; width: 372px; }
+    #room-propositions .ep-content { padding: 1rem 1.1rem 1.25rem; }
+    #room-propositions .ep-top { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.7rem; }
+    #room-propositions .ep-score { font-family: var(--mono); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; color: #fff; padding: 0.22rem 0.5rem; border-radius: 3px; }
+    #room-propositions .ep-score.supported  { background: var(--supported); }
+    #room-propositions .ep-score.contested  { background: var(--contested); }
+    #room-propositions .ep-score.undermined { background: var(--undermined); }
+    #room-propositions .ep-score.MISSING    { background: var(--missing); }
+    #room-propositions .ep-close { margin-left: auto; background: none; border: none; font-size: 1.45rem; line-height: 1; color: var(--slate); cursor: pointer; padding: 0 0.2rem; }
+    #room-propositions .ep-close:hover { color: var(--ink); }
+    #room-propositions .ep-title { font-size: 0.95rem; font-weight: 700; color: var(--ink); line-height: 1.4; margin-bottom: 0.3rem; }
+    #room-propositions .ep-content .prop-source { margin-bottom: 0.2rem; }
+
+    @media (max-width: 1040px) {
+      #room-propositions .claims-layout { flex-wrap: wrap; }
+      #room-propositions .timeline-sidebar { position: static; }
+      #room-propositions .timeline-sidebar.open { flex-basis: 100%; width: 100%; }
+      #room-propositions .evidence-panel { position: static; max-height: none; }
+      #room-propositions .evidence-panel.open { flex-basis: 100%; width: 100%; order: 3; }
+      #room-propositions .claims-main { flex-basis: 100%; }
+    }
+
+    /* ================================================================== */
+    /* HERO overhaul — matches the Claims paper/ink/mono aesthetic          */
+    /* ================================================================== */
+    #hero {
+      background:
+        radial-gradient(1100px 520px at 50% -10%, #f6f2e6 0%, rgba(246,242,230,0) 60%),
+        var(--paper);
+    }
+    #hero .hero-eyebrow { font-family: var(--mono); color: var(--slate-2); letter-spacing: 0.2em; }
+    #hero .hero-eyebrow b { color: var(--ink); }
+    #hero .hero-title { color: var(--ink); }
+    #hero .hero-title .grad {
+      background: none; -webkit-background-clip: border-box; background-clip: border-box;
+      color: #3f9d6d; -webkit-text-fill-color: #3f9d6d;
+    }
+    #hero .context-row { background: var(--white); border-color: var(--border); color: var(--slate); font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.03em; box-shadow: var(--shadow); }
+    #hero .context-row .eye { background: radial-gradient(circle at 30% 30%, #5cb98a, #3f9d6d); box-shadow: 0 0 0 4px rgba(63,157,109,.18); }
+    #hero .context-row b { color: var(--ink); }
+    #hero .context-row::after { background: linear-gradient(110deg, transparent 30%, rgba(63,157,109,.18) 50%, transparent 70%); }
+    #hero .opt-card { background: var(--white); border: 1px solid var(--border); border-top: 4px solid var(--ink); border-radius: 6px; }
+    #hero .opt-card::before { display: none; }
+    #hero .opt-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--border); border-top-color: #3f9d6d; }
+    #hero .opt-ico { background: var(--paper-2); color: var(--ink); border: 1px solid var(--border); border-radius: 6px; }
+    #hero .opt-name { color: var(--ink); }
+    #hero .opt-stat { font-family: var(--mono); color: var(--ink); }
+    #hero .opt-stat .muted { color: var(--slate-2); }
+    #hero .composer { border-color: var(--border); border-radius: 10px; }
+    #hero .composer:focus-within { border-color: var(--ink); box-shadow: 0 0 0 4px rgba(28,27,24,.08); }
+    #hero .send-btn { background: var(--ink); border-radius: 8px; }
+    #hero .send-btn:hover { filter: brightness(1.4); }
+    #hero .starter { background: var(--white); border-color: var(--border); color: var(--slate); }
+    #hero .starter:hover { border-color: var(--ink); background: var(--paper-2); color: var(--ink); }
   </style>
 </head>
 <body>
@@ -543,17 +783,13 @@
 <!-- ============================== RAIL ============================== -->
 <nav id="rail">
   <div class="rail-brand" id="rail-home" title="Home">PM</div>
-  <button class="rail-btn" data-room="timeline">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-    <span class="tip">Timeline</span>
-  </button>
   <button class="rail-btn" data-room="propositions">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg>
-    <span class="tip">Propositions</span>
+    <span class="tip">Claims &amp; Evidential Foundations</span>
   </button>
-  <button class="rail-btn" data-room="argumentation">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.7 7.6 11 15.6M16.3 7.6 13 15.6"/></svg>
-    <span class="tip">Argumentation</span>
+  <button class="rail-btn" data-room="damages">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    <span class="tip">Recoverable Damages</span>
   </button>
 </nav>
 
@@ -572,30 +808,24 @@
     <div class="context-row" id="context-row">
       <span class="eye"></span>
       Second Chair sees
-      <b id="ctx-props">…</b> propositions <span class="sep">·</span>
+      <b id="ctx-props">…</b> claims <span class="sep">·</span>
       the bundle <span class="sep">·</span>
       <b id="ctx-eu">8</b> EU sources <span class="sep">·</span>
       <b id="ctx-ready">…</b> trial readiness
     </div>
 
     <div class="cards" id="cards">
-      <button class="opt-card" data-room="timeline">
-        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
-        <div class="opt-name">Timeline</div>
-        <div class="opt-desc">When it happened — the chronology of the dispute.</div>
-        <div class="opt-stat" id="stat-timeline"><span class="muted">placeholder</span></div>
-      </button>
       <button class="opt-card" data-room="propositions">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></span>
-        <div class="opt-name">Propositions</div>
+        <div class="opt-name">Claims &amp; Evidential Foundations</div>
         <div class="opt-desc">What's claimed — the pleaded allegations &amp; denials, evidence-coded.</div>
         <div class="opt-stat" id="stat-propositions"><span class="muted">loading…</span></div>
       </button>
-      <button class="opt-card" data-room="argumentation">
-        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.7 7.6 11 15.6M16.3 7.6 13 15.6"/></svg></span>
-        <div class="opt-name">Argumentation</div>
-        <div class="opt-desc">Why it wins or loses — allegation vs defence, clash by clash.</div>
-        <div class="opt-stat" id="stat-argumentation"><span class="muted">loading…</span></div>
+      <button class="opt-card" data-room="damages">
+        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+        <div class="opt-name">Recoverable Damages</div>
+        <div class="opt-desc">What can be recovered — heads of loss and quantum. Coming soon.</div>
+        <div class="opt-stat" id="stat-damages"><span class="muted">placeholder</span></div>
       </button>
     </div>
 
@@ -638,31 +868,14 @@
   </div>
 </section>
 
-<!-- ========================= ROOM: TIMELINE ======================== -->
-<section id="room-timeline" class="view room">
-  <div class="room-head">
-    <div><h1>Timeline</h1><div class="sub">Chronology of the dispute</div></div>
-  </div>
-  <div class="room-body">
-    <div class="placeholder-room">
-      <span class="placeholder-badge">Placeholder</span>
-      <h2>Timeline coming soon</h2>
-      <p>This is a <strong>Placeholder</strong>. The case chronology — pleadings,
-         witness statements and evidence plotted by date — will live here.</p>
-      <div class="placeholder-spine">
-        <span class="node"></span><span class="line"></span>
-        <span class="node"></span><span class="line"></span>
-        <span class="node"></span><span class="line"></span>
-        <span class="node"></span>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ======================= ROOM: PROPOSITIONS ====================== -->
 <section id="room-propositions" class="view room">
   <div class="room-head">
-    <div><h1>Propositions</h1><div class="sub">Pleading-to-proof matrix</div></div>
+    <button class="tl-toggle" id="tl-toggle" title="Toggle timeline" aria-pressed="false">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span>Timeline</span>
+    </button>
+    <div><h1>Claims &amp; Evidential Foundations</h1><div class="sub">Pleading-to-proof matrix</div></div>
     <div class="spacer"></div>
     <div class="stat-pill"><span class="dot" style="background:#16a34a"></span><span class="count" id="count-supported">0</span><span class="lbl">Supported</span></div>
     <div class="stat-pill"><span class="dot" style="background:#d97706"></span><span class="count" id="count-contested">0</span><span class="lbl">Contested</span></div>
@@ -674,6 +887,26 @@
     </div>
   </div>
   <div class="room-body">
+   <div class="claims-layout">
+
+    <!-- Left: timeline sidebar (toggled) -->
+    <aside class="timeline-sidebar" id="timeline-sidebar">
+      <div class="tl-head">
+        <span>Timeline</span>
+        <span class="tl-tag">Placeholder</span>
+      </div>
+      <p class="tl-note">The case chronology — pleadings, witness statements and
+         evidence plotted by date — will live here.</p>
+      <ol class="tl-spine">
+        <li><span class="tl-dot"></span><div class="tl-item">Contract signed<small>placeholder date</small></div></li>
+        <li><span class="tl-dot"></span><div class="tl-item">Alleged breach<small>placeholder date</small></div></li>
+        <li><span class="tl-dot"></span><div class="tl-item">Proceedings issued<small>placeholder date</small></div></li>
+        <li><span class="tl-dot"></span><div class="tl-item">Witness statements<small>placeholder date</small></div></li>
+      </ol>
+    </aside>
+
+    <!-- Centre: the matrix -->
+    <div class="claims-main">
     <div id="loading-state">
       <div class="skeleton skel-card"></div><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div>
     </div>
@@ -688,10 +921,11 @@
       </nav>
 
       <div id="tab-matrix">
+        <div class="row-hint">Click any row for evidence breakdown</div>
         <div class="filters-bar">
           <div class="search-wrap">
             <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="search-input" class="search-input" placeholder="Search propositions..." />
+            <input type="text" id="search-input" class="search-input" placeholder="Search claims..." />
           </div>
           <div class="filter-group" id="status-filters">
             <button class="filter-btn active" data-status="all">All</button>
@@ -706,7 +940,7 @@
       </div>
 
       <div id="tab-risk" style="display:none">
-        <div class="risk-intro">Showing only <strong>Missing</strong> and <strong>Undermined</strong> propositions, sorted by risk — the areas needing further witness, expert or documentary evidence.</div>
+        <div class="risk-intro">Showing only <strong>Missing</strong> and <strong>Undermined</strong> claims, sorted by risk — the areas needing further witness, expert or documentary evidence.</div>
         <div class="filters-bar">
           <div class="search-wrap">
             <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -730,26 +964,36 @@
         </div>
       </section>
     </div>
+    </div><!-- /claims-main -->
+
+    <!-- Right: evidence breakdown side panel -->
+    <aside class="evidence-panel" id="evidence-panel">
+      <div class="ep-empty" id="evidence-panel-empty">
+        <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p>Select a claim or defence to see its evidence breakdown.</p>
+      </div>
+      <div class="ep-content" id="evidence-panel-content" style="display:none"></div>
+    </aside>
+
+   </div><!-- /claims-layout -->
   </div>
 </section>
 
-<!-- ======================= ROOM: ARGUMENTATION ===================== -->
-<section id="room-argumentation" class="view room">
+<!-- ========================= ROOM: DAMAGES ========================= -->
+<section id="room-damages" class="view room">
   <div class="room-head">
-    <div><h1>Argumentation</h1><div class="sub">Allegation vs defence — the case theory</div></div>
+    <div><h1>Recoverable Damages</h1><div class="sub">Heads of loss &amp; quantum</div></div>
   </div>
   <div class="room-body">
-    <p class="arg-intro">Claimant allegations on the left, Defendant denials on the right.
-       Each node is risk-coded; a <strong>clash</strong> marks where a denial directly answers an
-       allegation (via <code>responds&nbsp;to</code>). Click any node to open it in Propositions.</p>
-    <div class="arg-cols">
-      <div class="arg-col claimant">
-        <div class="arg-col-head"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--navy-3)"></span>Claimant — allegations</div>
-        <div id="arg-claimant"></div>
-      </div>
-      <div class="arg-col defendant">
-        <div class="arg-col-head"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--undermined)"></span>Defendant — denials</div>
-        <div id="arg-defendant"></div>
+    <div class="placeholder-room">
+      <span class="placeholder-badge">Placeholder</span>
+      <h2>Recoverable Damages coming soon</h2>
+      <p>This is a <strong>Placeholder</strong>. Heads of loss, quantum and the
+         evidence underpinning each damages claim will live here.</p>
+      <div class="placeholder-spine">
+        <span class="node"></span><span class="line"></span>
+        <span class="node"></span><span class="line"></span>
+        <span class="node"></span>
       </div>
     </div>
   </div>
@@ -765,7 +1009,6 @@
   let _byId = {};            // prop id -> { status, row }
   let _matrixLoaded = false;
   let _summaryLoaded = false;
-  let _argRendered = false;
   let _activeStatus = "all";
   let _searchQuery = "";
   let _riskSearch = "";
@@ -773,15 +1016,14 @@
   let _sending = false;
   let _currentView = "hero";
 
-  const ROOMS = ["timeline", "propositions", "argumentation"];
+  const ROOMS = ["propositions", "damages"];
 
   // ------------------------------------------------------------------ routing
   function go(name) {
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     const map = {
       hero: "hero", chat: "chatview",
-      timeline: "room-timeline", propositions: "room-propositions",
-      argumentation: "room-argumentation",
+      propositions: "room-propositions", damages: "room-damages",
     };
     $(map[name]).classList.add("active");
     _currentView = name;
@@ -795,10 +1037,17 @@
       b.classList.toggle("active", b.dataset.room === name));
 
     if (name === "propositions") ensureSummary();
-    if (name === "argumentation") renderArgumentation();
 
     window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
   }
+
+  // Timeline sidebar toggle (within the Claims room)
+  $("tl-toggle").addEventListener("click", () => {
+    const sb = $("timeline-sidebar");
+    const open = sb.classList.toggle("open");
+    $("tl-toggle").classList.toggle("active", open);
+    $("tl-toggle").setAttribute("aria-pressed", String(open));
+  });
 
   // rail + orb + cards wiring
   document.querySelectorAll(".rail-btn").forEach(b =>
@@ -937,11 +1186,13 @@
 
   function openProposition(pid) {
     go("propositions");
+    const entry = _byId[pid];
     setTimeout(() => {
+      if (entry && entry.row) openEvidencePanel(entry.row);
       const card = document.querySelector('.prop-card[data-prop-id="' + pid + '"]');
       if (card) {
-        card.classList.add("open", "flash");
         card.scrollIntoView({ behavior: "smooth", block: "center" });
+        card.classList.add("flash");
         setTimeout(() => card.classList.remove("flash"), 1600);
       }
     }, 120);
@@ -981,15 +1232,9 @@
     $("content").style.display = "block";
 
     // hero context + card stats
-    const all = matrix.filter(r => r.proposition.party === "Claimant");
-    const den = matrix.filter(r => r.proposition.type === "denial");
     $("ctx-props").textContent  = matrix.length;
     $("ctx-ready").textContent  = summary.trial_readiness + "%";
-    $("stat-propositions").innerHTML = matrix.length + " <span class='muted'>props ·</span> " + summary.trial_readiness + "%";
-    const clashes = matrix.filter(r => (r.proposition.responds_to || (r.proposition.type === "denial"))).length;
-    $("stat-argumentation").innerHTML =
-      matrix.filter(r => r.proposition.type === "allegation").length + " <span class='muted'>v</span> " + den.length +
-      " <span class='muted'>· " + den.length + " denials</span>";
+    $("stat-propositions").innerHTML = matrix.length + " <span class='muted'>claims ·</span> " + summary.trial_readiness + "% <span class='muted'>ready</span>";
     const ctx = $("context-row");
     ctx.classList.add("scan");
     setTimeout(() => ctx.classList.remove("scan"), 1200);
@@ -1049,8 +1294,237 @@
 
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ""; }
 
+  // ---- Figma restyle: score box + evidence map + grouped drawer ----
+
+  // Status → score-box label + colour class (kept in lock-step with status).
+  const STATUS_BAND = {
+    supported:  { label: "STRONG",   cls: "supported"  },
+    contested:  { label: "MODERATE", cls: "contested"  },
+    undermined: { label: "WEAK",     cls: "undermined" },
+    MISSING:    { label: "MISSING",  cls: "MISSING"    },
+  };
+
+  const SCALES_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M12 3v18M7 21h10M5 7h14M5 7l-2.5 6a3 3 0 0 0 5 0L5 7zm14 0l-2.5 6a3 3 0 0 0 5 0L19 7zM12 3l7 4M12 3L5 7"/></svg>';
+  const DOC_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+
+  // Weighted support share (0–100): supportive vs adverse confidence.
+  function scoreForRow(row) {
+    let sup = 0, adv = 0;
+    (row.links || []).forEach(l => {
+      if (l.relation === "supportive") sup += (l.confidence || 0);
+      else if (l.relation === "adverse") adv += (l.confidence || 0);
+    });
+    if (sup + adv === 0) return 0;
+    return Math.round(100 * sup / (sup + adv));
+  }
+
+  function relCounts(row) {
+    const c = { supportive: 0, adverse: 0, neutral: 0 };
+    (row.links || []).forEach(l => { if (c[l.relation] != null) c[l.relation]++; });
+    return c;
+  }
+
+  function evidenceTitle(link) {
+    const s = link.evidence_source || {};
+    return link.witness || link.evidence_id || s.doc_id || "Evidence";
+  }
+
+  // Shared hover tooltip for evidence-map tiles.
+  let _tipEl = null;
+  function getTip() {
+    if (!_tipEl) { _tipEl = document.createElement("div"); _tipEl.id = "ev-tooltip"; document.body.appendChild(_tipEl); }
+    return _tipEl;
+  }
+  function positionTip(e) {
+    const el = getTip(), pad = 12, r = el.getBoundingClientRect();
+    let x = e.clientX + pad, y = e.clientY + pad;
+    if (x + r.width > window.innerWidth - 8) x = e.clientX - r.width - pad;
+    if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - pad;
+    el.style.left = Math.max(8, x) + "px";
+    el.style.top  = Math.max(8, y) + "px";
+  }
+  function showTileTip(e) {
+    const el = getTip(), rel = this.dataset.rel || "";
+    el.innerHTML = '<span class="tip-rel ' + rel + '">' + (rel === "adverse" ? "Undermining" : cap(rel)) + "</span>";
+    el.appendChild(document.createTextNode(this.dataset.tip || ""));
+    el.classList.add("show");
+    positionTip(e);
+  }
+  function hideTileTip() { if (_tipEl) _tipEl.classList.remove("show"); }
+
+  function buildEvidenceMap(row) {
+    const links = row.links || [], c = relCounts(row);
+    const S = c.supportive, U = c.adverse, N = c.neutral;
+    const M = links.length === 0 ? 1 : 0;
+
+    const wrap = document.createElement("div"); wrap.className = "evidence-map";
+    const title = document.createElement("div"); title.className = "map-title"; title.textContent = "Evidence Map";
+    wrap.appendChild(title);
+
+    const tiles = document.createElement("div"); tiles.className = "map-tiles";
+    if (links.length === 0) {
+      for (let i = 0; i < 3; i++) { const t = document.createElement("span"); t.className = "ev-tile missing"; tiles.appendChild(t); }
+    } else {
+      const order = { supportive: 0, neutral: 1, adverse: 2 };
+      const sorted = links.slice().sort((a, b) => (order[a.relation] ?? 3) - (order[b.relation] ?? 3));
+      const CAP = 16;
+      sorted.slice(0, CAP).forEach(l => {
+        const t = document.createElement("span");
+        t.className = "ev-tile " + l.relation;
+        t.dataset.tip = evidenceTitle(l);
+        t.dataset.rel = l.relation;
+        t.addEventListener("mouseenter", showTileTip);
+        t.addEventListener("mousemove", positionTip);
+        t.addEventListener("mouseleave", hideTileTip);
+        tiles.appendChild(t);
+      });
+      if (sorted.length > CAP) { const more = document.createElement("span"); more.className = "map-more"; more.textContent = "+" + (sorted.length - CAP); tiles.appendChild(more); }
+    }
+    wrap.appendChild(tiles);
+
+    const total = S + N + U + M || 1;
+    const barRow = document.createElement("div"); barRow.className = "map-bar-row";
+    const bar = document.createElement("div"); bar.className = "seg-bar";
+    [["s", S], ["n", N], ["u", U], ["m", M]].forEach(([cls, v]) => {
+      if (v > 0) { const seg = document.createElement("div"); seg.className = "seg " + cls; seg.style.width = (100 * v / total) + "%"; bar.appendChild(seg); }
+    });
+    const legend = document.createElement("div"); legend.className = "map-legend";
+    [["s", "S", S], ["u", "U", U], ["n", "N", N], ["m", "M", M]].forEach(([cls, lab, v]) => {
+      const leg = document.createElement("span"); leg.className = "leg";
+      const sw = document.createElement("span"); sw.className = "sw " + cls;
+      leg.appendChild(sw); leg.appendChild(document.createTextNode(lab + " " + v));
+      legend.appendChild(leg);
+    });
+    barRow.appendChild(bar); barRow.appendChild(legend);
+    wrap.appendChild(barRow);
+    return wrap;
+  }
+
+  // Grouped Supporting / Undermining / Neutral sections (used by the side panel).
+  function buildEvidenceGroups(row) {
+    const inner = document.createElement("div"); inner.className = "evidence-inner";
+    const links = row.links || [];
+    if (links.length === 0) {
+      const empty = document.createElement("p"); empty.className = "evidence-empty";
+      empty.textContent = "No evidence links — this claim has no supportive or adverse material in the bundle.";
+      inner.appendChild(empty);
+    } else {
+      [
+        { key: "supportive", label: "Supporting" },
+        { key: "adverse",    label: "Undermining" },
+        { key: "neutral",    label: "Neutral / Context" },
+      ].forEach(g => {
+        const items = links.filter(l => l.relation === g.key);
+        if (items.length === 0) return;
+        const sec = document.createElement("div"); sec.className = "ev-group " + g.key;
+        const head = document.createElement("div"); head.className = "ev-group-head";
+        const sw = document.createElement("span"); sw.className = "sw";
+        head.appendChild(sw); head.appendChild(document.createTextNode(g.label + " — " + items.length));
+        sec.appendChild(head);
+        items.forEach(l => sec.appendChild(buildEvidenceRow(l)));
+        inner.appendChild(sec);
+      });
+    }
+    return inner;
+  }
+
+  // ---- Right-hand evidence side panel ----
+  let _activeCardId = null;
+
+  function openEvidencePanel(row) {
+    const p = row.proposition, status = row.status;
+    const band = STATUS_BAND[status] || STATUS_BAND.MISSING;
+    const panel = $("evidence-panel");
+    const content = $("evidence-panel-content");
+
+    content.innerHTML = "";
+
+    const top = document.createElement("div"); top.className = "ep-top";
+    const kind = document.createElement("span"); kind.className = "kind-pill";
+    kind.innerHTML = SCALES_SVG + (p.type === "denial" ? "Defense" : "Claim");
+    const score = document.createElement("span"); score.className = "ep-score " + band.cls;
+    score.textContent = scoreForRow(row) + " " + band.label;
+    const close = document.createElement("button"); close.className = "ep-close"; close.setAttribute("aria-label", "Close"); close.innerHTML = "&times;";
+    close.addEventListener("click", closeEvidencePanel);
+    top.appendChild(kind); top.appendChild(score); top.appendChild(close);
+    content.appendChild(top);
+
+    const title = document.createElement("p"); title.className = "ep-title"; title.textContent = p.text;
+    content.appendChild(title);
+
+    if (p.source) {
+      const s = p.source;
+      const src = document.createElement("div"); src.className = "prop-source";
+      src.textContent = [s.doc_id, s.page ? "p" + s.page : null, s.paragraph ? "¶" + s.paragraph : null].filter(Boolean).join("  ");
+      if (src.textContent) content.appendChild(src);
+    }
+
+    const mapTitle = document.createElement("div"); mapTitle.className = "map-title"; mapTitle.style.marginTop = "0.9rem";
+    mapTitle.textContent = "Evidence Map";
+    const map = buildEvidenceMap(row); map.querySelector(".map-title").remove();
+    content.appendChild(mapTitle); content.appendChild(map);
+
+    content.appendChild(buildEvidenceGroups(row));
+
+    $("evidence-panel-empty").style.display = "none";
+    content.style.display = "block";
+    panel.classList.add("open");
+
+    // highlight the active card
+    document.querySelectorAll(".prop-card.selected").forEach(c => c.classList.remove("selected"));
+    const card = document.querySelector('.prop-card[data-prop-id="' + p.id + '"]');
+    if (card) card.classList.add("selected");
+    _activeCardId = p.id;
+  }
+
+  function closeEvidencePanel() {
+    $("evidence-panel").classList.remove("open");
+    $("evidence-panel-content").style.display = "none";
+    $("evidence-panel-empty").style.display = "";
+    document.querySelectorAll(".prop-card.selected").forEach(c => c.classList.remove("selected"));
+    _activeCardId = null;
+  }
+
+  function buildEvidenceRow(link) {
+    const row = document.createElement("div"); row.className = "ev-row";
+    const icon = document.createElement("span"); icon.className = "ev-doc-icon"; icon.innerHTML = DOC_SVG;
+    row.appendChild(icon);
+
+    const main = document.createElement("div"); main.className = "ev-row-main";
+    const title = document.createElement("div"); title.className = "ev-row-title";
+    title.textContent = link.witness || link.evidence_id || "Evidence";
+    main.appendChild(title);
+
+    const s = link.evidence_source || {};
+    const sub = document.createElement("div"); sub.className = "ev-row-sub";
+    sub.textContent = [link.evidence_id, s.doc_id, s.page ? "p" + s.page : null, s.paragraph ? "¶" + s.paragraph : null].filter(Boolean).join("  ");
+    main.appendChild(sub);
+
+    const confWrap = document.createElement("div"); confWrap.className = "conf-bar-wrap"; confWrap.style.margin = "0.35rem 0";
+    const bar = document.createElement("div"); bar.className = "conf-bar";
+    const fill = document.createElement("div"); fill.className = "conf-fill " + link.relation;
+    fill.style.width = Math.round((link.confidence || 0) * 100) + "%"; bar.appendChild(fill);
+    const confNum = document.createElement("span"); confNum.className = "conf-num"; confNum.textContent = Math.round((link.confidence || 0) * 100) + "%";
+    confWrap.appendChild(bar); confWrap.appendChild(confNum);
+    main.appendChild(confWrap);
+
+    if (link.rationale) { const r = document.createElement("p"); r.className = "ev-rationale"; r.textContent = link.rationale; main.appendChild(r); }
+    if (link.quote) {
+      const q = document.createElement("div"); q.className = "ev-quote"; q.textContent = "“" + link.quote + "”";
+      if (!link.quote_ok) { const w = document.createElement("span"); w.className = "quote-warn"; w.textContent = "  [unverified quote]"; q.appendChild(w); }
+      main.appendChild(q);
+    }
+    row.appendChild(main);
+    return row;
+  }
+
   function buildCard(row) {
     const p = row.proposition, status = row.status;
+    const band = STATUS_BAND[status] || STATUS_BAND.MISSING;
     const card = document.createElement("div");
     card.className = "prop-card status-" + status;
     card.dataset.propId = p.id;
@@ -1061,6 +1535,11 @@
 
     const meta = document.createElement("div"); meta.className = "prop-meta";
     const topRow = document.createElement("div"); topRow.className = "prop-top-row";
+
+    const kind = document.createElement("span"); kind.className = "kind-pill";
+    kind.innerHTML = SCALES_SVG + (p.type === "denial" ? "Defense" : "Claim");
+    topRow.appendChild(kind);
+
     const idEl = document.createElement("span"); idEl.className = "prop-id"; idEl.textContent = p.id;
     const typeEl = document.createElement("span"); typeEl.className = "prop-type-badge"; typeEl.textContent = p.type;
     topRow.appendChild(idEl); topRow.appendChild(typeEl);
@@ -1072,66 +1551,26 @@
 
     meta.appendChild(topRow); meta.appendChild(textEl);
     if (srcEl.textContent) meta.appendChild(srcEl);
+    meta.appendChild(buildEvidenceMap(row));
 
     const right = document.createElement("div"); right.className = "card-right";
-    const badge = document.createElement("span"); badge.className = "status-badge " + status;
-    badge.textContent = status === "MISSING" ? "Missing" : cap(status);
+    const scoreBox = document.createElement("div"); scoreBox.className = "score-box " + band.cls;
+    const num = document.createElement("span"); num.className = "num"; num.textContent = scoreForRow(row);
+    const lbl = document.createElement("span"); lbl.className = "lbl"; lbl.textContent = band.label;
+    scoreBox.appendChild(num); scoreBox.appendChild(lbl);
     const arrow = document.createElement("svg");
     arrow.setAttribute("width", "16"); arrow.setAttribute("height", "16"); arrow.setAttribute("fill", "none");
     arrow.setAttribute("stroke", "currentColor"); arrow.setAttribute("stroke-width", "2"); arrow.setAttribute("viewBox", "0 0 24 24");
-    arrow.className = "expand-icon"; arrow.innerHTML = '<polyline points="6 9 12 15 18 9"/>';
-    right.appendChild(badge); right.appendChild(arrow);
+    arrow.className = "expand-icon"; arrow.innerHTML = '<polyline points="9 6 15 12 9 18"/>';
+    right.appendChild(scoreBox); right.appendChild(arrow);
 
     header.appendChild(meta); header.appendChild(right);
+    card.appendChild(header);
 
-    const drawer = document.createElement("div"); drawer.className = "evidence-drawer";
-    const inner = document.createElement("div"); inner.className = "evidence-inner";
-    const heading = document.createElement("div"); heading.className = "evidence-heading";
-    const linkCount = row.links ? row.links.length : 0;
-    heading.textContent = "Evidence links (" + linkCount + " retrieved, " + row.n_candidates + " candidates)";
-    inner.appendChild(heading);
-    if (!row.links || row.links.length === 0) {
-      const empty = document.createElement("p"); empty.className = "evidence-empty";
-      empty.textContent = "No evidence links — this proposition has no supportive or adverse material in the bundle.";
-      inner.appendChild(empty);
-    } else {
-      const evList = document.createElement("div"); evList.className = "evidence-list";
-      row.links.forEach(link => evList.appendChild(buildEvidenceItem(link)));
-      inner.appendChild(evList);
-    }
-    drawer.appendChild(inner);
-    card.appendChild(header); card.appendChild(drawer);
-
-    function toggle() { card.classList.toggle("open"); }
-    header.addEventListener("click", toggle);
-    header.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+    function open() { openEvidencePanel(row); }
+    header.addEventListener("click", open);
+    header.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
     return card;
-  }
-
-  function buildEvidenceItem(link) {
-    const item = document.createElement("div"); item.className = "evidence-item rel-" + link.relation;
-    const topRow = document.createElement("div"); topRow.className = "ev-top-row";
-    const relBadge = document.createElement("span"); relBadge.className = "rel-badge " + link.relation; relBadge.textContent = cap(link.relation);
-    const confWrap = document.createElement("div"); confWrap.className = "conf-bar-wrap";
-    const bar = document.createElement("div"); bar.className = "conf-bar";
-    const fill = document.createElement("div"); fill.className = "conf-fill " + link.relation;
-    fill.style.width = Math.round((link.confidence || 0) * 100) + "%"; bar.appendChild(fill);
-    const confNum = document.createElement("span"); confNum.className = "conf-num"; confNum.textContent = Math.round((link.confidence || 0) * 100) + "%";
-    confWrap.appendChild(bar); confWrap.appendChild(confNum);
-    topRow.appendChild(relBadge); topRow.appendChild(confWrap);
-    if (link.witness) { const w = document.createElement("span"); w.className = "ev-witness"; w.textContent = link.witness; topRow.appendChild(w); }
-
-    const s = link.evidence_source || {};
-    const citation = [link.evidence_id, s.doc_id, s.page ? "p" + s.page : null, s.paragraph ? "¶" + s.paragraph : null].filter(Boolean).join("  ");
-    const citEl = document.createElement("div"); citEl.className = "ev-citation"; citEl.textContent = citation;
-    item.appendChild(topRow); item.appendChild(citEl);
-    if (link.rationale) { const r = document.createElement("p"); r.className = "ev-rationale"; r.textContent = link.rationale; item.appendChild(r); }
-    if (link.quote) {
-      const q = document.createElement("div"); q.className = "ev-quote"; q.textContent = "“" + link.quote + "”";
-      if (!link.quote_ok) { const w = document.createElement("span"); w.className = "quote-warn"; w.textContent = "  [unverified quote]"; q.appendChild(w); }
-      item.appendChild(q);
-    }
-    return item;
   }
 
   // tabs / filters / search
@@ -1149,34 +1588,6 @@
   }));
   $("search-input").addEventListener("input", e => { _searchQuery = e.target.value; renderMatrix(); });
   $("risk-search-input").addEventListener("input", e => { _riskSearch = e.target.value; renderRisk(); });
-
-  // ------------------------------------------------------------------ argumentation
-  function renderArgumentation() {
-    if (!_matrixLoaded || _argRendered) return;
-    _argRendered = true;
-    const claimant = $("arg-claimant"), defendant = $("arg-defendant");
-    claimant.innerHTML = ""; defendant.innerHTML = "";
-
-    _matrix.forEach(row => {
-      const p = row.proposition;
-      const node = document.createElement("div");
-      node.className = "arg-node status-" + row.status;
-      node.dataset.propId = p.id;
-      const id = document.createElement("div"); id.className = "id"; id.textContent = p.id + " · " + row.status;
-      const t = document.createElement("div"); t.className = "t"; t.textContent = p.text;
-      node.appendChild(id); node.appendChild(t);
-
-      if (p.responds_to) {
-        const c = document.createElement("div"); c.className = "clash";
-        c.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7l10 10"/></svg> clashes with ' + p.responds_to;
-        node.appendChild(c);
-      }
-      node.addEventListener("click", () => openProposition(p.id));
-
-      const col = (p.party === "Defendant" || p.type === "denial") ? defendant : claimant;
-      col.appendChild(node);
-    });
-  }
 
   // ------------------------------------------------------------------ summary (lazy, in Propositions)
   async function ensureSummary() {
