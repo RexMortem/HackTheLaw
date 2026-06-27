@@ -708,6 +708,10 @@
     #room-propositions .timeline-sidebar.open { transform: translateX(0); }
     #room-propositions .tl-close { background: none; border: none; font-size: 1.3rem; line-height: 1; color: var(--slate); cursor: pointer; padding: 0 0.2rem; }
     #room-propositions .tl-close:hover { color: var(--ink); }
+    /* When the timeline drawer is open, slide the rail to just right of it
+       so the drawer sits at the far left, left of the entire interface. */
+    #rail { transition: left .28s ease; }
+    #rail.shifted { left: calc(280px + 0.7rem); }
     #room-propositions .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-family: var(--mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); margin-bottom: 0.55rem; white-space: nowrap; }
     #room-propositions .tl-tag { font-size: 0.54rem; color: var(--contested); background: var(--contested-bg); border: 1px solid var(--contested-border); border-radius: 999px; padding: 0.05rem 0.4rem; letter-spacing: 0.08em; }
     #room-propositions .tl-note { font-size: 0.76rem; color: var(--slate); line-height: 1.5; margin-bottom: 1rem; }
@@ -1103,6 +1107,7 @@
     $("timeline-sidebar").classList.toggle("open", open);
     $("tl-toggle").classList.toggle("active", open);
     $("tl-toggle").setAttribute("aria-pressed", String(open));
+    $("rail").classList.toggle("shifted", open);
   }
   $("tl-toggle").addEventListener("click", () =>
     setTimeline(!$("timeline-sidebar").classList.contains("open")));
