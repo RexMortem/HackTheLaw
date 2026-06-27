@@ -1396,8 +1396,7 @@
       Second Chair sees
       <b id="ctx-props">…</b> claims <span class="sep">·</span>
       the bundle <span class="sep">·</span>
-      <b id="ctx-eu">8</b> EU sources <span class="sep">·</span>
-      <b id="ctx-ready">…</b> trial readiness
+      <b id="ctx-eu">8</b> EU sources
     </div>
 
     <div class="cards" id="cards">
@@ -1485,10 +1484,6 @@
     <div class="stat-pill"><span class="dot" style="background:#d97706"></span><span class="count" id="count-contested">0</span><span class="lbl">Contested</span></div>
     <div class="stat-pill"><span class="dot" style="background:#dc2626"></span><span class="count" id="count-undermined">0</span><span class="lbl">Undermined</span></div>
     <div class="stat-pill"><span class="dot" style="background:#9ca3af"></span><span class="count" id="count-missing">0</span><span class="lbl">Missing</span></div>
-    <div class="readiness-mini">
-      <span class="score" id="readiness-score">0%</span>
-      <div class="readiness-bar"><div class="readiness-fill" id="readiness-fill" style="width:0%"></div></div>
-    </div>
   </div>
   <div class="room-body">
    <div class="claims-layout">
@@ -2061,8 +2056,6 @@
     $("count-contested").textContent   = summary.counts.contested || 0;
     $("count-undermined").textContent  = summary.counts.undermined || 0;
     $("count-missing").textContent     = summary.counts.MISSING || 0;
-    $("readiness-score").textContent   = summary.trial_readiness + "%";
-    $("readiness-fill").style.width    = summary.trial_readiness + "%";
 
     $("tab-badge-matrix").textContent = matrix.length;
     const riskCount = matrix.filter(r => r.status === "MISSING" || r.status === "undermined").length;
@@ -2073,8 +2066,7 @@
 
     // hero context + card stats
     $("ctx-props").textContent  = matrix.length;
-    $("ctx-ready").textContent  = summary.trial_readiness + "%";
-    $("stat-propositions").innerHTML = matrix.length + " <span class='muted'>claims ·</span> " + summary.trial_readiness + "% <span class='muted'>ready</span>";
+    $("stat-propositions").innerHTML = matrix.length + " <span class='muted'>claims</span>";
     const ctx = $("context-row");
     ctx.classList.add("scan");
     setTimeout(() => ctx.classList.remove("scan"), 1200);
