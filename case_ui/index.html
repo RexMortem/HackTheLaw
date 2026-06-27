@@ -1453,7 +1453,8 @@
         <div class="opt-desc">Assemble and stress-test a strategy</div>
         <div class="opt-stat" id="stat-builder"><span class="muted">strategy</span></div>
       </button>
-      <button class="opt-card" data-room="timeline">
+      <!-- Timeline temporarily hidden from the homepage (remove style to restore) -->
+      <button class="opt-card" data-room="timeline" style="display:none">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
         <div class="opt-name">Evidence Timeline</div>
         <div class="opt-desc">Evidence plotted chronologically</div>
@@ -1503,7 +1504,8 @@
 <!-- ======================= ROOM: PROPOSITIONS ====================== -->
 <section id="room-propositions" class="view room">
   <div class="room-head">
-    <button class="tl-toggle" id="tl-toggle" title="Toggle timeline" aria-pressed="false">
+    <!-- Timeline panel temporarily hidden (remove style here + on #timeline-sidebar to restore) -->
+    <button class="tl-toggle" id="tl-toggle" title="Toggle timeline" aria-pressed="false" style="display:none">
       <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       <span>Timeline</span>
     </button>
@@ -1517,8 +1519,8 @@
   <div class="room-body">
    <div class="claims-layout">
 
-    <!-- Left: timeline sidebar (toggled) -->
-    <aside class="timeline-sidebar" id="timeline-sidebar">
+    <!-- Left: timeline sidebar (toggled) — temporarily hidden -->
+    <aside class="timeline-sidebar" id="timeline-sidebar" style="display:none">
       <div class="tl-head">
         <span>Timeline <span class="tl-tag">Placeholder</span></span>
         <button class="tl-close" id="tl-close" aria-label="Close timeline">&times;</button>
