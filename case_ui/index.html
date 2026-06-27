@@ -891,18 +891,8 @@
 
     <!-- Left: timeline sidebar (toggled) -->
     <aside class="timeline-sidebar" id="timeline-sidebar">
-      <div class="tl-head">
-        <span>Timeline</span>
-        <span class="tl-tag">Placeholder</span>
-      </div>
-      <p class="tl-note">The case chronology — pleadings, witness statements and
-         evidence plotted by date — will live here.</p>
-      <ol class="tl-spine">
-        <li><span class="tl-dot"></span><div class="tl-item">Contract signed<small>placeholder date</small></div></li>
-        <li><span class="tl-dot"></span><div class="tl-item">Alleged breach<small>placeholder date</small></div></li>
-        <li><span class="tl-dot"></span><div class="tl-item">Proceedings issued<small>placeholder date</small></div></li>
-        <li><span class="tl-dot"></span><div class="tl-item">Witness statements<small>placeholder date</small></div></li>
-      </ol>
+       <iframe src="/timeline.html" title="Evidence timeline"
+                style="width:100%;height:80vh;border:0;display:block"></iframe>
     </aside>
 
     <!-- Centre: the matrix -->
@@ -1048,7 +1038,17 @@
     $("tl-toggle").classList.toggle("active", open);
     $("tl-toggle").setAttribute("aria-pressed", String(open));
   });
-
+// light up the timeline when a proposition is clicked
+    document.addEventListener("click", function (e) {
+      var el = e.target.closest("[data-prop-id]");
+      if (!el) return;
+      var f = document.querySelector("#timeline-sidebar iframe");
+      if (f) f.contentWindow.postMessage(
+        { source: "argument", type: "highlight", propId: el.getAttribute("data-prop-id") },
+  "*"); 
+      var sb = document.getElementById("timeline-sidebar");
+      if (sb && !sb.classList.contains("open")) sb.classList.add("open");
+    });
   // rail + orb + cards wiring
   document.querySelectorAll(".rail-btn").forEach(b =>
     b.addEventListener("click", () => go(b.dataset.room)));
