@@ -715,6 +715,97 @@
       .graph-shell { grid-template-columns: 1fr; height: auto; }
       .graph-stage { height: 60vh; }
     }
+
+    /* ---- AI arguments ---- */
+    .args-section { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .args-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .args-title { font-size: 1.15rem; font-weight: 700; color: var(--navy); letter-spacing: -0.01em; margin-bottom: .3rem; }
+    .arg-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.1rem; margin-bottom: .85rem; border-left: 4px solid var(--missing); }
+    .arg-card.strength-strong { border-left-color: var(--supported); }
+    .arg-card.strength-moderate { border-left-color: var(--contested); }
+    .arg-card.strength-weak { border-left-color: var(--undermined); }
+    .arg-card-top { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-bottom: .4rem; }
+    .arg-party { font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: .1rem .45rem; border-radius: 4px; background: #eef2ff; color: var(--navy-3); }
+    .arg-party.defendant { background: var(--undermined-bg); color: var(--undermined); }
+    .arg-issue { font-size: .82rem; font-weight: 600; color: var(--slate); }
+    .arg-strength { margin-left: auto; font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: .12rem .5rem; border-radius: 999px; }
+    .arg-strength.strong { background: var(--supported-bg); color: var(--supported); }
+    .arg-strength.moderate { background: var(--contested-bg); color: var(--contested); }
+    .arg-strength.weak { background: var(--undermined-bg); color: var(--undermined); }
+    .arg-thesis { font-size: .98rem; font-weight: 700; color: var(--navy); line-height: 1.4; margin-bottom: .35rem; }
+    .arg-reasoning { font-size: .88rem; color: #334155; line-height: 1.6; margin-bottom: .55rem; }
+    .arg-chips { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; margin-bottom: .4rem; }
+    .arg-chips .lbl { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--slate-2); margin-right: .2rem; }
+    .ev-chip { font-size: .72rem; font-weight: 700; font-family: "SFMono-Regular", Consolas, monospace; padding: .05rem .4rem; border-radius: 5px; border: 1px solid var(--border); background: #f1f5f9; color: #334155; cursor: pointer; }
+    .ev-chip:hover { filter: brightness(.96); }
+    .arg-vuln { font-size: .8rem; color: #7f1d1d; background: var(--undermined-bg); border: 1px solid var(--undermined-border); border-radius: 6px; padding: .4rem .6rem; margin-top: .35rem; }
+    .arg-vuln b { font-weight: 700; }
+    .arg-authority { margin-top: .55rem; padding-top: .5rem; border-top: 1px dashed var(--border); font-size: .82rem; color: #334155; }
+    .arg-authority .src { display: inline-flex; gap: .3rem; flex-wrap: wrap; margin-top: .3rem; }
+    .arg-authority a { font-size: .74rem; color: var(--navy-3); text-decoration: none; background: #eff4ff; border: 1px solid #dbe4ff; border-radius: 999px; padding: .1rem .5rem; }
+    .arg-authority a:hover { text-decoration: underline; }
+    .arg-authority .attr { font-size: .68rem; color: var(--slate-2); font-weight: 600; }
+
+    /* ---- Case Builder ---- */
+    .builder-grid { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 1.1rem; align-items: start; }
+    .builder-pane { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem; min-height: 240px; }
+    .builder-pane-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .5rem; }
+    .builder-pane-head h3 { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--slate); }
+    .builder-hint { font-size: .76rem; color: var(--slate-2); margin-bottom: .7rem; line-height: 1.4; }
+    .palette-list { display: flex; flex-direction: column; gap: .45rem; max-height: 62vh; overflow-y: auto; }
+    .palette-card { border: 1px solid var(--border); border-radius: 8px; padding: .5rem .6rem; cursor: grab; background: var(--bg); border-left: 4px solid var(--missing); transition: box-shadow .12s, transform .1s; }
+    .palette-card:hover { box-shadow: var(--shadow-md); transform: translateX(2px); }
+    .palette-card:active { cursor: grabbing; }
+    .palette-card.status-supported { border-left-color: var(--supported); }
+    .palette-card.status-contested { border-left-color: var(--contested); }
+    .palette-card.status-undermined { border-left-color: var(--undermined); }
+    .palette-card.status-MISSING { border-left-color: var(--missing); }
+    .palette-card.in-case { opacity: .4; pointer-events: none; }
+    .palette-card .pc-top { display: flex; gap: .4rem; align-items: center; margin-bottom: .15rem; }
+    .palette-card .pc-id { font-size: .68rem; font-weight: 700; font-family: "SFMono-Regular", Consolas, monospace; color: var(--slate-2); }
+    .palette-card .pc-text { font-size: .8rem; color: #1e293b; line-height: 1.35; }
+    .builder-board.dragover { outline: 2px dashed var(--navy-3); outline-offset: -6px; background: #f0f4ff; }
+    .case-title-input, .case-theory-input { width: 100%; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: .85rem; padding: .5rem .6rem; outline: none; margin-bottom: .55rem; color: #1e293b; }
+    .case-title-input:focus, .case-theory-input:focus { border-color: var(--navy-3); box-shadow: 0 0 0 3px rgba(37,58,99,.1); }
+    .case-theory-input { resize: vertical; min-height: 64px; line-height: 1.5; }
+    .dropzone-hint { font-size: .82rem; color: var(--slate-2); text-align: center; padding: 1.4rem .5rem; border: 1px dashed var(--border); border-radius: 8px; }
+    .case-items { display: flex; flex-direction: column; gap: .5rem; }
+    .case-item { border: 1px solid var(--border); border-radius: 8px; padding: .55rem .65rem; background: var(--white); border-left: 4px solid var(--missing); position: relative; }
+    .case-item.status-supported { border-left-color: var(--supported); }
+    .case-item.status-contested { border-left-color: var(--contested); }
+    .case-item.status-undermined { border-left-color: var(--undermined); }
+    .case-item.status-MISSING { border-left-color: var(--missing); }
+    .case-item .ci-top { display: flex; gap: .4rem; align-items: center; margin-bottom: .15rem; }
+    .case-item .ci-id { font-size: .68rem; font-weight: 700; font-family: "SFMono-Regular", Consolas, monospace; color: var(--slate-2); }
+    .case-item .ci-text { font-size: .82rem; color: #1e293b; line-height: 1.4; }
+    .case-item .ci-meta { font-size: .72rem; color: var(--slate-2); margin-top: .25rem; }
+    .case-item .ci-remove { position: absolute; top: .4rem; right: .5rem; cursor: pointer; color: var(--slate-2); font-size: 1rem; line-height: 1; border: none; background: none; }
+    .case-item .ci-remove:hover { color: var(--undermined); }
+    .builder-score-big { font-weight: 800; }
+
+    /* stress panel */
+    .stress-score-row { display: flex; align-items: center; gap: .7rem; margin-bottom: .6rem; }
+    .stress-score { font-size: 1.8rem; font-weight: 800; }
+    .stress-summary { font-size: .8rem; color: var(--slate); line-height: 1.4; }
+    .stress-lens { margin-top: .7rem; }
+    .stress-lens-head { font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--slate); margin-bottom: .35rem; display: flex; gap: .4rem; align-items: center; }
+    .stress-finding { border: 1px solid var(--border); border-left: 3px solid var(--slate-2); border-radius: 6px; padding: .45rem .6rem; margin-bottom: .4rem; }
+    .stress-finding.sev-critical { border-left-color: var(--undermined); background: var(--undermined-bg); }
+    .stress-finding.sev-high { border-left-color: var(--undermined); }
+    .stress-finding.sev-medium { border-left-color: var(--contested); }
+    .stress-finding.sev-low { border-left-color: var(--slate-2); }
+    .stress-finding.sev-info { border-left-color: var(--supported); }
+    .sf-title { font-size: .8rem; font-weight: 700; color: #1e293b; }
+    .sf-sev { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 0 .35rem; border-radius: 3px; margin-right: .35rem; }
+    .sf-sev.critical, .sf-sev.high { background: var(--undermined-bg); color: var(--undermined); }
+    .sf-sev.medium { background: var(--contested-bg); color: var(--contested); }
+    .sf-sev.low { background: #f1f5f9; color: var(--slate); }
+    .sf-sev.info { background: var(--supported-bg); color: var(--supported); }
+    .sf-detail { font-size: .76rem; color: #475569; line-height: 1.45; margin-top: .2rem; }
+    .sf-items { margin-top: .25rem; display: flex; flex-wrap: wrap; gap: .25rem; }
+    .sf-src a { font-size: .72rem; color: var(--navy-3); }
+
+    @media (max-width: 1000px) { .builder-grid { grid-template-columns: 1fr; } }
     @media (max-width: 760px) {
       .cards { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
       .hero-title { font-size: 2.3rem; }
@@ -1096,7 +1187,7 @@
   let _sending = false;
   let _currentView = "hero";
 
-  const ROOMS = ["timeline", "propositions", "argumentation", "graph"];
+  const ROOMS = ["timeline", "propositions", "argumentation", "graph", "builder"];
 
   // ------------------------------------------------------------------ routing
   function go(name) {
@@ -1105,6 +1196,7 @@
       hero: "hero",
       timeline: "room-timeline", propositions: "room-propositions",
       argumentation: "room-argumentation", graph: "room-graph",
+      builder: "room-builder",
     };
     $(map[name]).classList.add("active");
     _currentView = name;
@@ -1119,8 +1211,9 @@
       b.classList.toggle("active", b.dataset.room === name));
 
     if (name === "propositions") ensureSummary();
-    if (name === "argumentation") renderArgumentation();
+    if (name === "argumentation") { renderArgumentation(); ensureArguments(); }
     if (name === "graph") ensureGraph();
+    if (name === "builder") ensureBuilder();
 
     window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
   }
@@ -2236,6 +2329,331 @@
       } else wrap.style.display = "none";
       $("case-summary").style.display = "block";
     } catch (_) { _summaryLoaded = false; }
+  }
+
+  // ------------------------------------------------------------------ AI arguments
+  let _argsLoaded = false, _argsData = [];
+
+  function _evIndex() {
+    if (_evIdx) return _evIdx;
+    _evIdx = {};
+    _matrix.forEach(r => (r.links || []).forEach(l => {
+      if (!_evIdx[l.evidence_id]) _evIdx[l.evidence_id] = { witness: l.witness || "", quote: l.quote || "" };
+    }));
+    return _evIdx;
+  }
+  let _evIdx = null;
+
+  function evChip(eid) {
+    const meta = _evIndex()[eid] || {};
+    const chip = document.createElement("span");
+    chip.className = "ev-chip";
+    chip.textContent = eid;
+    chip.title = (meta.witness ? meta.witness + " — " : "") + (meta.quote || "evidence");
+    chip.addEventListener("click", () => {
+      go("graph");
+      setTimeout(() => { if (typeof G !== "undefined" && G && G.byId[eid]) selectNode(eid); }, 450);
+    });
+    return chip;
+  }
+
+  async function ensureArguments(refresh) {
+    if (_argsLoaded && !refresh) return;
+    _argsLoaded = true;
+    const list = $("args-list");
+    list.innerHTML = '<div class="skeleton skel-card"></div><div class="skeleton skel-card"></div>';
+    try {
+      const resp = await fetch("api/arguments" + (refresh ? "?refresh=1" : ""));
+      const data = await resp.json();
+      _argsData = (data && data.ok && data.arguments) ? data.arguments : [];
+      renderArguments();
+    } catch (e) {
+      list.innerHTML = '<p class="gp-detail-empty">Could not load arguments.</p>';
+      _argsLoaded = false;
+    }
+  }
+
+  function renderArguments() {
+    const list = $("args-list");
+    list.innerHTML = "";
+    if (!_argsData.length) {
+      list.innerHTML = '<p class="gp-detail-empty">No arguments generated yet. Set an Anthropic API key and click Regenerate.</p>';
+      return;
+    }
+    _argsData.forEach(a => list.appendChild(buildArgCard(a)));
+  }
+
+  function buildArgCard(a) {
+    const card = document.createElement("div");
+    card.className = "arg-card strength-" + (a.strength || "moderate");
+    const top = document.createElement("div"); top.className = "arg-card-top";
+    const party = document.createElement("span");
+    party.className = "arg-party" + (a.party === "Defendant" ? " defendant" : "");
+    party.textContent = a.party || "—";
+    const issue = document.createElement("span"); issue.className = "arg-issue"; issue.textContent = a.issue || "";
+    const strength = document.createElement("span"); strength.className = "arg-strength " + (a.strength || "moderate"); strength.textContent = a.strength || "";
+    top.appendChild(party); top.appendChild(issue); top.appendChild(strength);
+
+    const thesis = document.createElement("div"); thesis.className = "arg-thesis"; thesis.textContent = a.thesis || "";
+    const reasoning = document.createElement("div"); reasoning.className = "arg-reasoning"; reasoning.textContent = a.reasoning || "";
+    card.appendChild(top); card.appendChild(thesis); card.appendChild(reasoning);
+
+    if ((a.relies_on || []).length) {
+      const row = document.createElement("div"); row.className = "arg-chips";
+      const lbl = document.createElement("span"); lbl.className = "lbl"; lbl.textContent = "relies on"; row.appendChild(lbl);
+      a.relies_on.forEach(pid => row.appendChild(makeCite(pid)));
+      card.appendChild(row);
+    }
+    if ((a.evidence || []).length) {
+      const row = document.createElement("div"); row.className = "arg-chips";
+      const lbl = document.createElement("span"); lbl.className = "lbl"; lbl.textContent = "evidence"; row.appendChild(lbl);
+      a.evidence.forEach(eid => row.appendChild(evChip(eid)));
+      card.appendChild(row);
+    }
+    if (a.vulnerability) {
+      const v = document.createElement("div"); v.className = "arg-vuln";
+      v.innerHTML = "<b>Weakest link:</b> " + esc(a.vulnerability);
+      card.appendChild(v);
+    }
+    if (a.authority_note || (a.authority || []).length) {
+      const au = document.createElement("div"); au.className = "arg-authority";
+      au.innerHTML = '<span class="attr">Supporting authority — via Perplexity</span><div>' + esc(a.authority_note || "") + '</div>';
+      if ((a.authority || []).length) {
+        const src = document.createElement("div"); src.className = "src";
+        a.authority.forEach(c => { const link = document.createElement("a"); link.href = c.url; link.target = "_blank"; link.rel = "noopener"; link.textContent = (c.title || c.url).slice(0, 48); src.appendChild(link); });
+        au.appendChild(src);
+      }
+      card.appendChild(au);
+    }
+    return card;
+  }
+
+  $("args-refresh").addEventListener("click", () => ensureArguments(true));
+
+  // ------------------------------------------------------------------ Case Builder
+  let _builderInit = false;
+  let _case = { title: "", theory: "", propositions: [] };
+  let _stressData = null;
+  let _saveCaseT = null;
+
+  async function ensureBuilder() {
+    if (_builderInit) return;
+    _builderInit = true;
+    try {
+      const resp = await fetch("api/case");
+      const data = await resp.json();
+      if (data && data.ok && data.case && data.case.propositions) {
+        _case = { title: data.case.title || "", theory: data.case.theory || "",
+                  propositions: data.case.propositions || [] };
+      }
+    } catch (_) {}
+    $("case-title").value = _case.title;
+    $("case-theory").value = _case.theory;
+    renderPalette(""); renderCase();
+    // background-load arguments so the export has them
+    ensureArguments();
+  }
+
+  function caseStatus(pid) { return (_byId[pid] && _byId[pid].status) || "MISSING"; }
+  function caseRow(pid) { return _byId[pid] && _byId[pid].row; }
+
+  function renderPalette(filter) {
+    const box = $("palette-list"); box.innerHTML = "";
+    const q = (filter || "").toLowerCase();
+    _matrix.forEach(r => {
+      const p = r.proposition;
+      if (q && !(p.text + " " + p.id + " " + (p.party || "")).toLowerCase().includes(q)) return;
+      const card = document.createElement("div");
+      card.className = "palette-card status-" + r.status + (_case.propositions.includes(p.id) ? " in-case" : "");
+      card.draggable = true;
+      card.dataset.pid = p.id;
+      card.innerHTML = '<div class="pc-top"><span class="pc-id">' + p.id + '</span>'
+        + '<span class="prop-type-badge" style="font-size:.6rem">' + esc(p.type) + '</span></div>'
+        + '<div class="pc-text">' + esc(p.text.length > 110 ? p.text.slice(0, 109) + "…" : p.text) + '</div>';
+      card.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", p.id); e.dataTransfer.effectAllowed = "copy"; });
+      card.addEventListener("dblclick", () => addToCase(p.id));
+      box.appendChild(card);
+    });
+  }
+
+  function renderCase() {
+    const box = $("case-items"); box.innerHTML = "";
+    $("case-count").textContent = _case.propositions.length + " selected";
+    $("dropzone-hint").style.display = _case.propositions.length ? "none" : "block";
+    _case.propositions.forEach(pid => {
+      const row = caseRow(pid); if (!row) return;
+      const p = row.proposition;
+      const links = (row.links || []).filter(l => l.relation === "supportive");
+      const witns = [...new Set(links.map(l => l.witness).filter(Boolean))];
+      const item = document.createElement("div");
+      item.className = "case-item status-" + row.status;
+      item.innerHTML = '<button class="ci-remove" title="Remove">×</button>'
+        + '<div class="ci-top"><span class="ci-id">' + pid + '</span>'
+        + '<span class="status-badge ' + row.status + '" style="font-size:.6rem;padding:.05rem .4rem">' + (row.status === "MISSING" ? "Missing" : cap(row.status)) + '</span></div>'
+        + '<div class="ci-text">' + esc(p.text) + '</div>'
+        + '<div class="ci-meta">' + links.length + ' supporting · ' + (witns.length ? esc(witns.slice(0, 3).join(", ")) : 'no witness') + '</div>';
+      item.querySelector(".ci-remove").addEventListener("click", () => removeFromCase(pid));
+      box.appendChild(item);
+    });
+  }
+
+  function addToCase(pid) {
+    if (_case.propositions.includes(pid)) return;
+    _case.propositions.push(pid);
+    renderCase(); renderPalette($("builder-search").value); saveCaseDebounced();
+  }
+  function removeFromCase(pid) {
+    _case.propositions = _case.propositions.filter(x => x !== pid);
+    renderCase(); renderPalette($("builder-search").value); saveCaseDebounced();
+  }
+
+  function saveCaseDebounced() {
+    clearTimeout(_saveCaseT);
+    _saveCaseT = setTimeout(() => {
+      fetch("api/case", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(_case) }).catch(() => {});
+    }, 500);
+  }
+
+  // drag-and-drop wiring
+  (function wireBuilder() {
+    const dz = $("case-dropzone");
+    dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("dragover"); });
+    dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
+    dz.addEventListener("drop", e => {
+      e.preventDefault(); dz.classList.remove("dragover");
+      const pid = e.dataTransfer.getData("text/plain");
+      if (pid) addToCase(pid);
+    });
+    $("builder-search").addEventListener("input", e => renderPalette(e.target.value));
+    $("case-title").addEventListener("input", e => { _case.title = e.target.value; saveCaseDebounced(); });
+    $("case-theory").addEventListener("input", e => { _case.theory = e.target.value; saveCaseDebounced(); });
+    $("builder-stress").addEventListener("click", runStress);
+    $("builder-export").addEventListener("click", exportPlan);
+  })();
+
+  async function runStress() {
+    const btn = $("builder-stress"); const prev = btn.textContent;
+    btn.textContent = "Running…"; btn.disabled = true;
+    const panel = $("stress-panel");
+    panel.innerHTML = '<div class="skeleton skel-card"></div><div class="skeleton skel-card"></div>';
+    try {
+      // persist the case first so the stress test can scope to it
+      await fetch("api/case", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(_case) });
+      const adv = $("stress-adversarial").checked ? "?adversarial=1" : "";
+      const resp = await fetch("api/stress" + adv);
+      const data = await resp.json();
+      if (!data.ok) { panel.innerHTML = '<p class="gp-detail-empty">' + esc(data.error || "Stress test failed.") + '</p>'; return; }
+      _stressData = data;
+      renderStress(data);
+    } catch (e) {
+      panel.innerHTML = '<p class="gp-detail-empty">Could not run the stress test.</p>';
+    } finally { btn.textContent = prev; btn.disabled = false; }
+  }
+
+  function scoreColor(s) { return s >= 70 ? "var(--supported)" : s >= 45 ? "var(--contested)" : "var(--undermined)"; }
+
+  function renderStress(data) {
+    const panel = $("stress-panel"); panel.innerHTML = "";
+    $("builder-score").textContent = data.score + "%";
+    $("builder-score").style.color = scoreColor(data.score);
+    const head = document.createElement("div"); head.className = "stress-score-row";
+    head.innerHTML = '<span class="stress-score" style="color:' + scoreColor(data.score) + '">' + data.score + '</span>'
+      + '<span class="stress-summary">' + esc(data.summary) + '</span>';
+    panel.appendChild(head);
+
+    (data.lenses || []).forEach(lens => {
+      if (!lens.findings.length) return;
+      const sec = document.createElement("div"); sec.className = "stress-lens";
+      const h = document.createElement("div"); h.className = "stress-lens-head"; h.textContent = lens.title;
+      sec.appendChild(h);
+      lens.findings.forEach(f => sec.appendChild(buildFinding(f)));
+      panel.appendChild(sec);
+    });
+  }
+
+  function buildFinding(f) {
+    const el = document.createElement("div"); el.className = "stress-finding sev-" + f.severity;
+    const title = document.createElement("div"); title.className = "sf-title";
+    title.innerHTML = '<span class="sf-sev ' + f.severity + '">' + f.severity + '</span>' + esc(f.title);
+    el.appendChild(title);
+    if (f.detail) { const d = document.createElement("div"); d.className = "sf-detail"; d.textContent = f.detail; el.appendChild(d); }
+    const props = (f.items || []).filter(i => /^P\d{3,5}$/.test(i));
+    if (props.length) {
+      const items = document.createElement("div"); items.className = "sf-items";
+      props.forEach(pid => items.appendChild(makeCite(pid)));
+      el.appendChild(items);
+    }
+    if ((f.sources || []).length) {
+      const src = document.createElement("div"); src.className = "sf-src sf-detail";
+      f.sources.forEach(c => { const a = document.createElement("a"); a.href = c.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = "↗ " + (c.title || c.url).slice(0, 40); a.style.marginRight = ".5rem"; src.appendChild(a); });
+      el.appendChild(src);
+    }
+    return el;
+  }
+
+  // ---- strategy plan PDF (print a self-contained document) ----
+  function exportPlan() {
+    const sel = _case.propositions.map(pid => caseRow(pid)).filter(Boolean);
+    const selIds = new Set(_case.propositions);
+    const relevantArgs = _argsData.filter(a => !selIds.size || (a.relies_on || []).some(p => selIds.has(p)));
+    const esc2 = s => (s == null ? "" : String(s)).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    const today = new Date().toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
+
+    const propRows = sel.map(r => {
+      const p = r.proposition;
+      const witns = [...new Set((r.links || []).filter(l => l.relation === "supportive").map(l => l.witness).filter(Boolean))];
+      return '<tr><td class="id">' + p.id + '</td><td><span class="st st-' + r.status + '">' + (r.status === "MISSING" ? "Missing" : r.status) + '</span></td>'
+        + '<td>' + esc2(p.text) + '<div class="ev">' + (witns.length ? "Evidence: " + esc2(witns.join(", ")) : "No supporting witness") + '</div></td></tr>';
+    }).join("") || '<tr><td colspan="3" class="muted">No propositions selected — drag some into your strategy first.</td></tr>';
+
+    const argHtml = relevantArgs.map(a =>
+      '<div class="arg"><div class="arg-h"><b>' + esc2(a.party) + '</b> — ' + esc2(a.issue)
+      + ' <span class="st2 ' + a.strength + '">' + esc2(a.strength) + '</span></div>'
+      + '<div class="arg-t">' + esc2(a.thesis) + '</div><p>' + esc2(a.reasoning) + '</p>'
+      + '<div class="meta">Relies on: ' + (a.relies_on || []).join(", ") + ((a.evidence || []).length ? ' &middot; Evidence: ' + (a.evidence || []).join(", ") : '') + '</div>'
+      + (a.vulnerability ? '<div class="vuln"><b>Weakest link:</b> ' + esc2(a.vulnerability) + '</div>' : '')
+      + (a.authority_note ? '<div class="auth"><b>Authority:</b> ' + esc2(a.authority_note) + (a.authority || []).map(c => ' [' + esc2(c.url) + ']').join("") + '</div>' : '')
+      + '</div>').join("") || '<p class="muted">No arguments generated.</p>';
+
+    let stressHtml = '<p class="muted">Stress test not run.</p>';
+    if (_stressData) {
+      stressHtml = '<div class="score">Robustness: <b style="color:' + (_stressData.score >= 70 ? "#16a34a" : _stressData.score >= 45 ? "#d97706" : "#dc2626") + '">' + _stressData.score + '/100</b> — ' + esc2(_stressData.summary) + '</div>';
+      (_stressData.lenses || []).forEach(L => {
+        if (!L.findings.length) return;
+        stressHtml += '<h4>' + esc2(L.title) + '</h4>';
+        L.findings.forEach(f => {
+          stressHtml += '<div class="finding f-' + f.severity + '"><b>[' + f.severity.toUpperCase() + ']</b> ' + esc2(f.title)
+            + (f.detail ? '<div class="fd">' + esc2(f.detail) + '</div>' : '') + '</div>';
+        });
+      });
+    }
+
+    const doc = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Strategy Plan</title><style>'
+      + 'body{font-family:Georgia,serif;color:#1e293b;max-width:840px;margin:2rem auto;padding:0 1.5rem;line-height:1.55}'
+      + 'h1{font-size:1.7rem;color:#0f1f3d;margin-bottom:.2rem}h2{font-size:1.1rem;color:#0f1f3d;border-bottom:2px solid #0f1f3d;padding-bottom:.3rem;margin:1.6rem 0 .8rem}h4{margin:.8rem 0 .3rem;font-size:.92rem}'
+      + '.sub{color:#64748b;font-size:.85rem;margin-bottom:1rem}.theory{background:#f8fafc;border-left:4px solid #0f1f3d;padding:.7rem 1rem;font-style:italic;white-space:pre-wrap}'
+      + 'table{width:100%;border-collapse:collapse;font-family:-apple-system,Segoe UI,sans-serif;font-size:.82rem}td{border-bottom:1px solid #e2e8f0;padding:.5rem;vertical-align:top}td.id{font-family:monospace;color:#64748b;white-space:nowrap}.ev{font-size:.74rem;color:#64748b;margin-top:.2rem}'
+      + '.st{font-size:.68rem;font-weight:700;text-transform:uppercase;padding:.1rem .4rem;border-radius:3px}.st-supported{background:#f0fdf4;color:#16a34a}.st-contested{background:#fffbeb;color:#d97706}.st-undermined{background:#fef2f2;color:#dc2626}.st-MISSING{background:#f1f5f9;color:#6b7280}'
+      + '.arg{font-family:-apple-system,Segoe UI,sans-serif;border:1px solid #e2e8f0;border-radius:8px;padding:.7rem .9rem;margin-bottom:.7rem}.arg-h{font-size:.8rem;color:#475569}.arg-t{font-weight:700;margin:.2rem 0}.arg p{font-size:.86rem;margin:.2rem 0}.meta{font-size:.72rem;color:#64748b;font-family:monospace}'
+      + '.st2{font-size:.65rem;text-transform:uppercase;padding:.05rem .35rem;border-radius:3px;background:#eef2ff;color:#253a63}.st2.weak{background:#fef2f2;color:#dc2626}.st2.strong{background:#f0fdf4;color:#16a34a}.st2.moderate{background:#fffbeb;color:#d97706}'
+      + '.vuln{font-size:.78rem;background:#fef2f2;color:#7f1d1d;padding:.35rem .55rem;border-radius:5px;margin-top:.3rem}.auth{font-size:.76rem;color:#334155;margin-top:.3rem}'
+      + '.finding{font-family:-apple-system,Segoe UI,sans-serif;font-size:.82rem;padding:.35rem .5rem;border-left:3px solid #94a3b8;margin-bottom:.35rem}.f-critical,.f-high{border-left-color:#dc2626}.f-medium{border-left-color:#d97706}.f-info{border-left-color:#16a34a}.fd{font-size:.76rem;color:#475569}'
+      + '.score{font-family:-apple-system,Segoe UI,sans-serif;font-size:.9rem;margin-bottom:.6rem}.muted{color:#94a3b8}.footer{margin-top:2rem;padding-top:1rem;border-top:1px solid #e2e8f0;font-size:.72rem;color:#94a3b8;font-family:-apple-system,Segoe UI,sans-serif}'
+      + '@media print{body{margin:0}}</style></head><body>'
+      + '<h1>' + (esc2(_case.title) || "Case Strategy Plan") + '</h1>'
+      + '<div class="sub">Pleading-to-Proof strategy plan &middot; generated ' + today + '</div>'
+      + (_case.theory ? '<h2>Case theory</h2><div class="theory">' + esc2(_case.theory) + '</div>' : '')
+      + '<h2>Selected propositions (' + sel.length + ')</h2><table>' + propRows + '</table>'
+      + '<h2>Arguments</h2>' + argHtml
+      + '<h2>Stress test</h2>' + stressHtml
+      + '<div class="footer">Generated by the Pleading-to-Proof tool. AI-assisted analysis — final judgement rests with the supervising lawyer.</div>'
+      + '</body></html>';
+
+    const w = window.open("", "_blank");
+    if (!w) { alert("Allow pop-ups to export the plan."); return; }
+    w.document.write(doc); w.document.close();
+    setTimeout(() => w.print(), 350);
   }
 
   // ------------------------------------------------------------------ boot
