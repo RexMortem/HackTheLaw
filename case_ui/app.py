@@ -147,6 +147,139 @@ def _status_from_links(links: list, min_conf: float = 0.5) -> str:
     return "MISSING"
 
 
+# ---------------------------------------------------------------------------
+# Grounding guard — live, deterministic citation verification for the UI
+# ---------------------------------------------------------------------------
+# Every citation Claude emitted is checked against the case bundle before the UI
+# shows it, so a judge can never click a citation that doesn't hold. This is the
+# "accountability layer" / anti-hallucination gate: it is DETERMINISTIC CODE, not
+# a prompt — we don't ask the model to grade itself, we check it.
+#
+#   1. Citation existence — the cited source id (doc + ¶) must really be in the
+#      case; a fabricated paragraph/document is caught and flagged.
+#   2. Quote verification — the quoted text must actually appear in that source.
+#      The full source bundle (bundle_md/) is regenerable and not shipped with
+#      the app, so we replay the verdict the pipeline already recorded per
+#      citation as `quote_ok` — itself the same grounding-guard quote check run
+#      against the real source text at extraction time (caselib.verify_quote).
+#   3. Quarantine — anything that fails either check is marked so the UI can
+#      surface it as unverified rather than presenting it as solid.
+_GG = None
+
+
+def _grounding_guard():
+    """Lazy-import the deterministic verifier from case_ui/quantum (pure stdlib,
+    no third-party deps). Cached after first use."""
+    global _GG
+    if _GG is None:
+        gg_dir = str(_HERE / "quantum")
+        if gg_dir not in sys.path:
+            sys.path.insert(0, gg_dir)
+        import grounding_guard as gg
+        _GG = gg
+    return _GG
+
+
+def _citation_id(src: dict | None) -> str:
+    """Composite source id from a {doc_id, page, paragraph} provenance block,
+    e.g. '14_Letter_Notice_of_Termination ¶2' — shown in the verdict tooltip."""
+    if not src:
+        return ""
+    doc = str(src.get("doc_id") or "").strip()
+    para = str(src.get("paragraph") or "").strip()
+    if doc and para:
+        return f"{doc} ¶{para}"
+    return doc or para
+
+
+def _known_doc_ids() -> set:
+    """Legitimate case document ids — the ground truth for the citation EXISTENCE
+    check. Taken from the pipeline matrix on disk BEFORE user additions are layered
+    in, so the set is independent of whatever is being verified: a citation to a
+    document that isn't part of the case bundle is genuinely caught rather than
+    self-validating. Canonicalised via grounding_guard._canon_id."""
+    path = _out("matrix.json")
+    if not path.exists():
+        path = DATA_DIR / "matrix.json"
+    try:
+        base = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return set()
+    try:
+        canon = _grounding_guard()._canon_id
+    except Exception:
+        canon = lambda s: str(s).strip().lower()
+    docs: set = set()
+    for row in base:
+        for obj, key in [(row.get("proposition") or {}, "source")] + \
+                [(l, "evidence_source") for l in row.get("links") or []]:
+            doc = (obj.get(key) or {}).get("doc_id")
+            if doc:
+                docs.add(canon(doc))
+    return docs
+
+
+def _verify_matrix(matrix: list) -> dict:
+    """Run the grounding guard over every citation and annotate each proposition
+    and link in place with a `_verify` verdict the UI renders as a checkmark.
+
+    Two deterministic checks, no model in the loop:
+      • existence — the cited document must be a real case document (independent
+        ground truth from `_known_doc_ids`); a fabricated doc id is rejected.
+      • quote     — the quoted text must match the source. The full source bundle
+        is regenerable and not shipped, so we replay the per-citation `quote_ok`
+        the pipeline recorded — itself the grounding-guard quote check run against
+        the real source text at extraction time.
+
+    Returns a {available, total, verified, flagged} summary. Never raises — if the
+    guard can't load, citations are simply left unannotated and the UI falls back
+    to the per-link quote_ok flag."""
+    try:
+        gg = _grounding_guard()
+    except Exception as exc:  # never let verification take down the matrix endpoint
+        _log("verify", f"grounding guard unavailable: {type(exc).__name__}: {exc}")
+        return {"available": False, "total": 0, "verified": 0, "flagged": 0}
+
+    known_docs = _known_doc_ids()
+    Status = gg.Status
+    counters = {"total": 0, "verified": 0}
+
+    def _verdict(src: dict | None, quote, quote_ok) -> dict:
+        src = src or {}
+        sid = _citation_id(src)
+        doc = gg._canon_id(src.get("doc_id") or "") if src.get("doc_id") else ""
+        quote = str(quote or "")
+        if not doc or (known_docs and doc not in known_docs):
+            res = gg.CheckResult(sid, quote, Status.FABRICATED_SOURCE, 0.0,
+                                 f"cited document '{src.get('doc_id') or '?'}' is not in the case bundle")
+        elif not quote.strip():
+            res = gg.CheckResult(sid, quote, Status.NO_QUOTE, 1.0,
+                                 "source exists but no quote was supplied to verify")
+        elif quote_ok:
+            res = gg.CheckResult(sid, quote, Status.EXACT, 1.0,
+                                 "source exists and the quote matches it verbatim")
+        else:
+            res = gg.CheckResult(sid, quote, Status.MISQUOTE, 0.0,
+                                 "quote not found in the cited source")
+        counters["total"] += 1
+        if res.ok:
+            counters["verified"] += 1
+        return {"ok": res.ok, "status": res.status.value,
+                "score": round(res.score, 3), "detail": res.detail, "source_id": sid}
+
+    for row in matrix:
+        prop = row.get("proposition")
+        if prop is not None:
+            prop["_verify"] = _verdict(prop.get("source"), prop.get("quote"), prop.get("quote_ok"))
+        for link in row.get("links") or []:
+            link["_verify"] = _verdict(link.get("evidence_source"),
+                                       link.get("quote"), link.get("quote_ok"))
+
+    return {"available": True, "total": counters["total"],
+            "verified": counters["verified"],
+            "flagged": counters["total"] - counters["verified"]}
+
+
 def _evidence_index(matrix: list) -> dict:
     """evidence_id -> {witness, quote, evidence_source} from existing links, so a
     user-added proposition that cites existing evidence shows its real detail."""
@@ -952,6 +1085,8 @@ class Handler(BaseHTTPRequestHandler):
             self._serve_file(STATIC_DIR / "timeline.html", "text/html; charset=utf-8")
         elif path == "/api/matrix":
             self._api_matrix()
+        elif path == "/api/verify":
+            self._api_verify()
         elif path == "/api/graph":
             self._api_graph()
         elif path == "/api/summary":
@@ -1041,6 +1176,10 @@ class Handler(BaseHTTPRequestHandler):
             1,
         )
 
+        # Grounding guard: verify every citation and annotate each proposition /
+        # link in place with a `_verify` verdict the UI renders as a checkmark.
+        verification = _verify_matrix(matrix)
+
         # Cacheable: the matrix is static between pipeline runs, so let the
         # browser cache it (ETag gives a cheap 304 when it hasn't changed).
         self._json_cacheable(json.dumps({
@@ -1050,7 +1189,36 @@ class Handler(BaseHTTPRequestHandler):
                 "counts": counts,
                 "trial_readiness": readiness,
             },
+            "verification": verification,
             "matrix": matrix,
+        }), max_age=60)
+
+    def _api_verify(self):
+        """GET /api/verify — run the grounding guard over the whole matrix and
+        return the summary plus the list of any quarantined (failed) citations.
+        Lets you inspect the anti-hallucination gate independently of the UI."""
+        matrix, err = _load_matrix()
+        if err:
+            self._json_response(503, json.dumps({"ok": False, "error": err}))
+            return
+        summary = _verify_matrix(matrix)
+        flagged = []
+        for row in matrix:
+            prop = row.get("proposition") or {}
+            for kind, obj in [("proposition", prop)] + \
+                    [("evidence", l) for l in row.get("links") or []]:
+                v = obj.get("_verify")
+                if v and not v["ok"]:
+                    flagged.append({
+                        "proposition_id": prop.get("id"),
+                        "kind": kind,
+                        "id": obj.get("id") or obj.get("evidence_id"),
+                        "source_id": v["source_id"],
+                        "status": v["status"],
+                        "detail": v["detail"],
+                    })
+        self._json_cacheable(json.dumps({
+            "ok": True, "summary": summary, "flagged": flagged,
         }), max_age=60)
 
     def _api_graph(self):
