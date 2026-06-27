@@ -1048,6 +1048,10 @@
     .stress-run-big:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); filter: brightness(1.06); }
     .stress-run-big:active { transform: translateY(0); }
     .stress-run-big:disabled { opacity: .6; cursor: default; transform: none; box-shadow: var(--shadow-md); }
+    /* ---- Evidence Timeline room (embeds the GROUNDS timeline) ---- */
+    #room-timeline.active { display: flex; flex-direction: column; height: 100vh; padding: 0; }
+    #room-timeline .timeline-frame-wrap { flex: 1; min-height: 0; }
+    #room-timeline #timeline-frame { width: 100%; height: 100%; border: 0; display: block; background: #e3e6ea; }
     .palette-list { display: flex; flex-direction: column; gap: .45rem; max-height: 62vh; overflow-y: auto; }
     .palette-card { border: 1px solid var(--border); border-radius: 8px; padding: .5rem .6rem; cursor: grab; background: var(--bg); border-left: 4px solid var(--missing); transition: box-shadow .12s, transform .1s; }
     .palette-card:hover { box-shadow: var(--shadow-md); transform: translateX(2px); }
@@ -1291,6 +1295,10 @@
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-5 7 5v12"/><rect x="9.5" y="13" width="5" height="8"/></svg>
     <span class="tip">Case Builder</span>
   </button>
+  <button class="rail-btn" data-room="timeline">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span class="tip">Evidence Timeline</span>
+  </button>
 </nav>
 
 <!-- ============================== ORB =============================== -->
@@ -1429,6 +1437,12 @@
         <div class="opt-name">Case Builder</div>
         <div class="opt-desc">Assemble a strategy, stress-test it, export the plan.</div>
         <div class="opt-stat" id="stat-builder"><span class="muted">strategy</span></div>
+      </button>
+      <button class="opt-card" data-room="timeline">
+        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <div class="opt-name">Evidence Timeline</div>
+        <div class="opt-desc">Evidence plotted chronologically — supportive vs adverse over time.</div>
+        <div class="opt-stat" id="stat-timeline"><span class="muted">chronology</span></div>
       </button>
     </div>
 
@@ -1771,6 +1785,16 @@
   </div>
 </section>
 
+<!-- ========================= ROOM: TIMELINE ======================== -->
+<section id="room-timeline" class="view room">
+  <div class="room-head">
+    <div><h1>Evidence Timeline</h1><div class="sub">The case chronology — evidence plotted by date</div></div>
+  </div>
+  <div class="timeline-frame-wrap">
+    <iframe id="timeline-frame" title="Evidence timeline" src="about:blank"></iframe>
+  </div>
+</section>
+
 <script>
 (function () {
   "use strict";
@@ -1788,7 +1812,7 @@
   let _sending = false;
   let _currentView = "hero";
 
-  const ROOMS = ["propositions", "argumentation", "graph", "builder", "damages"];
+  const ROOMS = ["propositions", "argumentation", "graph", "builder", "timeline", "damages"];
 
   // ------------------------------------------------------------------ routing
   function go(name) {
@@ -1797,6 +1821,7 @@
       hero: "hero", chat: "chatview",
       propositions: "room-propositions", damages: "room-damages",
       argumentation: "room-argumentation", graph: "room-graph", builder: "room-builder",
+      timeline: "room-timeline",
     };
     $(map[name]).classList.add("active");
     _currentView = name;
@@ -1815,20 +1840,22 @@
     if (name === "argumentation") { renderArgumentation(); ensureArguments(); }
     if (name === "graph") ensureGraph();
     if (name === "builder") ensureBuilder();
+    if (name === "timeline") ensureTimeline();
     if (name === "damages") ensureQuantum();
 
     window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
   }
 
-  // Timeline drawer (within the Claims room) — off-canvas left overlay
-  function setTimeline(open) {
-    $("timeline-sidebar").classList.toggle("open", open);
-    $("tl-toggle").classList.toggle("active", open);
-    $("tl-toggle").setAttribute("aria-pressed", String(open));
+  // Evidence Timeline: embed the GROUNDS timeline (timeline.html) on first open.
+  // It fetches /api/matrix itself, so it stays in sync with our backend.
+  let _timelineLoaded = false;
+  function ensureTimeline() {
+    if (_timelineLoaded) return;
+    _timelineLoaded = true;
+    $("timeline-frame").src = "timeline.html";
   }
-  $("tl-toggle").addEventListener("click", () =>
-    setTimeline(!$("timeline-sidebar").classList.contains("open")));
-  $("tl-close").addEventListener("click", () => setTimeline(false));
+  // The Claims-room "Timeline" button opens the full Evidence Timeline room.
+  $("tl-toggle").addEventListener("click", () => go("timeline"));
 
   // rail + orb + cards wiring
   document.querySelectorAll(".rail-btn").forEach(b =>
