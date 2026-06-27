@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Proof Matrix — Second Chair</title>
+  <title>Second Chair</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
   <style>
     /* ================================================================== */
     /* Reset & tokens                                                      */
@@ -489,6 +491,20 @@
     .ev-rationale { font-size: 0.82rem; color: #334155; margin: 0.25rem 0; line-height: 1.5; }
     .ev-quote { font-size: 0.8rem; color: #475569; font-style: italic; border-left: 2px solid var(--border); padding-left: 0.6rem; margin-top: 0.3rem; line-height: 1.5; }
     .quote-warn { font-size: 0.7rem; color: #d97706; font-style: normal; font-weight: 600; }
+
+    /* Grounding-guard verification badge — the small checkmark on each piece of
+       evidence confirming the AI did not hallucinate the citation. */
+    .gg-badge { display: inline-flex; align-items: center; gap: 0.22rem; vertical-align: middle;
+      font-size: 0.64rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+      font-family: "SFMono-Regular", Consolas, monospace; font-style: normal;
+      padding: 0.08rem 0.36rem 0.08rem 0.28rem; border-radius: 999px; border: 1px solid transparent;
+      cursor: help; white-space: nowrap; user-select: none; }
+    .gg-badge svg { width: 11px; height: 11px; flex: 0 0 auto; }
+    .gg-badge.ok   { color: var(--supported); background: var(--supported-bg); border-color: var(--supported-border); }
+    .gg-badge.warn { color: #b45309;          background: #fffbeb;            border-color: #fde68a; }
+    .gg-badge.bad  { color: var(--undermined); background: var(--undermined-bg); border-color: #fecaca; }
+    .gg-badge.muted{ color: var(--slate-2);   background: var(--paper-2);     border-color: var(--border); }
+    .ev-quote .gg-badge { margin-left: 0.4rem; }
 
     .risk-intro { background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius); padding: 0.75rem 1rem; font-size: 0.85rem; color: #7f1d1d; margin-bottom: 1.25rem; line-height: 1.55; }
 
@@ -1403,45 +1419,44 @@
       Second Chair sees
       <b id="ctx-props">…</b> claims <span class="sep">·</span>
       the bundle <span class="sep">·</span>
-      <b id="ctx-eu">8</b> EU sources <span class="sep">·</span>
-      <b id="ctx-ready">…</b> trial readiness
+      <b id="ctx-eu">8</b> EU sources
     </div>
 
     <div class="cards" id="cards">
       <button class="opt-card" data-room="propositions">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></span>
         <div class="opt-name">Claims &amp; Evidential Foundations</div>
-        <div class="opt-desc">What's claimed — the pleaded allegations &amp; denials, evidence-coded.</div>
+        <div class="opt-desc">The pleaded claims and defences, evidence-coded</div>
         <div class="opt-stat" id="stat-propositions"><span class="muted">loading…</span></div>
       </button>
       <button class="opt-card" data-room="damages">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
         <div class="opt-name">Recoverable Damages</div>
-        <div class="opt-desc">Heads of loss and quantum — compare valuation methodologies.</div>
+        <div class="opt-desc">Heads of loss and quantum, valued</div>
         <div class="opt-stat" id="stat-damages"><span class="muted">quantum</span></div>
       </button>
       <button class="opt-card" data-room="argumentation">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 9h10M7 12h6"/></svg></span>
         <div class="opt-name">Argumentation</div>
-        <div class="opt-desc">Allegation vs defence, side by side — plus AI-drafted arguments.</div>
+        <div class="opt-desc">The arguments each side can run</div>
         <div class="opt-stat" id="stat-argumentation"><span class="muted">case theory</span></div>
       </button>
       <button class="opt-card" data-room="graph">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="9" cy="18" r="2.5"/></svg></span>
         <div class="opt-name">Case Graph</div>
-        <div class="opt-desc">Pleadings and evidence as a network — weak points and clusters.</div>
+        <div class="opt-desc">Pleadings and evidence as a network</div>
         <div class="opt-stat" id="stat-graph"><span class="muted">evidence map</span></div>
       </button>
       <button class="opt-card" data-room="builder">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-5 7 5v12"/></svg></span>
         <div class="opt-name">Case Builder</div>
-        <div class="opt-desc">Assemble a strategy, stress-test it, export the plan.</div>
+        <div class="opt-desc">Assemble and stress-test a strategy</div>
         <div class="opt-stat" id="stat-builder"><span class="muted">strategy</span></div>
       </button>
       <button class="opt-card" data-room="timeline">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
         <div class="opt-name">Evidence Timeline</div>
-        <div class="opt-desc">Evidence plotted chronologically — supportive vs adverse over time.</div>
+        <div class="opt-desc">Evidence plotted chronologically</div>
         <div class="opt-stat" id="stat-timeline"><span class="muted">chronology</span></div>
       </button>
     </div>
@@ -1498,10 +1513,6 @@
     <div class="stat-pill"><span class="dot" style="background:#d97706"></span><span class="count" id="count-contested">0</span><span class="lbl">Contested</span></div>
     <div class="stat-pill"><span class="dot" style="background:#dc2626"></span><span class="count" id="count-undermined">0</span><span class="lbl">Undermined</span></div>
     <div class="stat-pill"><span class="dot" style="background:#9ca3af"></span><span class="count" id="count-missing">0</span><span class="lbl">Missing</span></div>
-    <div class="readiness-mini">
-      <span class="score" id="readiness-score">0%</span>
-      <div class="readiness-bar"><div class="readiness-fill" id="readiness-fill" style="width:0%"></div></div>
-    </div>
   </div>
   <div class="room-body">
    <div class="claims-layout">
@@ -1641,23 +1652,9 @@
 <!-- ======================= ROOM: ARGUMENTATION ===================== -->
 <section id="room-argumentation" class="view room">
   <div class="room-head">
-    <div><h1>Argumentation</h1><div class="sub">Allegation vs defence — the case theory</div></div>
+    <div><h1>Argumentation</h1><div class="sub">The arguments each side can run</div></div>
   </div>
   <div class="room-body">
-    <p class="arg-intro">Claimant allegations on the left, Defendant denials on the right.
-       Each node is risk-coded; a <strong>clash</strong> marks where a denial directly answers an
-       allegation (via <code>responds&nbsp;to</code>). Click any node to open it in Propositions.</p>
-    <div class="arg-cols">
-      <div class="arg-col claimant">
-        <div class="arg-col-head"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--navy-3)"></span>Claimant — allegations</div>
-        <div id="arg-claimant"></div>
-      </div>
-      <div class="arg-col defendant">
-        <div class="arg-col-head"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--undermined)"></span>Defendant — denials</div>
-        <div id="arg-defendant"></div>
-      </div>
-    </div>
-
     <section class="args-section" id="args-section">
       <div class="args-head">
         <div>
@@ -1837,7 +1834,7 @@
       b.classList.toggle("active", b.dataset.room === name));
 
     if (name === "propositions") ensureSummary();
-    if (name === "argumentation") { renderArgumentation(); ensureArguments(); }
+    if (name === "argumentation") { ensureArguments(); }
     if (name === "graph") ensureGraph();
     if (name === "builder") ensureBuilder();
     if (name === "timeline") ensureTimeline();
@@ -2036,8 +2033,6 @@
     $("count-contested").textContent   = summary.counts.contested || 0;
     $("count-undermined").textContent  = summary.counts.undermined || 0;
     $("count-missing").textContent     = summary.counts.MISSING || 0;
-    $("readiness-score").textContent   = summary.trial_readiness + "%";
-    $("readiness-fill").style.width    = summary.trial_readiness + "%";
 
     $("tab-badge-matrix").textContent = matrix.length;
     const riskCount = matrix.filter(r => r.status === "MISSING" || r.status === "undermined").length;
@@ -2048,7 +2043,6 @@
 
     // hero context + card stats
     $("ctx-props").textContent  = matrix.length;
-    $("ctx-ready").textContent  = summary.trial_readiness + "%";
     $("stat-propositions").innerHTML = matrix.length + " <span class='muted'>claims ·</span> " + summary.trial_readiness + "% <span class='muted'>ready</span>";
     const ctx = $("context-row");
     ctx.classList.add("scan");
@@ -2276,6 +2270,8 @@
       const s = p.source;
       const src = document.createElement("div"); src.className = "prop-source";
       src.textContent = [s.doc_id, s.page ? "p" + s.page : null, s.paragraph ? "¶" + s.paragraph : null].filter(Boolean).join("  ");
+      const pBadge = verifyBadge(p._verify);
+      if (pBadge) { src.appendChild(document.createTextNode("  ")); src.appendChild(pBadge); }
       if (src.textContent) content.appendChild(src);
     }
 
@@ -2305,6 +2301,30 @@
     _activeCardId = null;
   }
 
+  // Grounding-guard verdict -> a small inline checkmark on each citation, proving
+  // the AI didn't hallucinate it (source exists + quote matches the cited source).
+  const GG_CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const GG_WARN_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+
+  function verifyBadge(verify) {
+    if (!verify) return null;
+    const status = verify.status || (verify.ok ? "exact" : "misquote");
+    const map = {
+      exact:          { cls: "ok",    svg: GG_CHECK_SVG, label: "Verified",   title: "Grounding guard: the cited source exists and the quoted text matches it verbatim — no hallucination." },
+      fuzzy:          { cls: "ok",    svg: GG_CHECK_SVG, label: "Verified",   title: "Grounding guard: source exists and the quote matches (minor OCR/whitespace difference)." },
+      no_quote:       { cls: "muted", svg: GG_CHECK_SVG, label: "Source ✓",   title: "Grounding guard: the cited source exists; no quote was supplied to match." },
+      misquote:       { cls: "warn",  svg: GG_WARN_SVG,  label: "Unverified", title: "Grounding guard: the cited source exists, but the quoted text could not be matched against it — treat with caution." },
+      fabricated_src: { cls: "bad",   svg: GG_WARN_SVG,  label: "No source",  title: "Grounding guard: the cited source id is not in the case bundle — citation blocked as possibly fabricated." },
+    };
+    const m = map[status] || map.misquote;
+    const el = document.createElement("span");
+    el.className = "gg-badge " + m.cls;
+    el.innerHTML = m.svg + "<span>" + m.label + "</span>";
+    el.title = m.title + (verify.source_id ? "\n\nSource: " + verify.source_id : "");
+    el.setAttribute("aria-label", "Citation " + m.label);
+    return el;
+  }
+
   function buildEvidenceRow(link) {
     const row = document.createElement("div"); row.className = "ev-row";
     const icon = document.createElement("span"); icon.className = "ev-doc-icon"; icon.innerHTML = DOC_SVG;
@@ -2331,7 +2351,11 @@
     if (link.rationale) { const r = document.createElement("p"); r.className = "ev-rationale"; r.textContent = link.rationale; main.appendChild(r); }
     if (link.quote) {
       const q = document.createElement("div"); q.className = "ev-quote"; q.textContent = "“" + link.quote + "”";
-      if (!link.quote_ok) { const w = document.createElement("span"); w.className = "quote-warn"; w.textContent = "  [unverified quote]"; q.appendChild(w); }
+      // Grounding-guard checkmark: prefer the server's full verdict, falling
+      // back to the per-link quote_ok flag if verification didn't run.
+      const badge = verifyBadge(link._verify || { ok: link.quote_ok !== false,
+        status: link.quote_ok === false ? "misquote" : "exact" });
+      if (badge) q.appendChild(badge);
       main.appendChild(q);
     }
     row.appendChild(main);
@@ -2442,34 +2466,6 @@
   }
 
   let _argRendered = false;
-
-  // ------------------------------------------------------------------ argumentation
-  function renderArgumentation() {
-    if (!_matrixLoaded || _argRendered) return;
-    _argRendered = true;
-    const claimant = $("arg-claimant"), defendant = $("arg-defendant");
-    claimant.innerHTML = ""; defendant.innerHTML = "";
-
-    _matrix.forEach(row => {
-      const p = row.proposition;
-      const node = document.createElement("div");
-      node.className = "arg-node status-" + row.status;
-      node.dataset.propId = p.id;
-      const id = document.createElement("div"); id.className = "id"; id.textContent = p.id + " · " + row.status;
-      const t = document.createElement("div"); t.className = "t"; t.textContent = p.text;
-      node.appendChild(id); node.appendChild(t);
-
-      if (p.responds_to) {
-        const c = document.createElement("div"); c.className = "clash";
-        c.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7l10 10"/></svg> clashes with ' + p.responds_to;
-        node.appendChild(c);
-      }
-      node.addEventListener("click", () => openProposition(p.id));
-
-      const col = (p.party === "Defendant" || p.type === "denial") ? defendant : claimant;
-      col.appendChild(node);
-    });
-  }
 
   // ------------------------------------------------------------------ case graph
   // A dependency-free force-directed view of the same graph we load into Neo4j:
