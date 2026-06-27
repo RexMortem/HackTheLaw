@@ -524,6 +524,8 @@ class Handler(BaseHTTPRequestHandler):
 
         if path in ("/", "/index.html"):
             self._serve_file(STATIC_DIR / "index.html", "text/html; charset=utf-8")
+        elif path in ("/timeline", "/timeline.html"):
+            self._serve_file(STATIC_DIR / "timeline.html", "text/html; charset=utf-8")
         elif path == "/api/matrix":
             self._api_matrix()
         elif path == "/api/summary":
