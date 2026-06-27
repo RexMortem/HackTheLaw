@@ -19,6 +19,13 @@ Usage:
   python extract.py --mode sync           # sequential calls (easier to debug)
   python extract.py --limit 5             # only the first 5 docs (a cheap dry run)
   python extract.py --pleadings "POC*.md" # force a glob to be treated as pleadings
+  python extract.py --no-llm              # force the zero-cost heuristic extractor
+  python extract.py --no-cache            # force fresh LLM calls, ignore out/cache
+
+Uses the LLM by default. Results are cached under out/cache keyed by (model,
+prompt, schema), so re-running over an unchanged bundle makes no LLM calls. If the
+LLM is unavailable when a fresh call is needed (no API key, no credits, offline),
+it falls back automatically to the heuristic extractor for those documents.
 """
 from __future__ import annotations
 
@@ -71,6 +78,10 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=0, help="cap number of docs (dry run)")
     ap.add_argument("--pleadings", default=None, help="glob to force-treat as pleadings")
     ap.add_argument("--evidence", default=None, help="glob to force-treat as evidence")
+    ap.add_argument("--no-cache", action="store_true",
+                    help="ignore the on-disk extraction cache (always call the LLM)")
+    ap.add_argument("--no-llm", action="store_true",
+                    help="skip the LLM entirely; extract with the heuristic fallback")
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
@@ -102,44 +113,111 @@ def main() -> int:
               "  Add the Particulars of Claim / Defence to the input folder, or pass\n"
               "  --pleadings '<glob>' to designate them. Evidence extraction still runs.\n")
 
-    client = cl.get_client()
+    # Use the LLM by default (results are cached, so re-runs are free). The
+    # heuristic extractor is the fallback: forced with --no-llm, or automatic if
+    # the LLM can't be reached (no key / no credits / offline) when a (cache-miss)
+    # call is actually needed.
+    cache_dir = None if (args.no_cache or args.no_llm) else os.path.join(args.out, "cache")
+    use_llm = not args.no_llm
+    client = None
+    if use_llm:
+        try:
+            client = cl.get_client()
+        except Exception as e:                      # e.g. no API key at construction
+            reason = cl.llm_unavailable_reason(e) or str(e)
+            print(f"\n  LLM unavailable ({reason}); using heuristic extraction.\n")
+            use_llm = False
 
     # ---- Build jobs -------------------------------------------------------
     prop_jobs, ev_jobs = [], []
     for i, d in enumerate(pleadings):
-        prop_jobs.append(dict(custom_id=f"prop-{i}", doc=d,
+        prop_jobs.append(dict(custom_id=f"prop-{i}", doc=d, kind="prop",
                               system=cl.PROPOSITIONS_SYSTEM,
                               user=doc_user_prompt(d),
                               schema=cl.PROPOSITIONS_SCHEMA, max_tokens=16000))
     for i, d in enumerate(evidence_docs):
-        ev_jobs.append(dict(custom_id=f"ev-{i}", doc=d,
+        ev_jobs.append(dict(custom_id=f"ev-{i}", doc=d, kind="ev",
                             system=cl.EVIDENCE_SYSTEM,
                             user=doc_user_prompt(d),
                             schema=cl.EVIDENCE_SCHEMA, max_tokens=32000))
 
+    def heuristic_result(job: dict) -> dict:
+        if job["kind"] == "prop":
+            return {"propositions": cl.heuristic_propositions(job["doc"])}
+        return {"evidence": cl.heuristic_evidence(job["doc"])}
+
     # ---- Run --------------------------------------------------------------
-    def run(jobs):
-        if not jobs:
-            return {}
+    # Set once the LLM proves unavailable mid-run (no credits, dropped network),
+    # so the rest of the run goes straight to the heuristic path without retrying.
+    llm_down = {"reason": None}
+
+    def _call_llm(pending):
+        """Call the LLM for cache-miss jobs. Raises on an LLM-unavailable error
+        so the caller can fall back; swallows genuine per-doc errors as None."""
         if args.mode == "batch":
             return cl.run_batch(client, [{k: j[k] for k in
                                           ("custom_id", "system", "user", "schema", "max_tokens")}
-                                         for j in jobs])
-        results = {}
-        for j in jobs:
+                                         for j in pending])
+        fresh = {}
+        for j in pending:
             print(f"  {j['custom_id']} {j['doc'].doc_id}")
             try:
-                results[j["custom_id"]] = cl.run_sync(
+                fresh[j["custom_id"]] = cl.run_sync(
                     client, j["system"], j["user"], j["schema"], j["max_tokens"])
             except Exception as e:
-                print(f"    ERROR {e}")
-                results[j["custom_id"]] = None
+                if cl.llm_unavailable_reason(e):
+                    raise                       # bubble up: fall back wholesale
+                print(f"    ERROR {e}")          # genuine per-doc error
+                fresh[j["custom_id"]] = None
+        return fresh
+
+    def run(jobs):
+        """Serve cached results, call the LLM for the rest (caching successes),
+        and fall back to the heuristic extractor for anything the LLM can't
+        produce — automatically, when there are no credits / no network."""
+        if not jobs:
+            return {}
+        results, pending = {}, []
+        for j in jobs:
+            j["_key"] = cl.llm_cache_key(j["system"], j["user"], j["schema"])
+            hit = None if llm_down["reason"] else cl.cache_load(cache_dir, j["_key"])
+            if hit is not None:
+                results[j["custom_id"]] = hit
+            else:
+                pending.append(j)
+        n_cached = len(jobs) - len(pending)
+        if n_cached:
+            print(f"  {n_cached}/{len(jobs)} from cache (no LLM call)")
+        if not pending:
+            return results
+
+        fresh = {}
+        if not llm_down["reason"]:
+            try:
+                fresh = _call_llm(pending)
+            except Exception as e:
+                llm_down["reason"] = cl.llm_unavailable_reason(e) or str(e)
+                print(f"  LLM unavailable ({llm_down['reason']}); falling back to "
+                      f"heuristic extraction for the rest of this run.")
+
+        for j in pending:
+            r = fresh.get(j["custom_id"])
+            if r is None:                       # cache miss the LLM couldn't fill
+                results[j["custom_id"]] = heuristic_result(j)   # not cached: retried with credits
+            else:
+                results[j["custom_id"]] = r
+                cl.cache_store(cache_dir, j["_key"], r)
         return results
 
-    print("\nExtracting propositions from pleadings...")
-    prop_res = run(prop_jobs)
-    print("Extracting evidence from witness statements/exhibits...")
-    ev_res = run(ev_jobs)
+    if not use_llm:
+        print("\nExtracting with the heuristic (no-LLM) extractor...")
+        prop_res = {j["custom_id"]: heuristic_result(j) for j in prop_jobs}
+        ev_res = {j["custom_id"]: heuristic_result(j) for j in ev_jobs}
+    else:
+        print("\nExtracting propositions from pleadings...")
+        prop_res = run(prop_jobs)
+        print("Extracting evidence from witness statements/exhibits...")
+        ev_res = run(ev_jobs)
 
     # ---- Assemble propositions -------------------------------------------
     propositions = []

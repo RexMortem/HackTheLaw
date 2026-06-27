@@ -457,6 +457,86 @@ def build_classify_user(prop: dict, candidates: list[dict]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Heuristic (no-LLM) extraction — a zero-cost, offline fallback / preview path.
+#
+# Splits each document into atomic spans straight from the parsed paragraph
+# structure, with no model call. It can't judge intent the way the LLM extractor
+# does (allegation-vs-denial nuance, dropping boilerplate and legal argument), so
+# recall/precision are lower — but every record is provenance-anchored and its
+# quote is verbatim by construction (it IS the span). Use it for a dry run, in
+# CI, or when no API key / credits are available. Output records match the shapes
+# of PROPOSITIONS_SCHEMA / EVIDENCE_SCHEMA so the rest of extract.py is unchanged.
+# ---------------------------------------------------------------------------
+_SENT_SPLIT = re.compile(r"(?<=[.;])\s+(?=[\"'(A-Z])")
+_DENIAL_RE = re.compile(
+    r"\b(denie[sd]|deny|denying|not admitted|no admission|is denied|are denied|"
+    r"disput\w+|reject\w+|refut\w+)\b", re.IGNORECASE)
+_HEURISTIC_MIN_CHARS = 40
+
+
+def _sentences(text: str) -> list[str]:
+    """Rough sentence split that keeps short trailing fragments attached, so a
+    stray "Ltd." or "(a)" doesn't become its own record."""
+    parts = [s.strip() for s in _SENT_SPLIT.split(text) if s.strip()]
+    merged: list[str] = []
+    for s in parts:
+        if merged and len(s) < 20:
+            merged[-1] = f"{merged[-1]} {s}"
+        else:
+            merged.append(s)
+    return merged or ([text.strip()] if text.strip() else [])
+
+
+def _atomic_spans(doc: "Document", min_chars: int = _HEURISTIC_MIN_CHARS):
+    """Yield (page, paragraph_label, span) for substantive paragraphs. Each span
+    is a verbatim substring of the source, so verify_quote() passes on it."""
+    for p in doc.paragraphs:
+        body = p.text
+        if p.label and body.startswith(p.label):
+            body = body[len(p.label):].strip()     # drop the repeated "12." label
+        if len(body) < min_chars:
+            continue                               # skip headings / one-liners
+        for sent in _sentences(body):
+            if len(sent) >= min_chars:
+                yield p.page, p.label, sent
+
+
+def _guess_party(doc: "Document") -> str:
+    blob = (str(doc.meta.get("title", "")) + " " + doc.doc_id).lower()
+    if "defence" in blob or "defendant" in blob or "counterclaim" in blob:
+        return "Defendant"
+    if "claim" in blob or "claimant" in blob or "particulars" in blob:
+        return "Claimant"
+    return ""
+
+
+def heuristic_propositions(doc: "Document") -> list[dict]:
+    """No-LLM proposition records, shaped like PROPOSITIONS_SCHEMA items."""
+    party = _guess_party(doc)
+    return [{
+        "type": "denial" if _DENIAL_RE.search(span) else "allegation",
+        "text": span,
+        "party": party,
+        "responds_to": "",
+        "page": page,
+        "paragraph": label,
+        "quote": span,
+    } for page, label, span in _atomic_spans(doc)]
+
+
+def heuristic_evidence(doc: "Document") -> list[dict]:
+    """No-LLM evidence records, shaped like EVIDENCE_SCHEMA items."""
+    wit = doc.meta.get("witness_name", "") or ""
+    return [{
+        "assertion": span,
+        "witness": wit,
+        "page": page,
+        "paragraph": label,
+        "quote": span,
+    } for page, label, span in _atomic_spans(doc)]
+
+
+# ---------------------------------------------------------------------------
 # Anthropic helpers
 # ---------------------------------------------------------------------------
 def get_client():
@@ -466,6 +546,74 @@ def get_client():
         raise SystemExit("The 'anthropic' package is required. "
                          "Run: pip install -r requirements.txt") from e
     return anthropic.Anthropic()   # reads ANTHROPIC_API_KEY from env
+
+
+def llm_unavailable_reason(exc: Exception) -> str | None:
+    """If exc means the LLM simply can't be used right now (no key, no credits,
+    no network), return a short human reason for the log. Return None for a
+    genuine bug (e.g. a malformed request) that we should NOT silently mask by
+    falling back to the heuristic extractor.
+
+    Callers use this to decide whether to fall back: a missing API key or an
+    exhausted credit balance is a reason to switch to the free heuristic path; a
+    schema error is not."""
+    try:
+        import anthropic
+    except ImportError:
+        return "anthropic package not installed"
+    if isinstance(exc, (anthropic.AuthenticationError,
+                        anthropic.PermissionDeniedError)):
+        return "authentication/permission failed (check ANTHROPIC_API_KEY)"
+    if isinstance(exc, anthropic.APIConnectionError):
+        return "cannot reach the Anthropic API (offline?)"
+    msg = str(exc).lower()
+    if "api_key" in msg or "anthropic_api_key" in msg:
+        return "no API key set"
+    if "credit" in msg or "billing" in msg or "quota" in msg or "insufficient" in msg:
+        return "no credits / quota exhausted"
+    return None
+
+
+# ---------------------------------------------------------------------------
+# On-disk result cache — skip re-calling the LLM for inputs we've seen before.
+# Keyed by a hash of (model, system, user, schema): identical inputs => cache
+# hit, so re-running extract.py / build_matrix.py over an unchanged bundle costs
+# no tokens. Bust it by deleting the cache directory (default out/cache, which
+# is gitignored along with the rest of out/).
+# ---------------------------------------------------------------------------
+CACHE_DIR_DEFAULT = os.path.join("out", "cache")
+
+
+def llm_cache_key(system: str, user: str, schema: dict, model: str = MODEL) -> str:
+    payload = json.dumps(
+        {"model": model, "system": system, "user": user, "schema": schema},
+        sort_keys=True, ensure_ascii=False,
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def cache_load(cache_dir: str | None, key: str):
+    """Cached value for key, or None on miss / disabled / unreadable file."""
+    if not cache_dir:
+        return None
+    path = os.path.join(cache_dir, key + ".json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return None        # a corrupt cache file is a miss, not a crash
+
+
+def cache_store(cache_dir: str | None, key: str, value) -> None:
+    """Persist a successful result. Failures (None) are never cached, so they
+    are retried on the next run rather than baked in."""
+    if not cache_dir or value is None:
+        return
+    os.makedirs(cache_dir, exist_ok=True)
+    with open(os.path.join(cache_dir, key + ".json"), "w", encoding="utf-8") as fh:
+        json.dump(value, fh, ensure_ascii=False)
 
 
 def _text_block(message) -> str:

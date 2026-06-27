@@ -21,6 +21,10 @@ Usage:
   python build_matrix.py                 # batch, top-K=25, conf>=0.5
   python build_matrix.py --top-k 40 --min-confidence 0.6
   python build_matrix.py --mode sync --limit 10
+  python build_matrix.py --no-cache      # force fresh LLM calls, ignore out/cache
+
+Classifications are cached under out/cache keyed by (model, prompt, schema), so
+re-running over unchanged propositions/evidence makes no LLM calls.
 """
 from __future__ import annotations
 
@@ -57,6 +61,8 @@ def main() -> int:
     ap.add_argument("--embed-model", default=cl.DEFAULT_EMBED_MODEL,
                     help="Voyage embedding model (needs VOYAGE_API_KEY)")
     ap.add_argument("--min-confidence", type=float, default=0.5)
+    ap.add_argument("--no-cache", action="store_true",
+                    help="ignore the on-disk classification cache (always call the LLM)")
     ap.add_argument("--limit", type=int, default=0, help="cap propositions (dry run)")
     ap.add_argument("--resume-batch", default=None,
                     help="recover a previously-submitted classification batch by id "
@@ -109,24 +115,49 @@ def main() -> int:
                          user=cl.build_classify_user(p, cands),
                          schema=cl.CLASSIFY_SCHEMA, max_tokens=8000))
 
+    # Cache key per proposition's classification request: identical (model,
+    # prompt, schema) => cache hit, so re-runs over unchanged inputs cost nothing.
+    cache_dir = None if args.no_cache else os.path.join(args.out, "cache")
+    for j in jobs:
+        j["_key"] = cl.llm_cache_key(j["system"], j["user"], j["schema"])
+
     client = cl.get_client()
     if args.resume_batch:
         print(f"Resuming classification batch {args.resume_batch} (GET-only)...")
         res = cl.collect_batch(client, args.resume_batch)
-    elif args.mode == "batch":
-        res = cl.run_batch(client, [{k: j[k] for k in
-                                     ("custom_id", "system", "user", "schema", "max_tokens")}
-                                    for j in jobs])
+        for j in jobs:                       # backfill the cache from the recovered batch
+            cl.cache_store(cache_dir, j["_key"], res.get(j["custom_id"]))
     else:
-        res = {}
+        # Serve cached classifications; only call the LLM for the rest.
+        res, pending = {}, []
         for j in jobs:
-            print(f"  {j['custom_id']} {j['prop_id']}")
-            try:
-                res[j["custom_id"]] = cl.run_sync(
-                    client, j["system"], j["user"], j["schema"], j["max_tokens"])
-            except Exception as e:
-                print(f"    ERROR {e}")
-                res[j["custom_id"]] = None
+            hit = cl.cache_load(cache_dir, j["_key"])
+            if hit is not None:
+                res[j["custom_id"]] = hit
+            else:
+                pending.append(j)
+        n_cached = len(jobs) - len(pending)
+        if n_cached:
+            print(f"{n_cached}/{len(jobs)} classifications from cache (no LLM call)")
+
+        if pending and args.mode == "batch":
+            fresh = cl.run_batch(client, [{k: j[k] for k in
+                                           ("custom_id", "system", "user", "schema", "max_tokens")}
+                                          for j in pending])
+        else:
+            fresh = {}
+            for j in pending:
+                print(f"  {j['custom_id']} {j['prop_id']}")
+                try:
+                    fresh[j["custom_id"]] = cl.run_sync(
+                        client, j["system"], j["user"], j["schema"], j["max_tokens"])
+                except Exception as e:
+                    print(f"    ERROR {e}")
+                    fresh[j["custom_id"]] = None
+        for j in pending:
+            r = fresh.get(j["custom_id"])
+            res[j["custom_id"]] = r
+            cl.cache_store(cache_dir, j["_key"], r)
 
     cls_by_prop = {j["prop_id"]: (res.get(j["custom_id"]) or {}).get("classifications", [])
                    for j in jobs}

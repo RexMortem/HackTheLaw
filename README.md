@@ -53,6 +53,20 @@ python case_ui/snapshot_data.py   # copy out/matrix.json -> case_ui/data/ for th
 
 Cheap dry run first: `python extract.py --mode sync --limit 3`.
 
+**LLM results are cached.** Both `extract.py` and `build_matrix.py` cache every
+per-document/per-proposition LLM result under `out/cache`, keyed by a hash of
+(model, prompt, schema). Re-running over an unchanged bundle makes no LLM calls,
+so iterating on the matrix or the app costs nothing. The cache also lets a
+crashed or partial run resume for free. Pass `--no-cache` to force fresh calls,
+or delete `out/cache` to reset.
+
+**Extraction falls back gracefully.** `extract.py` uses the LLM by default. If a
+fresh call is needed but the LLM can't be reached (no API key, no credits,
+offline), it automatically falls back to a free heuristic extractor for those
+documents rather than failing. Force the heuristic path with `--no-llm`. (Cached
+LLM results are always preferred, and heuristic fallbacks are never cached, so a
+later run with credits re-extracts those documents with the model.)
+
 > **Preprocessing is a separate, offline step.** `convert_docx.py` is never
 > invoked by the running app — the app only reads the matrix produced downstream.
 > Re-run it only when the source `.docx` bundle changes.
@@ -143,15 +157,27 @@ Key design choices, in brief:
    statement, or exhibit), and extracts atomic propositions from pleadings and
    evidence units from the rest. Every record carries provenance (doc_id, page,
    paragraph) and a verbatim quote verified against the source (anti-hallucination
-   gate).
+   gate). Results are cached per document (`--no-cache` to bypass); `--no-llm`
+   runs the heuristic extractor instead (see below).
 2. **`build_matrix.py`:** BM25-retrieves candidate evidence per proposition, has
    Claude classify each candidate, and rolls up the four-bucket matrix.
+   Classifications are cached per proposition.
 
 **Why this design**
 
 - **Structured outputs** (`output_config.format`) for schema-valid records.
 - **Batch API** (50% cheaper) for per-document extraction, with **prompt
   caching** on the shared instruction prefix.
+- **On-disk result cache.** Each extraction and classification call is cached
+  under `out/cache`, keyed by a hash of (model, prompt, schema), so re-running
+  over an unchanged bundle makes no LLM calls and a crashed run resumes for free.
+- **Automatic no-LLM fallback.** `extract.py` uses the LLM by default but falls
+  back to a heuristic extractor when the model can't be reached (no key, no
+  credits, offline) for any document that isn't already cached. The heuristic
+  derives propositions and evidence straight from the parsed paragraph structure
+  (sentence-split atomic spans, provenance and verbatim quotes by construction):
+  zero cost, lower recall/precision than the model. Force it with `--no-llm`;
+  heuristic results are never cached, so credits restore the model path.
 - **Model:** `claude-sonnet-4-6`, adaptive thinking, `effort: high`.
 
 **Retrieval and scoring knobs**
@@ -198,6 +224,7 @@ is absent, which is why it runs out of the box and on a deploy host where `out/`
 | Method | Path | Description |
 |---|---|---|
 | `GET`  | `/api/matrix`  | Full matrix + summary stats |
+| `GET`  | `/api/graph`   | Case graph (proposition + evidence nodes, support/undermine edges) for the Case Graph view and Neo4j |
 | `GET`  | `/api/summary` | AI case summary (cached; `?refresh=1` to regenerate) |
 | `GET`  | `/api/status`  | Health check (data present, goals exist) |
 | `GET`  | `/api/goals`   | Saved goals (`{}` if none) |
@@ -230,6 +257,52 @@ system prompt memorises the pleaded propositions and their matrix status, and
 the model is told to cite propositions inline as `[P0003]` (the UI turns these
 into chips). Without an API key it falls back to a keyword-matched, grounded
 reply over the pleadings so it still says something true about the case.
+
+### Case Graph + Neo4j
+
+The proof matrix is a graph flattened into a table: each pleaded proposition
+links to the evidence that bears on it. `graph_export.py` makes that graph
+explicit and is the single source feeding both the in-app **Case Graph** view
+and **Neo4j**:
+
+```
+out/matrix.json ─graph_export.py─▶ out/graph.json    (→ /api/graph → Case Graph view)
+                                  ├ out/graph.cypher  (paste into Neo4j Browser)
+                                  └ case_ui/data/graph.json  (committed snapshot)
+```
+
+- **Model:** `(:Evidence)-[:SUPPORTS|UNDERMINES|NEUTRAL {confidence, rationale,
+  quote}]->(:Proposition)`. Proposition nodes carry `status` and a
+  `contradicted` flag (evidence cuts both ways); evidence nodes carry `degree`
+  (props touched) and `carries` (props it actually supports/undermines — the
+  load-bearing signal).
+- **Case Graph view** (UI rail → *Case Graph*): a dependency-free, canvas
+  force-directed render using focus+context — propositions are the prominent
+  spine and evidence is a faint cloud that lights up when you hover or click a
+  proposition (toggle *All evidence* for the full picture). Edges are
+  green=supports / red=undermines (neutral toggleable). Drag to pull apart, click
+  a proposition to open it in the matrix.
+- **Graph analytics** (computed in pure Python in `graph_export.py`, so they ship
+  in `graph.json` with no database; the same metrics are written by Neo4j GDS
+  when you load — see below):
+  - **PageRank** — node priority (drives ranking; not shown prominently).
+  - **Communities / issue clusters** — label-propagation over a graph that also
+    links propositions sharing a witness, so related allegations group into
+    issues. *Colour → Issue cluster* recolours the graph; a side panel lists them.
+  - **Articulation points + single points of failure** — the *Weak points*
+    toggle (and a side panel) surface evidence whose removal fragments the case
+    or that is the *sole* support for a proposition — the Case Collapse view.
+- **Load into Neo4j** (optional, wins the Neo4j tool prize and unlocks graph
+  analytics — centrality, single-points-of-failure, contradiction queries):
+  ```bash
+  pip install neo4j
+  export NEO4J_URI=neo4j+s://<id>.databases.neo4j.io   # Aura
+  export NEO4J_PASSWORD=...                              # NEO4J_USERNAME defaults to neo4j
+  python graph_export.py        # (re)build out/graph.json
+  python neo4j_load.py          # idempotent MERGE load
+  ```
+  Example queries (load-bearing evidence, single-witness propositions,
+  contradictions) are in the `neo4j_load.py` docstring.
 
 ### Deployment (Render)
 

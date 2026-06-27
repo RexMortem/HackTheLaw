@@ -9,3 +9,7 @@ anthropic>=0.69
 #   --retriever embeddings|hybrid  (needs VOYAGE_API_KEY)
 voyageai>=0.3
 numpy>=1.26   # already present; used for the dense cosine search
+
+# Optional: load the case graph into Neo4j (neo4j_load.py; needs NEO4J_* env).
+# graph_export.py and the web Case Graph view are pure stdlib and need none of this.
+neo4j>=5.0
