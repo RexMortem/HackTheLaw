@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grounds — Vertical Evidence Timeline (v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+<!--
+  GROUNDS — vertical evidence timeline, v2. A DRIVEN VIEW, not the reasoning engine.
+
+  OWNS: chronological display of evidence, quote display, doc_id/¶/witness metadata,
+        supportive/adverse/neutral visual states, zoom/fit/undated handling,
+        a clicked-evidence detail panel, the source-document link, the highlight API,
+        postMessage integration, and an evidence-click message back to the parent.
+  DOES NOT OWN: extraction, LLM calls, argument scoring, verdicts, trial readiness,
+        accept/reject, contradiction DETECTION, citation VERIFICATION, citation STATUS
+        DISPLAY (the ✓/grounding lives in the argument feature), legal judgment.
+
+  ── DATA ────────────────────────────────────────────────────────────────
+  Loads (first that returns a non-empty array wins):
+    1) GET /api/matrix   2) ./matrix.json   3) ./data/matrix.json   4) inline demo
+  Expected shape (array of propositions):
+    [{ proposition:{id,text,party,type,status},
+       links:[{ evidence_id, relation:'supportive'|'adverse'|'neutral',
+                quote, quote_ok:bool, witness, date:'YYYY-MM-DD',
+                evidence_source:{doc_id, paragraph, page?}, source_url? }],
+       conflicts?: [["E0009","E0011"], ...]   // OPTIONAL, backend-driven only
+    }]
+
+  ── HIGHLIGHT API (same page) ───────────────────────────────────────────
+    window.GroundsTimeline.highlightProposition('P0001');
+    window.GroundsTimeline.highlightEvidence(['E0009','E0011'], ['adverse','adverse']);
+    window.GroundsTimeline.clear();
+    window.GroundsTimeline.reload();          // re-fetch the matrix
+
+  ── HIGHLIGHT via postMessage (iframe / window) ─────────────────────────
+    frame.contentWindow.postMessage({source:'argument', type:'highlight', propId:'P0001'}, '*');
+    frame.contentWindow.postMessage({source:'argument', type:'highlight',
+        evidence:[{evidence_id:'E0009', relation:'adverse'}], conflicts:[['E0009','E0011']]}, '*');
+    frame.contentWindow.postMessage({source:'argument', type:'clear'}, '*');
+
+  ── Timeline -> parent ──────────────────────────────────────────────────
+    {source:'grounds-timeline', type:'evidence-click', evidence_id:'E0009'}
+  ─────────────────────────────────────────────────────────────────────────
+-->
+<style>
+  :root{
+    --ink:#eef0f3; --ink-2:#ffffff; --surface:#f5f6f8; --line:#d9dde3;
+    --paper:#2b3138; --paper-dim:#5c6470; --paper-faint:#98a0ab;
+    --sup:#1f9d57; --sup-bg:#e8f6ee; --adv:#c5384b; --adv-bg:#fbeaed;
+    --neu:#2f6fd6; --neu-bg:#eaf1fc; --gold:#9c6f15;
+    --mono:'IBM Plex Mono',monospace; --serif:'Newsreader',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#e3e6ea;color:var(--paper);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  /* the timeline is a side PANEL — capped width so it never eats the argument feature's space */
+  .app{display:flex;flex-direction:column;height:100vh;background:var(--ink);position:relative;overflow:hidden}
+
+  .top{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);flex:none}
+  .brand{font-family:var(--mono);font-size:13px;letter-spacing:.16em}
+  .brand b{color:var(--paper);font-weight:600}
+  .sub{font-family:var(--mono);font-size:10px;color:var(--paper-faint);letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+  .gchip{font-family:var(--mono);font-size:10.5px;color:var(--paper-dim);border:1px solid var(--line);background:var(--surface);padding:5px 9px;border-radius:999px;letter-spacing:.04em;white-space:nowrap}
+  .zoom{margin-left:auto;display:flex;gap:4px}
+  .zoom button{background:var(--ink-2);border:1px solid var(--line);color:var(--paper-dim);font-family:var(--mono);font-size:13px;width:26px;height:26px;border-radius:5px;cursor:pointer;line-height:1}
+  .zoom button#zoomFit{width:auto;padding:0 8px;font-size:10px;letter-spacing:.08em}
+  .zoom button:hover{border-color:var(--gold);color:var(--paper)}
+
+  .legend{display:flex;gap:13px;padding:8px 16px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--paper-dim);flex:none;flex-wrap:wrap;align-items:center}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .selnote{margin-left:auto;color:var(--gold);font-weight:500}
+
+  .scrollwrap{flex:1;min-width:0;overflow-y:auto;position:relative}
+  .scrollwrap::-webkit-scrollbar{width:9px}
+  .scrollwrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px}
+
+  .tl{position:relative;margin:14px 0 30px}
+  .spine{position:absolute;left:96px;top:0;bottom:0;width:2px;background:var(--line)}
+  .conflictlayer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:visible}
+  .tick{position:absolute;left:0;width:88px;text-align:right;font-family:var(--mono);font-size:10px;color:var(--paper-faint);transform:translateY(-50%)}
+  .tick::after{content:"";position:absolute;right:-12px;top:50%;width:8px;height:1px;background:var(--line)}
+  .yearcut{position:absolute;left:8px;right:14px;border-top:2px solid var(--line);transform:translateY(-50%)}
+  .yearcut span{position:absolute;left:64px;top:-15px;background:var(--ink);padding:0 12px;font-family:var(--serif);font-size:17px;font-weight:600;color:var(--paper);letter-spacing:.02em}
+
+  .ev{position:absolute;left:96px;display:flex;align-items:center;gap:9px;transform:translateY(-50%);cursor:pointer;transition:opacity .15s;height:24px;z-index:3}
+  .ev .dot{width:12px;height:12px;border-radius:50%;flex:none;border:2px solid var(--ink-2);margin-left:-6px;box-shadow:0 0 0 1px var(--line),0 1px 3px rgba(20,28,40,.18);transition:transform .15s,box-shadow .15s}
+  .ev .card{background:transparent;border:1px solid transparent;border-radius:8px;padding:4px 11px;max-width:300px;transition:background .12s,border-color .12s,box-shadow .12s,max-width .12s}
+  .ev .line{display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden}
+  .ev .eid{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--paper-faint);flex:none}
+  .ev .badge{font-family:var(--mono);font-size:9px;flex:none;display:inline-flex;align-items:center;gap:3px}
+  .ev .badge.ok{color:var(--sup)} .ev .badge.bad{color:var(--adv)}
+  .ev .q{font-family:var(--serif);font-size:14px;color:var(--paper-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .ev.sup .dot{background:var(--sup)} .ev.adv .dot{background:var(--adv)} .ev.neu .dot{background:var(--neu)}
+  .ev.idle .dot{background:var(--paper-faint)}
+
+  /* hover = transient quote peek (one at a time) */
+  .ev:hover{z-index:40;height:auto}
+  .ev:hover .card{background:var(--ink-2);border-color:var(--line);box-shadow:0 6px 20px rgba(20,28,40,.16);max-width:400px}
+  .ev:hover .q{white-space:normal;line-height:1.34}
+
+  /* lit (selected by the argument feature) — compact colour chip with a coloured edge */
+  .ev.lit{z-index:5}
+  .ev.lit .card{background:var(--ink-2);border-color:var(--line);box-shadow:0 2px 8px rgba(20,28,40,.1)}
+  .ev.lit.sup .card{border-left:3px solid var(--sup)}
+  .ev.lit.adv .card{border-left:3px solid var(--adv)}
+  .ev.lit.neu .card{border-left:3px solid var(--neu)}
+  .ev.lit .dot{transform:scale(1.5);box-shadow:0 0 0 2px var(--ink-2),0 0 14px 2px currentColor}
+  .ev.lit.sup .dot{color:var(--sup)} .ev.lit.adv .dot{color:var(--adv)} .ev.lit.neu .dot{color:var(--neu)}
+
+  /* focused = the evidence whose detail panel is open */
+  .ev.focused .dot{transform:scale(1.6);box-shadow:0 0 0 3px var(--ink-2),0 0 0 5px var(--gold)}
+  .ev.focused .card{background:var(--ink-2);border-color:var(--gold)}
+
+  /* selection muted (not hidden) — colour does the focusing, context stays readable */
+  .selecting .ev{opacity:.5}
+  .selecting .ev .q{color:var(--paper-faint)}
+  .selecting .ev.lit, .selecting .ev.focused{opacity:1}
+  .selecting .ev.lit .q{color:var(--paper)}
+  .selecting .ev:hover{opacity:1}
+
+  .undated{margin:0 16px 26px 96px;border-top:1px dashed var(--line);padding-top:10px}
+  .undated h4{font-family:var(--mono);font-size:10px;color:var(--paper-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+
+  .empty{padding:46px 22px;text-align:center;color:var(--paper-faint);font-size:13px;line-height:1.7}
+  .empty code{font-family:var(--mono);color:var(--paper-dim)}
+
+  /* ── clicked-evidence DETAIL PANEL (slides up over the bottom of the panel) ── */
+  .body{flex:1;display:flex;min-height:0}
+  /* detail docks on the RIGHT and shrinks the timeline beside it — it never covers the timeline */
+  .detail{flex:none;width:0;overflow:hidden;background:var(--ink-2);border-left:1px solid var(--line);transition:width .22s ease}
+  .detail.open{width:340px;overflow-y:auto}
+  .dpad{position:relative;width:340px;padding:18px 18px 22px}
+  .detail .dclose{position:absolute;top:12px;right:12px;width:26px;height:26px;border:1px solid var(--line);background:var(--surface);
+                  border-radius:6px;color:var(--paper-faint);font-size:15px;cursor:pointer;line-height:1}
+  .detail .dclose:hover{color:var(--paper);border-color:var(--paper-faint)}
+  .drel{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;
+        text-transform:uppercase;padding:4px 9px;border-radius:999px}
+  .drel.sup{color:var(--sup);background:var(--sup-bg);border:1px solid #bfe3cd}
+  .drel.adv{color:var(--adv);background:var(--adv-bg);border:1px solid #f0c4cc}
+  .drel.neu{color:var(--neu);background:var(--neu-bg);border:1px solid #c5d9f6}
+  .deid{font-family:var(--mono);font-size:10px;color:var(--paper-faint);margin-left:8px}
+  .dquote{font-family:var(--serif);font-size:16px;line-height:1.45;color:var(--paper);margin:14px 0 4px}
+  .dmeta{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:12px 0;font-size:12.5px}
+  .dmeta dt{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--paper-faint);align-self:center}
+  .dmeta dd{color:var(--paper-dim)}
+  /* strong grounding status block */
+  .dground{display:flex;align-items:flex-start;gap:9px;padding:10px 12px;border-radius:7px;font-size:12.5px;line-height:1.4;margin:6px 0 14px}
+  .dground.ok{background:var(--sup-bg);border:1px solid #bfe3cd;color:#185c36}
+  .dground.bad{background:var(--adv-bg);border:1px solid #f0c4cc;color:#8a1f2e}
+  .dground .gi{font-size:15px;line-height:1.1}
+  .dground b{font-weight:600}
+  .dsrc{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:#fff;background:var(--neu);
+        border:none;border-radius:6px;padding:9px 14px;text-decoration:none;cursor:pointer}
+  .dsrc:hover{filter:brightness(1.07)}
+  .dsrc.disabled{background:var(--surface);color:var(--paper-faint);border:1px dashed var(--line);pointer-events:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="brand"><b>GROUNDS</b> · TIMELINE</div>
+    <div class="sub" id="caseLbl">loading…</div>
+    <div class="zoom"><button id="zoomOut" title="Zoom out (compress time)">−</button><button id="zoomFit" title="Reset zoom">fit</button><button id="zoomIn" title="Zoom in (spread time)">+</button></div>
+    <div class="gchip" id="gchip">grounding: —</div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--sup)"></i>supportive</span>
+    <span><i style="background:var(--adv)"></i>adverse</span>
+    <span><i style="background:var(--neu)"></i>neutral</span>
+    <span style="color:var(--paper-faint)">click a dot for its source · highlight from <b style="color:var(--paper-dim)">Arguments</b></span>
+    <span class="selnote" id="selnote"></span>
+  </div>
+
+  <div class="body">
+    <div class="scrollwrap"><div class="tl" id="tl"></div><div id="undated"></div></div>
+    <!-- clicked-evidence detail — docks on the RIGHT, does not cover the timeline -->
+    <div class="detail" id="detail"><div class="dpad">
+      <button class="dclose" id="dclose" title="Close">×</button>
+      <div><span class="drel neu" id="d-rel">—</span><span class="deid" id="d-eid"></span></div>
+      <div class="dquote" id="d-quote"></div>
+      <dl class="dmeta" id="d-meta"></dl>
+      <a class="dsrc" id="d-src" target="_blank" rel="noopener" download>↓ Open source document</a>
+    </div></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------------- date resolution ----------------
+  const MONTHS={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+  // doc_id -> date FALLBACK (only used when a link has no `date`). Backend `date` is preferred.
+  const DOC_DATES=[
+    [/claim_form|particulars/, '2025-06-05'],[/master_services|\bmsa\b/, '2024-03-14'],
+    [/statement_of_work|\bsow\b/, '2024-03-14'],[/order_form/, '2024-03-20'],
+    [/deed_of_variation/, '2024-06-28'],[/change_order|co_no_3|\bco[_-]?3\b/, '2024-09-02'],
+    [/loyalty/, '2024-08-21'],[/go-?live|golive|readiness/, '2024-10-24'],
+    [/uat|acceptance/, '2024-11-12'],[/outage|root_cause|northgate/, '2024-11-26'],
+    [/peak_trading|internal|q4/, '2024-12-08'],[/defect_log|defect|issue_log/, '2024-12-15'],
+    [/termination/, '2025-01-20'],[/techflow_response|response/, '2025-02-07'],
+    [/whitfield|expert.*it|it.*expert/, '2026-04-24'],[/greenhalgh|quantum/, '2026-04-24'],
+    [/vance|okafor|nair|witness|witn/, '2026-03-13']
+  ];
+  function parseDate(s){ if(!s) return null;
+    let m=String(s).match(/(\d{4})-(\d{2})-(\d{2})/); if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+    m=String(s).match(/(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/);
+    if(m && MONTHS[m[2].toLowerCase()]!=null) return new Date(+m[3],MONTHS[m[2].toLowerCase()],+m[1]);
+    m=String(s).match(/([A-Za-z]{3})[a-z]*\s+(\d{4})/);
+    if(m && MONTHS[m[1].toLowerCase()]!=null) return new Date(+m[2],MONTHS[m[1].toLowerCase()],15);
+    return null; }
+  function docDate(id){ if(!id) return null; const d=String(id).toLowerCase();
+    for(const [re,iso] of DOC_DATES){ if(re.test(d)) return parseDate(iso); } return null; }
+  function evidenceDate(l){ const s=l.evidence_source||{};
+    return parseDate(l.date) || parseDate(s.date) || docDate(s.doc_id) || parseDate(l.quote); }
+
+  // where source documents are served. Set DOCS_BASE (e.g. '/docs/') when bundle files are
+  // served alongside the app, OR have the backend put `source_url` on each evidence link (preferred).
+  const DOCS_BASE='', DOC_EXT='.docx';
+  function sourceUrl(e){ if(e.url) return e.url; if(!e.doc) return ''; return DOCS_BASE+e.doc+DOC_EXT; }
+
+  // ---------------- load matrix ----------------
+  let EV={}, PROP={}, REL={}, CONFLICTS_BY_PROP={};
+  async function loadMatrix(){
+    let data=null;
+    for(const url of ['/api/matrix','./matrix.json','./data/matrix.json']){
+      try{ const r=await fetch(url,{cache:'no-store'}); if(r.ok){ const j=await r.json(); data=j.matrix||j; if(Array.isArray(data)&&data.length) break; } }catch(e){}
+    }
+    let demo=false;
+    if(!Array.isArray(data)||!data.length){ data=DEMO; demo=true; }
+    document.getElementById('caseLbl').textContent = demo ? 'inline demo (no matrix.json)' : data.length+' propositions';
+    ingest(data); render(); grounding();
+    if(demo) setTimeout(()=>API.highlightProposition('P0004'), 800); // standalone self-demo
+  }
+  function ingest(matrix){
+    EV={}; PROP={}; REL={}; CONFLICTS_BY_PROP={};
+    matrix.forEach(row=>{
+      const p=row.proposition||{}; const pid=p.id;
+      if(pid){ PROP[pid]={text:p.text,party:p.party,type:p.type,status:p.status||row.status}; REL[pid]={}; }
+      if(pid && Array.isArray(row.conflicts)) CONFLICTS_BY_PROP[pid]=row.conflicts; // OPTIONAL, backend-driven
+      (row.links||[]).forEach(l=>{
+        const id=l.evidence_id; if(!id) return;
+        if(pid) REL[pid][id]=l.relation||'neutral';
+        if(!EV[id]){ const s=l.evidence_source||{};
+          EV[id]={id, date:evidenceDate(l), quote:l.quote||'', doc:s.doc_id||'', para:s.paragraph||'',
+                  page:s.page||'', witness:l.witness||'', quote_ok:l.quote_ok!==false,
+                  url:l.source_url||l.url||s.url||''}; }
+      });
+    });
+  }
+
+  // ---------------- render ----------------
+  const tlEl=document.getElementById('tl'), undatedEl=document.getElementById('undated');
+  const PXPERDAY=2.6, ROWMIN=34, PAD=40, SPINEX=96;
+  let ZOOM=1, lastSel=null, nodeById={}, yById={}, conflictSvg=null;
+  function render(){
+    tlEl.innerHTML=''; undatedEl.innerHTML=''; nodeById={}; yById={};
+    const all=Object.values(EV);
+    const dated=all.filter(e=>e.date).sort((a,b)=>a.date-b.date);
+    const undated=all.filter(e=>!e.date);
+    if(!dated.length && !undated.length){ tlEl.innerHTML='<div class="empty">No evidence yet.<br>Serve <code>/api/matrix</code> or drop a <code>matrix.json</code> beside this file.</div>'; return; }
+
+    const spine=document.createElement('div'); spine.className='spine'; tlEl.appendChild(spine);
+    conflictSvg=document.createElementNS('http://www.w3.org/2000/svg','svg'); conflictSvg.setAttribute('class','conflictlayer'); tlEl.appendChild(conflictSvg);
+
+    let y=PAD, lastT=null, lastTickMonth=null, lastYear=null;
+    dated.forEach(e=>{
+      const t=e.date.getTime();
+      if(lastT!=null){ const days=(t-lastT)/86400000; y+=Math.max(ROWMIN, Math.min(200*ZOOM, days*PXPERDAY*ZOOM)); }
+      lastT=t;
+      const yr=e.date.getFullYear();
+      if(yr!==lastYear){ if(lastYear!==null) y+=24;
+        const yc=document.createElement('div'); yc.className='yearcut'; yc.style.top=y+'px';
+        yc.innerHTML='<span>'+yr+'</span>'; tlEl.appendChild(yc); y+=22; lastYear=yr; lastTickMonth=null; }
+      const mk=yr+'-'+e.date.getMonth();
+      if(mk!==lastTickMonth){ lastTickMonth=mk;
+        const tk=document.createElement('div'); tk.className='tick'; tk.style.top=y+'px';
+        tk.textContent=e.date.toLocaleString('en',{month:'short'}); tlEl.appendChild(tk); }
+      yById[e.id]=y;
+      tlEl.appendChild(mkEv(e,y));
+    });
+    tlEl.style.height=(y+PAD)+'px';
+    if(conflictSvg) conflictSvg.setAttribute('viewBox','0 0 560 '+(y+PAD));
+
+    if(undated.length){
+      undatedEl.innerHTML='<div class="undated"><h4>Undated evidence ('+undated.length+')</h4></div>';
+      const box=undatedEl.querySelector('.undated');
+      undated.forEach(e=>{ const n=mkEv(e,null); n.style.position='static'; n.style.transform='none'; n.style.marginBottom='8px'; box.appendChild(n); });
+    }
+    reapply();
+  }
+  function reapply(){ if(!lastSel) return;
+    document.body.classList.add('selecting');
+    Object.values(nodeById).forEach(n=>{n.classList.remove('lit'); setRelClass(n,'idle');});
+    Object.entries(lastSel.map).forEach(([eid,rel])=>{const node=nodeById[eid]; if(node){node.classList.add('lit'); setRelClass(node,rel);}});
+    if(focusedId && nodeById[focusedId]) nodeById[focusedId].classList.add('focused');
+    drawConflicts(lastSel.conflicts);
+  }
+  function mkEv(e,y){
+    const div=document.createElement('div'); div.className='ev idle'; if(y!=null) div.style.top=y+'px';
+    div.dataset.eid=e.id; nodeById[e.id]=div;
+    div.innerHTML='<span class="dot"></span><div class="card">'
+      +'<div class="line"><span class="eid">'+esc(e.id)+'</span>'
+        +'<span class="q">'+esc(trim(e.quote,200)||'(no quote)')+'</span></div></div>';
+    div.addEventListener('click',()=>openDetail(e));
+    return div;
+  }
+  function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+  function trim(s,n){s=s||'';return s.length>n?s.slice(0,n-1)+'…':s;}
+
+  // ---------------- conflict connector (OPTIONAL — only drawn from backend data) ----------------
+  function drawConflicts(pairs){ if(!conflictSvg) return; conflictSvg.innerHTML='';
+    if(!Array.isArray(pairs)) return;
+    pairs.forEach(pr=>{ const a=pr[0]||pr.a, b=pr[1]||pr.b; const ya=yById[a], yb=yById[b];
+      if(ya==null||yb==null) return;
+      const x=SPINEX, bow=x-46;
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d','M '+x+' '+ya+' C '+bow+' '+ya+', '+bow+' '+yb+', '+x+' '+yb);
+      path.setAttribute('fill','none'); path.setAttribute('stroke','var(--adv)');
+      path.setAttribute('stroke-width','1.4'); path.setAttribute('stroke-dasharray','5 4');
+      path.setAttribute('opacity','.75'); conflictSvg.appendChild(path);
+    });
+  }
+
+  // ---------------- evidence count (neutral; citation/grounding lives in the argument feature) ----------------
+  function grounding(){ document.getElementById('gchip').textContent=Object.keys(EV).length+' evidence'; }
+
+  // ---------------- detail panel (clicked evidence) ----------------
+  const detail=document.getElementById('detail'); let focusedId=null;
+  function relName(r){ return r==='supportive'?'Supportive':r==='adverse'?'Adverse':'Neutral'; }
+  function relCls(r){ return r==='supportive'?'sup':r==='adverse'?'adv':'neu'; }
+  function openDetail(e){
+    focusedId=e.id;
+    document.querySelectorAll('.ev.focused').forEach(n=>n.classList.remove('focused'));
+    if(nodeById[e.id]) nodeById[e.id].classList.add('focused');
+    // relation is relative to the current selection if any, else from the first proposition that cites it
+    let rel='neutral';
+    if(lastSel && lastSel.map[e.id]) rel=lastSel.map[e.id];
+    else { for(const pid in REL){ if(REL[pid][e.id]){ rel=REL[pid][e.id]; break; } } }
+    const r=document.getElementById('d-rel'); r.className='drel '+relCls(rel); r.textContent=relName(rel);
+    document.getElementById('d-eid').textContent=e.id+(e.witness?' · '+e.witness:'');
+    document.getElementById('d-quote').textContent='“'+(e.quote||'(no quote)')+'”';
+    const dl=document.getElementById('d-meta'); dl.innerHTML='';
+    const dlbl=e.date?e.date.toLocaleDateString('en',{day:'numeric',month:'long',year:'numeric'}):'undated';
+    const rows=[['Document',e.doc||'—'],['Paragraph',e.para?('¶'+e.para):'—'],['Page',e.page||'—'],['Witness',e.witness||'—'],['Date',dlbl]];
+    rows.forEach(([k,v])=>{ dl.insertAdjacentHTML('beforeend','<dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd>'); });
+    const url=sourceUrl(e), src=document.getElementById('d-src');
+    if(url){ src.className='dsrc'; src.href=url; src.style.display='inline-flex';
+      src.textContent='↓ Open source document'+(e.page?' · p.'+e.page:''); }
+    else { src.className='dsrc disabled'; src.removeAttribute('href'); src.textContent='source file not linked'; src.style.display='inline-flex'; }
+    detail.classList.add('open');
+    try{ window.parent && window.parent!==window && window.parent.postMessage({source:'grounds-timeline',type:'evidence-click',evidence_id:e.id},'*'); }catch(_){}
+    document.dispatchEvent(new CustomEvent('grounds:evidence-click',{detail:{evidence_id:e.id}}));
+  }
+  function closeDetail(){ detail.classList.remove('open'); focusedId=null;
+    document.querySelectorAll('.ev.focused').forEach(n=>n.classList.remove('focused')); }
+  document.getElementById('dclose').onclick=closeDetail;
+
+  // ---------------- highlight API ----------------
+  function setRelClass(node,rel){ node.classList.remove('sup','adv','neu','idle');
+    node.classList.add(rel==='supportive'?'sup':rel==='adverse'?'adv':rel==='neutral'?'neu':'idle'); }
+  function clearHighlight(){ lastSel=null; document.body.classList.remove('selecting');
+    Object.values(nodeById).forEach(n=>{n.classList.remove('lit'); setRelClass(n,'idle');});
+    drawConflicts(null); document.getElementById('selnote').textContent=''; }
+  function applyHighlight(map,label,conflicts){ lastSel={map,label,conflicts};
+    document.body.classList.add('selecting');
+    Object.values(nodeById).forEach(n=>{ n.classList.remove('lit'); setRelClass(n,'idle'); });
+    let n=0, first=null;
+    Object.entries(map).forEach(([eid,rel])=>{ const node=nodeById[eid]; if(node){ node.classList.add('lit'); setRelClass(node,rel); n++; if(!first)first=node; } });
+    if(focusedId && nodeById[focusedId]) nodeById[focusedId].classList.add('focused');
+    drawConflicts(conflicts);
+    document.getElementById('selnote').textContent=label?label+' · '+n+' lit':'';
+    if(first) first.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  const API={
+    highlightProposition(pid){ const m=REL[pid]; if(!m){ console.warn('Grounds: unknown proposition',pid); return; }
+      applyHighlight(m, pid+(PROP[pid]&&PROP[pid].party?' · '+PROP[pid].party:''), CONFLICTS_BY_PROP[pid]); },
+    highlightEvidence(ids,relations){ const m={}; (ids||[]).forEach((id,i)=>{ m[id]=(relations&&relations[i])||'neutral'; }); applyHighlight(m,'selection',null); },
+    highlightEvidencePairs(pairs,conflicts){ const m={}; (pairs||[]).forEach(p=>{ m[p.evidence_id]=p.relation||'neutral'; }); applyHighlight(m,'selection',conflicts); },
+    clear: clearHighlight, reload: loadMatrix
+  };
+  window.GroundsTimeline=API;
+
+  // postMessage (iframe / cross-window)
+  window.addEventListener('message',ev=>{ const d=ev.data||{}; if(d.source!=='argument') return;
+    if(d.type==='clear'){ clearHighlight(); return; }
+    if(d.type==='highlight'){
+      if(Array.isArray(d.evidence)) API.highlightEvidencePairs(d.evidence, d.conflicts);
+      else if(d.propId) API.highlightProposition(d.propId);
+      else if(Array.isArray(d.evidenceIds)) API.highlightEvidence(d.evidenceIds, d.relations);
+    }
+  });
+  // same-page CustomEvent alternative
+  document.addEventListener('grounds:select',e=>{ const d=e.detail||{};
+    if(d.propId) API.highlightProposition(d.propId);
+    else if(d.evidence) API.highlightEvidencePairs(d.evidence, d.conflicts);
+    else if(d.evidenceIds) API.highlightEvidence(d.evidenceIds, d.relations); });
+  document.addEventListener('grounds:clear',clearHighlight);
+
+  // ---------------- zoom ----------------
+  function setZoom(z){ ZOOM=Math.max(0.4,Math.min(4,z)); render(); }
+  document.getElementById('zoomIn').onclick=()=>setZoom(ZOOM*1.3);
+  document.getElementById('zoomOut').onclick=()=>setZoom(ZOOM/1.3);
+  document.getElementById('zoomFit').onclick=()=>setZoom(1);
+  document.querySelector('.scrollwrap').addEventListener('wheel',e=>{ if(e.ctrlKey||e.metaKey){ e.preventDefault(); setZoom(ZOOM*(e.deltaY<0?1.12:0.9)); } },{passive:false});
+
+  // ---------------- inline demo (replaced by real matrix.json) ----------------
+  const DEMO=[
+    {proposition:{id:'P0001',type:'breach',party:'Claimant',status:'contested',text:'Go-live was fixed at 1 Oct; the Platform was delivered late.'},
+     conflicts:[['E0007','E0003']],
+     links:[{evidence_id:'E0007',relation:'adverse',date:'2024-09-02',quote:'the go-live date is revised from 1 October 2024 to 18 November 2024',quote_ok:true,evidence_source:{doc_id:'07_Change_Order_No_3',paragraph:'2'}},
+            {evidence_id:'E0003',relation:'adverse',date:'2024-03-14',quote:'the go-live date stated in the SOW is a target date; the timetable is a planning estimate',quote_ok:true,evidence_source:{doc_id:'03_Master_Services_Agreement',paragraph:'3.1'}}]},
+    {proposition:{id:'P0002',type:'breach',party:'Claimant',status:'undermined',text:'The Platform was unavailable for more than 40% of trading hours.'},
+     links:[{evidence_id:'E0019',relation:'adverse',date:'2026-04-24',quote:'total Platform unavailability attributable to the Platform itself was approximately 6.2% of trading hours',quote_ok:true,witness:'Dr Alan Whitfield',evidence_source:{doc_id:'19_Expert_Report_Whitfield_IT',paragraph:'2'}},
+            {evidence_id:'E0011',relation:'adverse',date:'2024-11-26',quote:'the root cause was a loss of wide-area network connectivity at Northgate Telecom, not the Platform',quote_ok:true,evidence_source:{doc_id:'11_Email_Outage_Root_Cause',paragraph:'1'}}]},
+    {proposition:{id:'P0003',type:'breach',party:'Claimant',status:'supported',text:'The Platform contained Severity 1 stock-sync defects, not fit for purpose.'},
+     links:[{evidence_id:'E0019b',relation:'supportive',date:'2026-04-24',quote:'genuine and serious defects in the stock-synchronisation module, correctly categorised as Severity 1',quote_ok:true,witness:'Dr Alan Whitfield',evidence_source:{doc_id:'19_Expert_Report_Whitfield_IT',paragraph:'5'}},
+            {evidence_id:'E0013',relation:'supportive',date:'2024-12-15',quote:'D-001 stock-sync: tills show incorrect stock counts; Platform defect',quote_ok:false,evidence_source:{doc_id:'13_Defect_Log',paragraph:'D-001'}}]},
+    {proposition:{id:'P0004',type:'breach',party:'Claimant',status:'undermined',text:'Meridian requested no change to scope; all delay was TechFlow’s fault.'},
+     conflicts:[['E0007','E0010']],
+     links:[{evidence_id:'E0007',relation:'adverse',date:'2024-09-02',quote:'the Loyalty Module was not part of the original scope under SOW-01; signed for the Customer: Priya Nair',quote_ok:true,evidence_source:{doc_id:'07_Change_Order_No_3',paragraph:'1'}},
+            {evidence_id:'E0010',relation:'adverse',date:'2024-08-21',quote:'the board wants a customer loyalty capability included before we go live',quote_ok:true,witness:'Helena Vance',evidence_source:{doc_id:'10_Email_Loyalty_Change',paragraph:'1'}}]},
+    {proposition:{id:'P0005',type:'breach',party:'Claimant',status:'undermined',text:'Meridian warned the Platform was not ready and asked to defer; TechFlow ignored it.'},
+     links:[{evidence_id:'E0009',relation:'adverse',date:'2024-10-24',quote:'our clear recommendation is to defer go-live to mid-January 2025; please proceed to go-live on 18 November as planned',quote_ok:true,witness:'Reilly / Vance',evidence_source:{doc_id:'09_Email_Go-Live_Readiness',paragraph:'1'}}]},
+    {proposition:{id:'P0006',type:'breach',party:'Claimant',status:'undermined',text:'Meridian gave no acceptance or sign-off.'},
+     links:[{evidence_id:'E0008',relation:'adverse',date:'2024-11-12',quote:'Phase 1 has passed User Acceptance Testing and is accepted; no Severity 1 or 2 items outstanding',quote_ok:true,witness:'Priya Nair',evidence_source:{doc_id:'08_UAT_Acceptance_Certificate',paragraph:'1'}}]},
+    {proposition:{id:'P0007',type:'causation',party:'Claimant',status:'contested',text:'Q4 loss of profit was caused by the Platform.'},
+     links:[{evidence_id:'E0012',relation:'adverse',date:'2024-12-08',quote:'the Lutterworth distribution centre flooded on 3 December and was out of action for about ten days; unrelated to the platform',quote_ok:true,witness:'Raymond Okafor',evidence_source:{doc_id:'12_Email_Peak_Trading',paragraph:'1'}},
+            {evidence_id:'E0020',relation:'adverse',date:'2026-04-24',quote:'approximately £1.5m of the claimed decline is attributable to the flood and the wider market',quote_ok:true,witness:'Fiona Greenhalgh',evidence_source:{doc_id:'20_Expert_Report_Greenhalgh_Quantum',paragraph:'5'}}]},
+    {proposition:{id:'P0008',type:'termination',party:'Claimant',status:'contested',text:'TechFlow terminated / repudiated the contract.'},
+     links:[{evidence_id:'E0014',relation:'neutral',date:'2025-01-20',quote:'our client accepts your conduct as terminating the MSA with immediate effect',quote_ok:true,evidence_source:{doc_id:'14_Letter_Notice_of_Termination',paragraph:'1'}}]}
+  ];
+
+  loadMatrix();
+})();
+</script>
+</body>
+</html>
