@@ -11,14 +11,18 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --navy:    #0f1f3d;
-      --navy-2:  #1a2f52;
-      --navy-3:  #253a63;
-      --slate:   #64748b;
+      /* Brand palette — unified green. (Token names kept as "navy" so every
+         existing reference recolours; values are deep greens.) */
+      --navy:    #14532d;
+      --navy-2:  #166534;
+      --navy-3:  #15803d;
+      --slate:   #5b7568;
       --slate-2: #94a3b8;
       --border:  #e2e8f0;
-      --bg:      #f8fafc;
+      --bg:      #f6faf7;
       --white:   #ffffff;
+      --brand-tint:  #ecfdf5;   /* light green wash for hovers / chips */
+      --structure:   #0d9488;   /* teal for DEPENDS_ON edges (distinct from green) */
 
       --supported:         #16a34a;
       --supported-bg:      #f0fdf4;
@@ -33,8 +37,8 @@
       --missing-bg:        #f9fafb;
       --missing-border:    #e5e7eb;
 
-      --accent-a: #22d3ee;
-      --accent-b: #34d399;
+      --accent-a: #34d399;
+      --accent-b: #6ee7b7;
 
       --radius:    10px;
       --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
@@ -1198,6 +1202,53 @@
     /* while dragging a proposition, nudge the toggle to signal it's a target */
     body.dragging-prop #case-toggle.show { box-shadow: 0 0 0 4px rgba(37,58,99,.25), var(--shadow-lg); border-color: var(--navy-3); }
 
+    /* ---- Add proposition / evidence (button + modal) ---- */
+    .add-btn { display: inline-flex; align-items: center; gap: .3rem; background: var(--navy); color: #fff;
+      border: 1px solid var(--navy); border-radius: 999px; padding: .35rem .8rem; font-size: .8rem; font-weight: 700; cursor: pointer; transition: filter .12s, transform .1s; }
+    .add-btn:hover { filter: brightness(1.12); }
+    .add-btn:active { transform: scale(.96); }
+    #add-backdrop { position: fixed; inset: 0; background: rgba(15,31,61,.45); z-index: 60; opacity: 0; pointer-events: none; transition: opacity .18s; }
+    #add-backdrop.show { opacity: 1; pointer-events: auto; }
+    #add-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -48%) scale(.98); z-index: 61;
+      width: 540px; max-width: 94vw; max-height: 90vh; overflow-y: auto; background: var(--white); border-radius: 14px;
+      box-shadow: var(--shadow-lg); padding: 1.5rem 1.6rem 1.3rem; opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; }
+    #add-modal.show { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+    .add-close { position: absolute; top: .9rem; right: 1rem; border: none; background: none; font-size: 1.6rem; line-height: 1; color: var(--slate-2); cursor: pointer; }
+    .add-close:hover { color: var(--navy); }
+    .add-title { font-size: 1.2rem; font-weight: 800; color: var(--navy); margin-bottom: 1rem; }
+    .add-seg { display: inline-flex; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: .2rem; margin-bottom: 1.1rem; }
+    .add-seg-btn { border: none; background: none; padding: .35rem 1rem; font-size: .82rem; font-weight: 700; color: var(--slate); border-radius: 999px; cursor: pointer; transition: all .15s; }
+    .add-seg-btn.active { background: var(--navy); color: #fff; box-shadow: var(--shadow); }
+    .add-label { display: block; font-size: .76rem; font-weight: 700; color: var(--slate); margin-bottom: .8rem; }
+    .add-label .req { color: var(--undermined); }
+    .add-label .opt { color: var(--slate-2); font-weight: 500; }
+    .add-label textarea, .add-label input, .add-label select {
+      display: block; width: 100%; margin-top: .3rem; font-family: inherit; font-size: .88rem; color: #1e293b;
+      border: 1px solid var(--border); border-radius: 8px; padding: .5rem .6rem; outline: none; background: var(--white); }
+    .add-label textarea { resize: vertical; line-height: 1.5; }
+    .add-label textarea:focus, .add-label input:focus, .add-label select:focus { border-color: var(--navy-3); box-shadow: 0 0 0 3px rgba(37,58,99,.12); }
+    .add-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+    .add-links { border-top: 1px solid var(--border); padding-top: .9rem; margin-top: .3rem; }
+    .add-links-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .2rem; }
+    .add-links-head span { font-size: .76rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--slate); }
+    .add-link-add { border: 1px solid var(--border); background: var(--white); border-radius: 999px; padding: .2rem .6rem; font-size: .74rem; font-weight: 700; color: var(--navy-3); cursor: pointer; }
+    .add-link-add:hover { background: #f0f4ff; border-color: var(--navy-3); }
+    .add-links-hint { font-size: .74rem; color: var(--slate-2); margin-bottom: .6rem; }
+    .add-link-row { display: grid; grid-template-columns: 1fr auto auto; gap: .45rem; margin-bottom: .45rem; align-items: center; }
+    .add-link-row select, .add-link-row input { font-family: inherit; font-size: .8rem; border: 1px solid var(--border); border-radius: 7px; padding: .35rem .45rem; outline: none; background: var(--white); color: #1e293b; }
+    .add-link-row .rel-supportive { color: var(--supported); }
+    .add-link-row .rel-adverse { color: var(--undermined); }
+    .add-link-x { border: none; background: none; color: var(--slate-2); font-size: 1.1rem; cursor: pointer; line-height: 1; }
+    .add-link-x:hover { color: var(--undermined); }
+    .add-foot { display: flex; align-items: center; gap: .6rem; margin-top: 1.1rem; }
+    .add-error { flex: 1; font-size: .78rem; color: var(--undermined); }
+    .add-cancel { border: 1px solid var(--border); background: var(--white); border-radius: 8px; padding: .5rem .9rem; font-size: .83rem; font-weight: 600; color: var(--slate); cursor: pointer; }
+    .add-cancel:hover { border-color: var(--navy-3); color: var(--navy); }
+    .add-save { border: none; border-radius: 8px; padding: .5rem 1.1rem; font-size: .83rem; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, var(--navy-2), var(--navy-3)); cursor: pointer; transition: filter .12s; }
+    .add-save:hover { filter: brightness(1.12); }
+    .add-save:disabled { opacity: .6; cursor: default; }
+
     @media (max-width: 760px) {
       .q-figure { font-size: 1.7rem; }
       .hero-title { font-size: 2.3rem; }
@@ -1257,6 +1308,51 @@
     <button class="gc-btn" id="ct-open-builder" style="width:100%">Open Case Builder →</button>
   </div>
 </aside>
+
+<!-- ==================== ADD PROPOSITION / EVIDENCE ==================== -->
+<div id="add-backdrop"></div>
+<div id="add-modal" role="dialog" aria-label="Add to the case">
+  <button class="add-close" id="add-close" aria-label="Close">×</button>
+  <h2 class="add-title">Add to the case</h2>
+  <div class="add-seg" id="add-seg">
+    <button class="add-seg-btn active" data-kind="proposition">Proposition</button>
+    <button class="add-seg-btn" data-kind="evidence">Evidence</button>
+  </div>
+
+  <div class="add-fields" id="add-fields-prop">
+    <label class="add-label">Text <span class="req">*</span>
+      <textarea id="ap-text" rows="3" placeholder="The pleaded allegation or denial, in one sentence…"></textarea></label>
+    <div class="add-row">
+      <label class="add-label">Type<select id="ap-type"><option value="allegation">Allegation</option><option value="denial">Denial</option></select></label>
+      <label class="add-label">Party<input id="ap-party" placeholder="Claimant / Defendant"></label>
+    </div>
+    <label class="add-label">Responds to <span class="opt">(optional)</span><input id="ap-responds" placeholder="e.g. P0003, or a short description"></label>
+  </div>
+
+  <div class="add-fields" id="add-fields-ev" style="display:none">
+    <label class="add-label">Assertion <span class="req">*</span>
+      <textarea id="ae-text" rows="3" placeholder="The fact this evidence establishes…"></textarea></label>
+    <div class="add-row">
+      <label class="add-label">Witness / source<input id="ae-witness" placeholder="Name"></label>
+      <label class="add-label">Document<input id="ae-doc" value="User-added"></label>
+    </div>
+    <label class="add-label">Quote <span class="opt">(optional)</span><textarea id="ae-quote" rows="2" placeholder="Verbatim quote from the source…"></textarea></label>
+  </div>
+
+  <div class="add-links">
+    <div class="add-links-head"><span id="add-links-title">Linked evidence</span>
+      <button class="add-link-add" id="add-link-btn">+ Add link</button></div>
+    <p class="add-links-hint" id="add-links-hint">Reference the evidence this proposition relies on.</p>
+    <div id="add-links-list"></div>
+  </div>
+
+  <div class="add-foot">
+    <span class="add-error" id="add-error"></span>
+    <button class="add-cancel" id="add-cancel">Cancel</button>
+    <button class="add-save" id="add-save">Add to case</button>
+  </div>
+  <datalist id="add-ev-datalist"></datalist>
+</div>
 
 <!-- Shared source-citation popover (positioned by JS near the clicked icon) -->
 
@@ -1434,6 +1530,9 @@
             <button class="filter-btn" data-status="undermined"><span class="dot" style="background:var(--undermined)"></span>Undermined</button>
             <button class="filter-btn" data-status="MISSING"><span class="dot" style="background:var(--missing)"></span>Missing</button>
           </div>
+          <button class="add-btn" id="open-add" title="Add a proposition or evidence">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Add
+          </button>
           <span class="result-count" id="matrix-result-count"></span>
         </div>
         <div class="card-list" id="matrix-list"></div>
@@ -1774,6 +1873,13 @@
       const reply = (data && data.ok) ? data.reply : "Sorry — I couldn't answer that.";
       appendMessage("sc", reply, data && data.source);
       _chat.push({ role: "assistant", content: reply });
+      if (data && data.navigate) {           // Second Chair switched the view
+        const target = data.navigate;
+        setTimeout(() => {
+          if (target === "home") go("hero");
+          else if (ROOMS.includes(target)) go(target);
+        }, 700);
+      }
     } catch (e) {
       typingEl.remove();
       appendMessage("sc", "Second Chair is unreachable. Is the server running on port 8001?", "offline");
@@ -3387,6 +3493,125 @@
     setTimeout(() => w.print(), 350);
   }
 
+
+  // ------------------------------------------------------------------ Add proposition / evidence
+  let _addKind = "proposition";
+
+  function _evOptions() {
+    const seen = {}, out = [];
+    _matrix.forEach(r => (r.links || []).forEach(l => {
+      const eid = l.evidence_id;
+      if (eid && !seen[eid]) { seen[eid] = 1; out.push({ id: eid, label: (l.witness || "") + (l.quote ? " — " + l.quote.slice(0, 40) : "") }); }
+    }));
+    return out.sort((a, b) => a.id.localeCompare(b.id));
+  }
+  function _propOptions() {
+    return _matrix.map(r => ({ id: r.proposition.id, label: (r.proposition.text || "").slice(0, 50) }));
+  }
+
+  function openAddModal() {
+    // refresh the evidence autocomplete from the current matrix
+    $("add-ev-datalist").innerHTML = _evOptions().map(o =>
+      '<option value="' + o.id + '">' + esc(o.label) + '</option>').join("");
+    setAddKind(_addKind);
+    $("add-links-list").innerHTML = "";
+    $("add-error").textContent = "";
+    $("add-backdrop").classList.add("show");
+    $("add-modal").classList.add("show");
+  }
+  function closeAddModal() {
+    $("add-backdrop").classList.remove("show");
+    $("add-modal").classList.remove("show");
+  }
+
+  function setAddKind(kind) {
+    _addKind = kind;
+    document.querySelectorAll(".add-seg-btn").forEach(b => b.classList.toggle("active", b.dataset.kind === kind));
+    $("add-fields-prop").style.display = kind === "proposition" ? "block" : "none";
+    $("add-fields-ev").style.display = kind === "evidence" ? "block" : "none";
+    $("add-links-title").textContent = kind === "proposition" ? "Linked evidence" : "Linked propositions";
+    $("add-links-hint").textContent = kind === "proposition"
+      ? "Reference the evidence this proposition relies on."
+      : "Reference the propositions this evidence bears on.";
+    $("add-links-list").innerHTML = "";   // targets differ by kind
+  }
+
+  function addLinkRow() {
+    const row = document.createElement("div");
+    row.className = "add-link-row";
+    let targetHtml;
+    if (_addKind === "proposition") {
+      targetHtml = '<input class="add-link-target" list="add-ev-datalist" placeholder="Evidence id (e.g. E00175)">';
+    } else {
+      targetHtml = '<select class="add-link-target"><option value="">Select proposition…</option>'
+        + _propOptions().map(o => '<option value="' + o.id + '">' + o.id + ' — ' + esc(o.label) + '</option>').join("") + '</select>';
+    }
+    row.innerHTML = targetHtml
+      + '<select class="add-link-rel"><option value="supportive">supports</option><option value="adverse">undermines</option><option value="neutral">neutral</option></select>'
+      + '<button class="add-link-x" title="Remove">×</button>';
+    row.querySelector(".add-link-x").addEventListener("click", () => row.remove());
+    $("add-links-list").appendChild(row);
+  }
+
+  function collectAddition() {
+    const links = [];
+    $("add-links-list").querySelectorAll(".add-link-row").forEach(row => {
+      const ref = (row.querySelector(".add-link-target").value || "").trim();
+      const rel = row.querySelector(".add-link-rel").value;
+      if (ref) links.push(_addKind === "proposition"
+        ? { evidence_id: ref, relation: rel }
+        : { proposition_id: ref, relation: rel });
+    });
+    if (_addKind === "proposition") {
+      return { kind: "proposition", text: $("ap-text").value.trim(), type: $("ap-type").value,
+               party: $("ap-party").value.trim(), responds_to: $("ap-responds").value.trim(), links };
+    }
+    return { kind: "evidence", assertion: $("ae-text").value.trim(), witness: $("ae-witness").value.trim(),
+             quote: $("ae-quote").value.trim(), doc_id: $("ae-doc").value.trim() || "User-added", links };
+  }
+
+  async function submitAddition() {
+    const payload = collectAddition();
+    const txt = payload.text || payload.assertion;
+    if (!txt) { $("add-error").textContent = "Please enter the " + (_addKind === "proposition" ? "proposition text." : "assertion."); return; }
+    const save = $("add-save"); save.disabled = true; save.textContent = "Adding…";
+    try {
+      const resp = await fetch("api/additions", { method: "POST",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await resp.json();
+      if (!data.ok) { $("add-error").textContent = data.error || "Could not add."; return; }
+      // clear the form, reload the matrix, refresh dependent views
+      ["ap-text", "ap-party", "ap-responds", "ae-text", "ae-witness", "ae-quote"].forEach(id => $(id).value = "");
+      $("ae-doc").value = "User-added";
+      closeAddModal();
+      await loadMatrix();
+      _graphLoaded = false;                          // graph refreshes on next visit
+      if (_builderInit) renderPalette($("builder-search").value);
+      renderTray();
+      flashProp(data.id);                            // highlight the new proposition (if any)
+    } catch (e) {
+      $("add-error").textContent = "Network error — is the server running?";
+    } finally { save.disabled = false; save.textContent = "Add to case"; }
+  }
+
+  function flashProp(pid) {
+    if (!pid || !/^U\d+$/.test(pid)) return;         // only propositions get a card
+    go("propositions");
+    setTimeout(() => {
+      const card = document.querySelector('.prop-card[data-prop-id="' + pid + '"]');
+      if (card) { card.classList.add("flash"); card.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => card.classList.remove("flash"), 1600); }
+    }, 150);
+  }
+
+  (function wireAdd() {
+    $("open-add").addEventListener("click", openAddModal);
+    $("add-close").addEventListener("click", closeAddModal);
+    $("add-backdrop").addEventListener("click", closeAddModal);
+    $("add-cancel").addEventListener("click", closeAddModal);
+    $("add-link-btn").addEventListener("click", addLinkRow);
+    $("add-save").addEventListener("click", submitAddition);
+    document.querySelectorAll(".add-seg-btn").forEach(b => b.addEventListener("click", () => setAddKind(b.dataset.kind)));
+  })();
 
   // ------------------------------------------------------------------ boot
   loadMatrix();

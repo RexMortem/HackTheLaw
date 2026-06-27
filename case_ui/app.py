@@ -91,6 +91,8 @@ SUMMARY_FILE = DATA_DIR / "summary.json"
 ARGUMENTS_FILE = DATA_DIR / "arguments.json"
 CASE_FILE = DATA_DIR / "case.json"
 QUANTUM_FILE = DATA_DIR / "quantum.json"
+# User-added propositions / evidence, layered onto the matrix at load time.
+ADDITIONS_FILE = DATA_DIR / "additions.json"
 
 # EU Publications Office — Cellar SPARQL endpoint (public, no auth). Used to
 # retrieve potentially relevant EU legal materials to ground the AI summary.
@@ -126,7 +128,106 @@ def _load_matrix() -> tuple[list, str | None]:
             "  python case_ui/snapshot_data.py"
         )
     with open(path, encoding="utf-8") as fh:
-        return json.load(fh), None
+        matrix = json.load(fh)
+    return _apply_additions(matrix), None
+
+
+def _status_from_links(links: list, min_conf: float = 0.5) -> str:
+    """Four-bucket status from a row's links (same rule as build_matrix)."""
+    sup = any(l.get("relation") == "supportive" and (l.get("confidence") or 0) >= min_conf
+              for l in links)
+    adv = any(l.get("relation") == "adverse" and (l.get("confidence") or 0) >= min_conf
+              for l in links)
+    if sup and adv:
+        return "contested"
+    if sup:
+        return "supported"
+    if adv:
+        return "undermined"
+    return "MISSING"
+
+
+def _evidence_index(matrix: list) -> dict:
+    """evidence_id -> {witness, quote, evidence_source} from existing links, so a
+    user-added proposition that cites existing evidence shows its real detail."""
+    idx: dict = {}
+    for row in matrix:
+        for l in row.get("links", []) or []:
+            eid = l.get("evidence_id")
+            if eid and eid not in idx:
+                idx[eid] = {"witness": l.get("witness", ""), "quote": l.get("quote", ""),
+                            "evidence_source": l.get("evidence_source", {})}
+    return idx
+
+
+def _apply_additions(matrix: list) -> list:
+    """Merge user-added propositions and evidence (from additions.json) into a
+    freshly-loaded matrix. Non-destructive: the snapshot on disk is untouched;
+    additions are layered in on every load so they flow into the matrix, graph,
+    stress test and every downstream feature."""
+    additions = _load_additions()
+    user_props = additions.get("propositions") or []
+    user_evidence = additions.get("evidence") or []
+    if not user_props and not user_evidence:
+        return matrix
+
+    by_id = {row["proposition"]["id"]: row for row in matrix if row.get("proposition")}
+    ev_idx = _evidence_index(matrix)
+    user_ev_by_id = {e["id"]: e for e in user_evidence}
+    affected: set = set()
+
+    def _link_for_evidence(eid, relation, confidence, rationale):
+        meta = ev_idx.get(eid)
+        if not meta and eid in user_ev_by_id:
+            ue = user_ev_by_id[eid]
+            meta = {"witness": ue.get("witness", ""), "quote": ue.get("quote", ""),
+                    "evidence_source": {"doc_id": ue.get("doc_id", "User-added"),
+                                        "page": None, "paragraph": ""}}
+        meta = meta or {}
+        return {"evidence_id": eid, "relation": relation,
+                "confidence": confidence, "rationale": rationale,
+                "quote": meta.get("quote", ""), "quote_ok": True,
+                "witness": meta.get("witness", ""),
+                "evidence_source": meta.get("evidence_source")
+                or {"doc_id": "", "page": None, "paragraph": ""},
+                "user_added": True}
+
+    # 1. user evidence -> append a link onto each proposition it references
+    for e in user_evidence:
+        for lk in e.get("links", []) or []:
+            pid = lk.get("proposition_id")
+            row = by_id.get(pid)
+            if not row:
+                continue
+            row.setdefault("links", []).append(_link_for_evidence(
+                e["id"], lk.get("relation", "supportive"),
+                lk.get("confidence", 0.7), lk.get("rationale", "")))
+            affected.add(pid)
+
+    # 2. user propositions -> new matrix rows (links may cite existing/user evidence)
+    for p in user_props:
+        links = [_link_for_evidence(lk.get("evidence_id"), lk.get("relation", "supportive"),
+                                    lk.get("confidence", 0.7), lk.get("rationale", ""))
+                 for lk in (p.get("links") or []) if lk.get("evidence_id")]
+        row = {
+            "proposition": {
+                "id": p["id"], "type": p.get("type", "allegation"),
+                "text": p.get("text", ""), "party": p.get("party", ""),
+                "responds_to": p.get("responds_to", ""), "quote": "", "quote_ok": True,
+                "source": {"doc_id": "User-added", "page": None, "paragraph": ""},
+                "user_added": True,
+            },
+            "status": _status_from_links(links), "n_candidates": len(links), "links": links,
+        }
+        matrix.append(row)
+        by_id[p["id"]] = row
+
+    # 3. recompute status of existing rows that gained user evidence
+    for pid in affected:
+        row = by_id.get(pid)
+        if row:
+            row["status"] = _status_from_links(row.get("links", []))
+    return matrix
 
 
 def _build_summary(matrix: list) -> dict:
@@ -257,9 +358,63 @@ def _offline_chat_reply(user_msg: str, matrix: list) -> str:
     return "\n".join(lines)
 
 
-def _chat_reply(messages: list, matrix: list) -> tuple[str, str]:
-    """Answer the lawyer's question as 'Second Chair', grounded in the matrix.
-    Returns (reply_text, source) where source is 'claude' or 'offline'."""
+_NAV_VIEWS = {
+    "propositions": "Proof Matrix",
+    "damages": "Financial overview",
+    "argumentation": "Argumentation",
+    "graph": "Case Graph",
+    "builder": "Case Builder",
+    "home": "home screen",
+}
+
+# Tool the chat model can call to switch the UI to another view. View ids MUST
+# match the go() routes in index.html.
+NAVIGATE_TOOL = {
+    "name": "navigate",
+    "description": (
+        "Switch the app to a different view. Call this when the lawyer asks to go "
+        "to / open / show a screen, or when another view is the best way to answer "
+        "them. Views: propositions = proof matrix of pleaded allegations & denials; "
+        "damages = the financial / quantum (money / loss) overview; argumentation = "
+        "the generated legal arguments; graph = the case graph linking pleadings to "
+        "evidence; builder = the case builder; home = the landing screen. Always "
+        "also give a one-line spoken reply confirming where you're taking them."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {"view": {"type": "string", "enum": list(_NAV_VIEWS)}},
+        "required": ["view"],
+    },
+}
+
+# Keyword fallback so "go to the financial overview" still navigates on the
+# offline (no-LLM) path.
+_NAV_TRIGGERS = ("go to", "open", "show me", "show the", "take me", "switch to",
+                 "navigate", "bring up", "jump to")
+_NAV_KEYWORDS = [
+    ("damages", ("financial", "damages", "quantum", "money", "loss", "compensation")),
+    ("graph", ("graph", "network", "connections", "map of")),
+    ("argumentation", ("argument", "argumentation", "case theory")),
+    ("builder", ("builder", "build the case", "build my case", "assemble")),
+    ("propositions", ("proposition", "proof matrix", "matrix", "allegation", "claims")),
+    ("home", ("home", "landing", "start screen", "main screen")),
+]
+
+
+def _offline_navigate(user_msg: str) -> str | None:
+    t = (user_msg or "").lower()
+    if not any(trig in t for trig in _NAV_TRIGGERS):
+        return None
+    for view, kws in _NAV_KEYWORDS:
+        if any(k in t for k in kws):
+            return view
+    return None
+
+
+def _chat_reply(messages: list, matrix: list) -> tuple[str, str, str | None]:
+    """Answer as 'Second Chair', grounded in the matrix. Returns
+    (reply_text, source, navigate) — source is 'claude'|'offline', navigate is a
+    view id to switch the UI to (or None)."""
     user_msgs = [m for m in messages if m.get("role") == "user"]
     last_user = user_msgs[-1].get("content", "") if user_msgs else ""
 
@@ -267,7 +422,7 @@ def _chat_reply(messages: list, matrix: list) -> tuple[str, str]:
     if _llm_in_cooldown():
         _log("chat", f"in LLM cooldown ({_llm_down_until - time.monotonic():.0f}s "
                      "left) — returning offline reply")
-        return _offline_chat_reply(last_user, matrix), "offline"
+        return _offline_chat_reply(last_user, matrix), "offline", _offline_navigate(last_user)
 
     try:
         import caselib  # lazy: anthropic SDK + .env
@@ -284,7 +439,9 @@ def _chat_reply(messages: list, matrix: list) -> tuple[str, str]:
             "evidential status from the proof matrix. Answer the lawyer's questions "
             "about the case, grounded strictly in this data. When you reference a "
             "proposition, cite it inline in square brackets exactly like [P0003]. "
-            "Be concise, neutral and practical.\n\n"
+            "Be concise, neutral and practical. When the lawyer asks to go to / "
+            "open / show another screen (e.g. 'go to the financial overview'), use "
+            "the navigate tool to switch the view.\n\n"
             f"PLEADED PROPOSITIONS:\n{_case_digest(matrix)}\n\n"
             f"PROOF-MATRIX TOTALS: {c.get('supported', 0)} supported, "
             f"{c.get('contested', 0)} contested, {c.get('undermined', 0)} undermined, "
@@ -306,6 +463,7 @@ def _chat_reply(messages: list, matrix: list) -> tuple[str, str]:
             # text) — which previously showed up as a silent "offline".
             max_tokens=4000,
             thinking={"type": "adaptive"},
+            tools=[NAVIGATE_TOOL],
             # Cache the case digest: it's identical across every turn of a chat.
             system=[{"type": "text", "text": system,
                      "cache_control": {"type": "ephemeral"}}],
@@ -313,10 +471,16 @@ def _chat_reply(messages: list, matrix: list) -> tuple[str, str]:
         )
         dt = time.monotonic() - t0
         _log("chat", f"<- LLM responded in {dt:.1f}s: {_describe_response(msg)}")
+        navigate = None
+        for b in msg.content:
+            if getattr(b, "type", None) == "tool_use" and getattr(b, "name", "") == "navigate":
+                navigate = (b.input or {}).get("view")
         text = "\n".join(b.text for b in msg.content if b.type == "text").strip()
-        if text:
-            _log("chat", f"OK: returning {len(text)} chars (source=claude)")
-            return text, "claude"
+        if not text and navigate:
+            text = f"Taking you to the {_NAV_VIEWS.get(navigate, navigate)}."
+        if text or navigate:
+            _log("chat", f"OK: {len(text)} chars, navigate={navigate} (source=claude)")
+            return text, "claude", navigate
         # Reached the model but got no text (e.g. all budget spent on thinking,
         # stop_reason=max_tokens). This was previously silent — log it loudly.
         _log("chat", f"WARNING empty text despite stop_reason="
@@ -683,6 +847,76 @@ def _load_arguments_cached() -> list:
     return []
 
 
+def _load_additions() -> dict:
+    """User-added propositions/evidence ({} if none)."""
+    if ADDITIONS_FILE.exists():
+        try:
+            with open(ADDITIONS_FILE, encoding="utf-8") as fh:
+                return json.load(fh)
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {}
+
+
+def _save_additions(payload: dict) -> dict:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(ADDITIONS_FILE, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, ensure_ascii=False, indent=2)
+    return payload
+
+
+def _next_addition_id(existing: list, prefix: str) -> str:
+    """Next free id like U0007 / UE0007, scanning existing ids for the max."""
+    n = 0
+    for item in existing:
+        m = re.match(rf"^{prefix}(\d+)$", str(item.get("id", "")))
+        if m:
+            n = max(n, int(m.group(1)))
+    return f"{prefix}{n + 1:04d}"
+
+
+def _add_addition(kind: str, body: dict) -> dict:
+    """Append a user proposition or evidence item; returns the stored record.
+    Links are normalised; ids are assigned (U#### / UE####)."""
+    store = _load_additions()
+    store.setdefault("propositions", [])
+    store.setdefault("evidence", [])
+
+    def _links(items, ref_key):
+        out = []
+        for lk in items or []:
+            ref = (lk.get(ref_key) or "").strip()
+            rel = lk.get("relation", "supportive")
+            if ref and rel in ("supportive", "adverse", "neutral"):
+                out.append({ref_key: ref, "relation": rel,
+                            "confidence": float(lk.get("confidence", 0.7) or 0.7),
+                            "rationale": (lk.get("rationale") or "").strip()})
+        return out
+
+    if kind == "proposition":
+        rec = {
+            "id": _next_addition_id(store["propositions"], "U"),
+            "type": body.get("type", "allegation"),
+            "text": (body.get("text") or "").strip(),
+            "party": (body.get("party") or "").strip(),
+            "responds_to": (body.get("responds_to") or "").strip(),
+            "links": _links(body.get("links"), "evidence_id"),
+        }
+        store["propositions"].append(rec)
+    else:  # evidence
+        rec = {
+            "id": _next_addition_id(store["evidence"], "UE"),
+            "assertion": (body.get("assertion") or body.get("text") or "").strip(),
+            "witness": (body.get("witness") or "").strip(),
+            "quote": (body.get("quote") or "").strip(),
+            "doc_id": (body.get("doc_id") or "User-added").strip(),
+            "links": _links(body.get("links"), "proposition_id"),
+        }
+        store["evidence"].append(rec)
+    _save_additions(store)
+    return rec
+
+
 def _load_case() -> dict:
     """Load the saved 'built case' (selected propositions/evidence + notes)."""
     if CASE_FILE.exists():
@@ -732,6 +966,8 @@ class Handler(BaseHTTPRequestHandler):
             self._api_goals_get()
         elif path == "/api/case":
             self._api_case_get()
+        elif path == "/api/additions":
+            self._api_additions_get()
         else:
             self._404()
 
@@ -745,6 +981,17 @@ class Handler(BaseHTTPRequestHandler):
             self._api_chat()
         elif path == "/api/case":
             self._api_case_post()
+        elif path == "/api/additions":
+            self._api_additions_post()
+        else:
+            self._404()
+
+    def do_DELETE(self):
+        parsed = urlparse(self.path)
+        path = parsed.path.rstrip("/") or "/"
+        if path == "/api/additions":
+            _save_additions({"propositions": [], "evidence": []})
+            self._json_response(200, json.dumps({"ok": True}))
         else:
             self._404()
 
@@ -930,6 +1177,48 @@ class Handler(BaseHTTPRequestHandler):
         _save_case(payload)
         self._json_response(200, json.dumps({"ok": True, "saved": payload}))
 
+    def _api_additions_get(self):
+        """GET /api/additions — list user-added propositions and evidence."""
+        store = _load_additions()
+        self._json_response(200, json.dumps({
+            "ok": True,
+            "propositions": store.get("propositions", []),
+            "evidence": store.get("evidence", []),
+        }))
+
+    def _api_additions_post(self):
+        """POST /api/additions — add a proposition or evidence item.
+
+        Body: {"kind": "proposition"|"evidence", ...fields..., "links": [...]}.
+        For a proposition, links reference evidence: {evidence_id, relation, ...}.
+        For evidence, links reference propositions: {proposition_id, relation, ...}.
+        """
+        length = int(self.headers.get("Content-Length", 0))
+        if length == 0:
+            self._json_response(400, json.dumps({"ok": False, "error": "Empty body"}))
+            return
+        try:
+            body = json.loads(self.rfile.read(length).decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            self._json_response(400, json.dumps({"ok": False, "error": f"Invalid JSON: {exc}"}))
+            return
+
+        kind = body.get("kind")
+        if kind not in ("proposition", "evidence"):
+            self._json_response(400, json.dumps(
+                {"ok": False, "error": "kind must be 'proposition' or 'evidence'"}))
+            return
+        text = (body.get("text") or body.get("assertion") or "").strip()
+        if not text:
+            self._json_response(400, json.dumps(
+                {"ok": False, "error": "text/assertion is required"}))
+            return
+
+        rec = _add_addition(kind, body)
+        _log("additions", f"added {kind} {rec['id']} "
+                          f"({len(rec.get('links', []))} link(s))")
+        self._json_response(200, json.dumps({"ok": True, "id": rec["id"], "record": rec}))
+
     def _api_chat(self):
         """POST /api/chat — converse with 'Second Chair', grounded in the matrix.
 
@@ -956,9 +1245,11 @@ class Handler(BaseHTTPRequestHandler):
         matrix, _err = _load_matrix()
         _log("chat", f"POST /api/chat received: {len(messages)} message(s)")
         t0 = time.monotonic()
-        reply, source = _chat_reply(messages, matrix or [])
-        _log("chat", f"POST /api/chat done in {time.monotonic() - t0:.1f}s -> source={source}")
-        self._json_response(200, json.dumps({"ok": True, "reply": reply, "source": source}))
+        reply, source, navigate = _chat_reply(messages, matrix or [])
+        _log("chat", f"POST /api/chat done in {time.monotonic() - t0:.1f}s -> "
+                     f"source={source} navigate={navigate}")
+        self._json_response(200, json.dumps({
+            "ok": True, "reply": reply, "source": source, "navigate": navigate}))
 
     def _api_status(self):
         """GET /api/status — lightweight health check."""
@@ -1063,7 +1354,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
     def _404(self):
