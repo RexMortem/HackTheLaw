@@ -158,6 +158,30 @@
         border:none;border-radius:6px;padding:9px 14px;text-decoration:none;cursor:pointer}
   .dsrc:hover{filter:brightness(1.07)}
   .dsrc.disabled{background:var(--surface);color:var(--paper-faint);border:1px dashed var(--line);pointer-events:none}
+
+  /* ── polish: keyboard focus, hover, entrance, loading, clear, narrow ── */
+  .ev:focus{outline:none}
+  .ev:focus-visible .card{background:var(--ink-2);border-color:var(--neu);box-shadow:0 0 0 2px var(--neu)}
+  .ev:focus-visible .dot{transform:scale(1.35)}
+  .zoom button:focus-visible,.dclose:focus-visible,.dsrc:focus-visible,.clearbtn:focus-visible{outline:2px solid var(--neu);outline-offset:2px}
+  .ev:hover .dot{transform:scale(1.3)}
+  @keyframes evIn{from{opacity:0;transform:translateY(-50%) translateX(-8px)}to{opacity:1;transform:translateY(-50%)}}
+  .tl.enter .ev{animation:evIn .34s cubic-bezier(.2,.7,.3,1) both}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:72px 20px;color:var(--paper-faint);font-family:var(--mono);font-size:11px;letter-spacing:.1em}
+  .spinner{width:28px;height:28px;border:2.5px solid var(--line);border-top-color:var(--paper-dim);border-radius:50%;animation:spin .8s linear infinite}
+  .clearbtn{display:none;margin-left:10px;background:var(--ink-2);border:1px solid var(--line);color:var(--paper-dim);font-family:var(--mono);font-size:10px;letter-spacing:.05em;padding:3px 10px;border-radius:999px;cursor:pointer}
+  .selecting .clearbtn{display:inline-flex;align-items:center;gap:5px}
+  .clearbtn:hover{border-color:var(--gold);color:var(--paper)}
+  .kbd-hint{font-family:var(--mono);font-size:9.5px;color:var(--paper-faint);letter-spacing:.04em}
+  /* narrow embedding: the detail overlays instead of squeezing the timeline away */
+  @media (max-width:560px){
+    .detail{position:absolute;top:0;right:0;bottom:0;z-index:50;box-shadow:-8px 0 24px rgba(20,28,40,.18)}
+    .detail.open{width:100%}.dpad{width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  }
 </style>
 </head>
 <body>
@@ -165,19 +189,20 @@
   <div class="top">
     <div class="brand"><b>GROUNDS</b> · TIMELINE</div>
     <div class="sub" id="caseLbl">loading…</div>
-    <div class="zoom"><button id="zoomOut" title="Zoom out (compress time)">−</button><button id="zoomFit" title="Reset zoom">fit</button><button id="zoomIn" title="Zoom in (spread time)">+</button></div>
+    <div class="zoom"><button id="zoomOut" title="Zoom out (compress time)" aria-label="Zoom out">−</button><button id="zoomFit" title="Reset zoom" aria-label="Reset zoom to fit">fit</button><button id="zoomIn" title="Zoom in (spread time)" aria-label="Zoom in">+</button></div>
     <div class="gchip" id="gchip">grounding: —</div>
   </div>
   <div class="legend">
     <span><i style="background:var(--sup)"></i>supportive</span>
     <span><i style="background:var(--adv)"></i>adverse</span>
     <span><i style="background:var(--neu)"></i>neutral</span>
-    <span style="color:var(--paper-faint)">click a dot for its source · highlight from <b style="color:var(--paper-dim)">Arguments</b></span>
-    <span class="selnote" id="selnote"></span>
+    <span style="color:var(--paper-faint)">click a dot for its source · <span class="kbd-hint">↑↓ navigate · ⏎ open · esc close · ⌘scroll zoom</span></span>
+    <span class="selnote" id="selnote" aria-live="polite"></span>
+    <button class="clearbtn" id="clearSel" title="Clear selection (Esc)">✕ clear</button>
   </div>
 
   <div class="body">
-    <div class="scrollwrap"><div class="tl" id="tl"></div><div id="undated"></div></div>
+    <div class="scrollwrap"><div class="tl" id="tl" role="list" aria-label="Evidence timeline"></div><div id="undated"></div></div>
     <!-- clicked-evidence detail — docks on the RIGHT, does not cover the timeline -->
     <div class="detail" id="detail"><div class="dpad">
       <button class="dclose" id="dclose" title="Close">×</button>
@@ -225,6 +250,7 @@
   // ---------------- load matrix ----------------
   let EV={}, PROP={}, REL={}, CONFLICTS_BY_PROP={};
   async function loadMatrix(){
+    tlEl.innerHTML='<div class="loading"><div class="spinner"></div><div>loading evidence…</div></div>';
     let data=null;
     for(const url of ['/api/matrix','./matrix.json','./data/matrix.json']){
       try{ const r=await fetch(url,{cache:'no-store'}); if(r.ok){ const j=await r.json(); data=j.matrix||j; if(Array.isArray(data)&&data.length) break; } }catch(e){}
@@ -255,7 +281,9 @@
   // ---------------- render ----------------
   const tlEl=document.getElementById('tl'), undatedEl=document.getElementById('undated');
   const PXPERDAY=2.6, ROWMIN=34, PAD=40, SPINEX=96;
-  let ZOOM=1, lastSel=null, nodeById={}, yById={}, conflictSvg=null;
+  let ZOOM=1, lastSel=null, nodeById={}, yById={}, conflictSvg=null, _firstRender=true;
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SCROLL = REDUCED ? 'auto' : 'smooth';
   function render(){
     tlEl.innerHTML=''; undatedEl.innerHTML=''; nodeById={}; yById={};
     const all=Object.values(EV);
@@ -290,6 +318,7 @@
       const box=undatedEl.querySelector('.undated');
       undated.forEach(e=>{ const n=mkEv(e,null); n.style.position='static'; n.style.transform='none'; n.style.marginBottom='8px'; box.appendChild(n); });
     }
+    if(_firstRender){ _firstRender=false; tlEl.classList.add('enter'); setTimeout(()=>tlEl.classList.remove('enter'), 440); }
     reapply();
   }
   function reapply(){ if(!lastSel) return;
@@ -302,10 +331,13 @@
   function mkEv(e,y){
     const div=document.createElement('div'); div.className='ev idle'; if(y!=null) div.style.top=y+'px';
     div.dataset.eid=e.id; nodeById[e.id]=div;
+    div.tabIndex=0; div.setAttribute('role','listitem');
+    div.setAttribute('aria-label', e.id+(e.witness?' · '+e.witness:'')+': '+(e.quote?trim(e.quote,90):'no quote'));
     div.innerHTML='<span class="dot"></span><div class="card">'
       +'<div class="line"><span class="eid">'+esc(e.id)+'</span>'
         +'<span class="q">'+esc(trim(e.quote,200)||'(no quote)')+'</span></div></div>';
     div.addEventListener('click',()=>openDetail(e));
+    div.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); openDetail(e); } });
     return div;
   }
   function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
@@ -352,11 +384,12 @@
       src.textContent='↓ Open source document'+(e.page?' · p.'+e.page:''); }
     else { src.className='dsrc disabled'; src.removeAttribute('href'); src.textContent='source file not linked'; src.style.display='inline-flex'; }
     detail.classList.add('open');
+    const _dc=document.getElementById('dclose'); if(_dc) _dc.focus();
     try{ window.parent && window.parent!==window && window.parent.postMessage({source:'grounds-timeline',type:'evidence-click',evidence_id:e.id},'*'); }catch(_){}
     document.dispatchEvent(new CustomEvent('grounds:evidence-click',{detail:{evidence_id:e.id}}));
   }
-  function closeDetail(){ detail.classList.remove('open'); focusedId=null;
-    document.querySelectorAll('.ev.focused').forEach(n=>n.classList.remove('focused')); }
+  function closeDetail(){ const ret=focusedId&&nodeById[focusedId]; detail.classList.remove('open'); focusedId=null;
+    document.querySelectorAll('.ev.focused').forEach(n=>n.classList.remove('focused')); if(ret) ret.focus(); }
   document.getElementById('dclose').onclick=closeDetail;
 
   // ---------------- highlight API ----------------
@@ -373,7 +406,7 @@
     if(focusedId && nodeById[focusedId]) nodeById[focusedId].classList.add('focused');
     drawConflicts(conflicts);
     document.getElementById('selnote').textContent=label?label+' · '+n+' lit':'';
-    if(first) first.scrollIntoView({behavior:'smooth',block:'center'});
+    if(first) first.scrollIntoView({behavior:SCROLL,block:'center'});
   }
   const API={
     highlightProposition(pid){ const m=REL[pid]; if(!m){ console.warn('Grounds: unknown proposition',pid); return; }
@@ -406,6 +439,24 @@
   document.getElementById('zoomOut').onclick=()=>setZoom(ZOOM/1.3);
   document.getElementById('zoomFit').onclick=()=>setZoom(1);
   document.querySelector('.scrollwrap').addEventListener('wheel',e=>{ if(e.ctrlKey||e.metaKey){ e.preventDefault(); setZoom(ZOOM*(e.deltaY<0?1.12:0.9)); } },{passive:false});
+
+  // ---------------- clear-selection + keyboard navigation ----------------
+  const _clr=document.getElementById('clearSel'); if(_clr) _clr.addEventListener('click', clearHighlight);
+  function _rows(){ return Array.from(tlEl.querySelectorAll('.ev')).concat(Array.from(undatedEl.querySelectorAll('.ev'))); }
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){ if(detail.classList.contains('open')) closeDetail(); else if(lastSel) clearHighlight(); return; }
+    if(e.key==='+'||e.key==='='){ e.preventDefault(); setZoom(ZOOM*1.3); return; }
+    if(e.key==='-'||e.key==='_'){ e.preventDefault(); setZoom(ZOOM/1.3); return; }
+    if(e.key==='0'){ setZoom(1); return; }
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      const rows=_rows(); if(!rows.length) return;
+      const a=document.activeElement, onRow=a&&a.classList&&a.classList.contains('ev');
+      if(!onRow){ if(e.key==='ArrowDown'){ e.preventDefault(); rows[0].focus(); rows[0].scrollIntoView({block:'center',behavior:SCROLL}); } return; }
+      e.preventDefault(); let i=rows.indexOf(a);
+      i = e.key==='ArrowDown' ? Math.min(rows.length-1,i+1) : Math.max(0,i-1);
+      rows[i].focus(); rows[i].scrollIntoView({block:'center',behavior:SCROLL});
+    }
+  });
 
   // ---------------- inline demo (replaced by real matrix.json) ----------------
   const DEMO=[
