@@ -4,8 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Second Chair</title>
+<<<<<<< HEAD
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
+=======
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+>>>>>>> 3b9d47af773090c7dd4b2f44105e45d6487cffe2
   <style>
     /* ================================================================== */
     /* Reset & tokens                                                      */
@@ -1065,9 +1069,6 @@
     .stress-run-big:active { transform: translateY(0); }
     .stress-run-big:disabled { opacity: .6; cursor: default; transform: none; box-shadow: var(--shadow-md); }
     /* ---- Evidence Timeline room (embeds the GROUNDS timeline) ---- */
-    #room-timeline.active { display: flex; flex-direction: column; height: 100vh; padding: 0; }
-    #room-timeline .timeline-frame-wrap { flex: 1; min-height: 0; }
-    #room-timeline #timeline-frame { width: 100%; height: 100%; border: 0; display: block; background: #e3e6ea; }
     .palette-list { display: flex; flex-direction: column; gap: .45rem; max-height: 62vh; overflow-y: auto; }
     .palette-card { border: 1px solid var(--border); border-radius: 8px; padding: .5rem .6rem; cursor: grab; background: var(--bg); border-left: 4px solid var(--missing); transition: box-shadow .12s, transform .1s; }
     .palette-card:hover { box-shadow: var(--shadow-md); transform: translateX(2px); }
@@ -1311,10 +1312,6 @@
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-5 7 5v12"/><rect x="9.5" y="13" width="5" height="8"/></svg>
     <span class="tip">Case Builder</span>
   </button>
-  <button class="rail-btn" data-room="timeline">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-    <span class="tip">Evidence Timeline</span>
-  </button>
 </nav>
 
 <!-- ============================== ORB =============================== -->
@@ -1426,30 +1423,47 @@
       <button class="opt-card" data-room="propositions">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></span>
         <div class="opt-name">Claims &amp; Evidential Foundations</div>
+<<<<<<< HEAD
         <div class="opt-desc">The pleaded claims and defences, evidence-coded</div>
+=======
+        <div class="opt-desc">The pleaded allegations and denials, evidence-coded.</div>
+>>>>>>> 3b9d47af773090c7dd4b2f44105e45d6487cffe2
         <div class="opt-stat" id="stat-propositions"><span class="muted">loading…</span></div>
       </button>
       <button class="opt-card" data-room="damages">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
         <div class="opt-name">Recoverable Damages</div>
+<<<<<<< HEAD
         <div class="opt-desc">Heads of loss and quantum, valued</div>
+=======
+        <div class="opt-desc">Heads of loss and quantum, compared.</div>
+>>>>>>> 3b9d47af773090c7dd4b2f44105e45d6487cffe2
         <div class="opt-stat" id="stat-damages"><span class="muted">quantum</span></div>
       </button>
       <button class="opt-card" data-room="argumentation">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 9h10M7 12h6"/></svg></span>
         <div class="opt-name">Argumentation</div>
+<<<<<<< HEAD
         <div class="opt-desc">The arguments each side can run</div>
+=======
+        <div class="opt-desc">Allegation versus defence, side by side.</div>
+>>>>>>> 3b9d47af773090c7dd4b2f44105e45d6487cffe2
         <div class="opt-stat" id="stat-argumentation"><span class="muted">case theory</span></div>
       </button>
       <button class="opt-card" data-room="graph">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="9" cy="18" r="2.5"/></svg></span>
         <div class="opt-name">Case Graph</div>
+<<<<<<< HEAD
         <div class="opt-desc">Pleadings and evidence as a network</div>
+=======
+        <div class="opt-desc">Pleadings and evidence as a network.</div>
+>>>>>>> 3b9d47af773090c7dd4b2f44105e45d6487cffe2
         <div class="opt-stat" id="stat-graph"><span class="muted">evidence map</span></div>
       </button>
       <button class="opt-card" data-room="builder">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-5 7 5v12"/></svg></span>
         <div class="opt-name">Case Builder</div>
+<<<<<<< HEAD
         <div class="opt-desc">Assemble and stress-test a strategy</div>
         <div class="opt-stat" id="stat-builder"><span class="muted">strategy</span></div>
       </button>
@@ -1460,6 +1474,11 @@
         <div class="opt-desc">Evidence plotted chronologically</div>
         <div class="opt-stat" id="stat-timeline"><span class="muted">chronology</span></div>
       </button>
+=======
+        <div class="opt-desc">Assemble and stress-test a case strategy.</div>
+        <div class="opt-stat" id="stat-builder"><span class="muted">strategy</span></div>
+      </button>
+>>>>>>> 3b9d47af773090c7dd4b2f44105e45d6487cffe2
     </div>
 
     <div class="composer" id="hero-composer">
@@ -1522,16 +1541,12 @@
     <!-- Left: timeline sidebar (toggled) — temporarily hidden -->
     <aside class="timeline-sidebar" id="timeline-sidebar" style="display:none">
       <div class="tl-head">
-        <span>Timeline <span class="tl-tag">Placeholder</span></span>
+        <span>Evidence Timeline</span>
         <button class="tl-close" id="tl-close" aria-label="Close timeline">&times;</button>
       </div>
-      <p class="tl-note">The case chronology — pleadings, witness statements and
-         evidence plotted by date — will live here.</p>
-      <ol class="tl-spine">
-        <li><span class="tl-dot"></span><div class="tl-item">Contract signed<small>placeholder date</small></div></li>
-        <li><span class="tl-dot"></span><div class="tl-item">Alleged breach<small>placeholder date</small></div></li>
-        <li><span class="tl-dot"></span><div class="tl-item">Proceedings issued<small>placeholder date</small></div></li>
-        <li><span class="tl-dot"></span><div class="tl-item">Witness statements<small>placeholder date</small></div></li>
+      <p class="tl-note">The case chronology — key documents and evidence plotted by date.</p>
+      <ol class="tl-spine" id="tl-spine">
+        <li><div class="tl-item"><small>loading…</small></div></li>
       </ol>
     </aside>
 
@@ -1784,16 +1799,6 @@
   </div>
 </section>
 
-<!-- ========================= ROOM: TIMELINE ======================== -->
-<section id="room-timeline" class="view room">
-  <div class="room-head">
-    <div><h1>Evidence Timeline</h1><div class="sub">The case chronology — evidence plotted by date</div></div>
-  </div>
-  <div class="timeline-frame-wrap">
-    <iframe id="timeline-frame" title="Evidence timeline" src="about:blank"></iframe>
-  </div>
-</section>
-
 <script>
 (function () {
   "use strict";
@@ -1811,7 +1816,7 @@
   let _sending = false;
   let _currentView = "hero";
 
-  const ROOMS = ["propositions", "argumentation", "graph", "builder", "timeline", "damages"];
+  const ROOMS = ["propositions", "argumentation", "graph", "builder", "damages"];
 
   // ------------------------------------------------------------------ routing
   function go(name) {
@@ -1820,7 +1825,6 @@
       hero: "hero", chat: "chatview",
       propositions: "room-propositions", damages: "room-damages",
       argumentation: "room-argumentation", graph: "room-graph", builder: "room-builder",
-      timeline: "room-timeline",
     };
     $(map[name]).classList.add("active");
     _currentView = name;
@@ -1839,22 +1843,75 @@
     if (name === "argumentation") { ensureArguments(); }
     if (name === "graph") ensureGraph();
     if (name === "builder") ensureBuilder();
-    if (name === "timeline") ensureTimeline();
     if (name === "damages") ensureQuantum();
 
     window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
   }
 
-  // Evidence Timeline: embed the GROUNDS timeline (timeline.html) on first open.
-  // It fetches /api/matrix itself, so it stays in sync with our backend.
-  let _timelineLoaded = false;
-  function ensureTimeline() {
-    if (_timelineLoaded) return;
-    _timelineLoaded = true;
-    $("timeline-frame").src = "timeline.html";
+  // ---------------------------------------------------- evidence timeline sidebar
+  // A slim, vertical chronology that toggles open on the LEFT of the Claims &
+  // Evidential Foundations matrix. It is sticky (stays in view while the lawyer
+  // scrolls the matrix) so the case timeline can be referred back to at all times.
+  function setTimeline(open) {
+    $("timeline-sidebar").classList.toggle("open", open);
+    $("tl-toggle").classList.toggle("active", open);
+    $("tl-toggle").setAttribute("aria-pressed", String(open));
   }
-  // The Claims-room "Timeline" button opens the full Evidence Timeline room.
-  $("tl-toggle").addEventListener("click", () => go("timeline"));
+  $("tl-toggle").addEventListener("click", () =>
+    setTimeline(!$("timeline-sidebar").classList.contains("open")));
+  $("tl-close").addEventListener("click", () => setTimeline(false));
+
+  // Dates aren't on the links; resolve them from the source document id, mirroring
+  // the standalone timeline (timeline.html) so both stay consistent.
+  const _MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const _DOC_DATES = [
+    [/claim_form|particulars/, "2025-06-05"], [/master_services|\bmsa\b/, "2024-03-14"],
+    [/statement_of_work|\bsow\b/, "2024-03-14"], [/order_form/, "2024-03-20"],
+    [/deed_of_variation/, "2024-06-28"], [/change_order|co_no_3|\bco[_-]?3\b/, "2024-09-02"],
+    [/loyalty/, "2024-08-21"], [/go-?live|golive|readiness/, "2024-10-24"],
+    [/uat|acceptance/, "2024-11-12"], [/outage|root_cause|northgate/, "2024-11-26"],
+    [/peak_trading|internal|q4/, "2024-12-08"], [/defect_log|defect|issue_log/, "2024-12-15"],
+    [/termination/, "2025-01-20"], [/techflow_response|response/, "2025-02-07"],
+    [/whitfield|expert.*it|it.*expert/, "2026-04-24"], [/greenhalgh|quantum/, "2026-04-24"],
+    [/vance|okafor|nair|witness|witn/, "2026-03-13"],
+  ];
+  function _docDate(id) {
+    if (!id) return null;
+    const d = String(id).toLowerCase();
+    for (const [re, iso] of _DOC_DATES) {
+      if (re.test(d)) { const m = iso.match(/(\d{4})-(\d{2})-(\d{2})/); return new Date(+m[1], +m[2] - 1, +m[3]); }
+    }
+    return null;
+  }
+  function _humaniseDoc(id) {
+    return String(id || "Document").replace(/\.[a-z0-9]+$/i, "").replace(/^\d+[_-]+/, "")
+      .replace(/[_-]+/g, " ").replace(/\b\w/g, c => c.toUpperCase()).trim();
+  }
+  function renderTimelineSidebar() {
+    const spine = $("tl-spine");
+    if (!spine) return;
+    // One entry per distinct source document, dated via the doc-id table.
+    const byDoc = {};
+    _matrix.forEach(row => (row.links || []).forEach(l => {
+      const s = l.evidence_source || {};
+      const doc = s.doc_id;
+      if (!doc || byDoc[doc]) return;
+      byDoc[doc] = { doc, date: _docDate(doc) };
+    }));
+    const items = Object.values(byDoc)
+      .filter(e => e.date)
+      .sort((a, b) => a.date - b.date);
+    if (!items.length) {
+      spine.innerHTML = '<li><div class="tl-item"><small>No dated evidence yet.</small></div></li>';
+      return;
+    }
+    spine.innerHTML = items.map(e => {
+      const d = e.date, label = _humaniseDoc(e.doc);
+      const when = d.getDate() + " " + _MONTHS[d.getMonth()] + " " + d.getFullYear();
+      return '<li><span class="tl-dot"></span><div class="tl-item">' + esc(label) +
+             '<small>' + when + '</small></div></li>';
+    }).join("");
+  }
 
   // rail + orb + cards wiring
   document.querySelectorAll(".rail-btn").forEach(b =>
@@ -2052,6 +2109,7 @@
 
     renderMatrix();
     renderRisk();
+    renderTimelineSidebar();   // populate the slim chronology sidebar
     loadCase();   // matrix ready -> tray can render saved props
   }
 

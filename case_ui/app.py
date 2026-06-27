@@ -1083,7 +1083,11 @@ class Handler(BaseHTTPRequestHandler):
             self._serve_file(STATIC_DIR / "index.html", "text/html; charset=utf-8")
         elif path in ("/timeline", "/timeline.html"):
             self._serve_file(STATIC_DIR / "timeline.html", "text/html; charset=utf-8")
+<<<<<<< HEAD
         elif path in ("/favicon.svg", "/favicon.ico"):
+=======
+        elif path == "/favicon.svg":
+>>>>>>> 3b9d47af773090c7dd4b2f44105e45d6487cffe2
             self._serve_file(STATIC_DIR / "favicon.svg", "image/svg+xml")
         elif path == "/api/matrix":
             self._api_matrix()
