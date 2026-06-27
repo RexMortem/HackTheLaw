@@ -40,6 +40,12 @@
       --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
       --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
       --shadow-lg: 0 20px 40px -12px rgba(15,31,61,.35);
+
+      /* Figma "Claims & Evidential Foundations" theme (additive) */
+      --ink:     #1c1b18;
+      --paper:   #f1efe7;
+      --paper-2: #f7f5ee;
+      --mono: "SFMono-Regular", "JetBrains Mono", "Roboto Mono", Consolas, "Liberation Mono", Menlo, monospace;
     }
 
     html { font-size: 15px; }
@@ -57,6 +63,10 @@
     /* ================================================================== */
     .view { display: none; }
     .view.active { display: block; }
+    /* #hero sets display:flex by id, which outranks .view's display toggle —
+       this keeps it hidden unless it is the active view (so rooms don't stack
+       below it and require scrolling). */
+    #hero:not(.active) { display: none; }
 
     /* ================================================================== */
     /* HERO launcher                                                       */
@@ -136,9 +146,10 @@
     /* Option cards */
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 1rem;
-      margin-bottom: 1.6rem;
+      max-width: 620px;
+      margin: 0 auto 1.6rem;
     }
     .opt-card {
       position: relative;
@@ -210,37 +221,7 @@
     .send-btn:hover { filter: brightness(1.12); }
     .send-btn:active { transform: scale(.92); }
 
-    #hero-composer { max-width: 720px; margin: 0 auto; width: 100%; }
-
-    /* -------- In-place chat: the hero composer expands into the chatbot ------ */
-    /* The landing intro (eyebrow/title/context/cards) and starters collapse,
-       and the conversation thread grows to fill the screen with the composer
-       docked at the bottom — the chatbox "extends to the bottom of the screen". */
-    .hero-intro { overflow: hidden; max-height: 1400px; opacity: 1;
-      transition: max-height .45s ease, opacity .3s ease, margin .45s ease; }
-    .starters { transition: max-height .35s ease, opacity .25s ease, margin .35s ease;
-      max-height: 160px; overflow: hidden; }
-    .hero-thread { display: none; }
-
-    #hero.chatting {
-      justify-content: stretch;
-      height: 100vh; min-height: 100vh; overflow: hidden;
-      padding: 1.1rem 1.5rem;
-    }
-    #hero.chatting .hero-inner {
-      display: flex; flex-direction: column; flex: 1 1 auto;
-      min-height: 0; max-width: 820px; text-align: left;
-    }
-    #hero.chatting .hero-intro,
-    #hero.chatting .starters {
-      max-height: 0; opacity: 0; margin: 0; pointer-events: none;
-    }
-    #hero.chatting .hero-thread {
-      display: flex; flex-direction: column; gap: 1.1rem;
-      flex: 1 1 auto; min-height: 0; overflow-y: auto;
-      width: 100%; padding: 0.5rem 0.25rem 1rem;
-    }
-    #hero.chatting #hero-composer { margin: 0 auto; max-width: 820px; }
+    #hero-composer { max-width: 720px; margin: 0 auto; }
 
     .starters {
       display: flex; flex-wrap: wrap; gap: 0.45rem; justify-content: center;
@@ -326,8 +307,15 @@
     .orb-label small { display: block; font-size: 0.66rem; font-weight: 500; color: var(--accent-a); letter-spacing: 0.04em; }
 
     /* ================================================================== */
-    /* Chat messages (rendered in the in-place hero chat thread)           */
+    /* CHAT view                                                           */
     /* ================================================================== */
+    #chatview { min-height: 100vh; animation: viewIn .45s ease both; }
+    .chat-wrap {
+      max-width: 760px; margin: 0 auto;
+      padding: 4.5rem 1.25rem 8.5rem; min-height: 100vh;
+    }
+    #thread { display: flex; flex-direction: column; gap: 1.1rem; }
+
     .msg { display: flex; gap: 0.75rem; animation: msgIn .35s ease both; }
     @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
     .msg.user { flex-direction: row-reverse; }
@@ -352,39 +340,6 @@
       border: 1px solid var(--contested-border); border-radius: 4px; padding: 0 0.3rem; font-size: 0.62rem;
     }
 
-    /* Markdown rendered inside Second Chair replies (user messages stay plain) */
-    .msg.sc .msg-body { white-space: normal; }
-    .msg-body > :first-child { margin-top: 0; }
-    .msg-body > :last-child { margin-bottom: 0; }
-    .msg-body p { margin: 0 0 0.6rem; }
-    .msg-body h1, .msg-body h2, .msg-body h3, .msg-body h4 {
-      margin: 0.8rem 0 0.4rem; line-height: 1.3; color: var(--navy); font-weight: 700;
-    }
-    .msg-body h1 { font-size: 1.05rem; } .msg-body h2 { font-size: 1rem; }
-    .msg-body h3 { font-size: 0.92rem; } .msg-body h4 { font-size: 0.86rem; }
-    .msg-body ul, .msg-body ol { margin: 0 0 0.6rem; padding-left: 1.25rem; }
-    .msg-body li { margin: 0.15rem 0; }
-    .msg-body blockquote {
-      margin: 0 0 0.6rem; padding: 0.2rem 0.8rem;
-      border-left: 3px solid var(--border); color: var(--slate);
-    }
-    .msg-body code {
-      font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.85em;
-      background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; padding: 0.05rem 0.3rem;
-    }
-    .msg-body pre {
-      margin: 0 0 0.6rem; padding: 0.7rem 0.85rem; background: #0f172a; color: #e2e8f0;
-      border-radius: 8px; overflow-x: auto;
-    }
-    .msg-body pre code { background: none; border: 0; padding: 0; color: inherit; font-size: 0.82rem; }
-    .msg-body a { color: #0e7490; text-decoration: underline; }
-    .msg-body table { border-collapse: collapse; width: 100%; margin: 0 0 0.6rem; font-size: 0.84rem; }
-    .msg-body th, .msg-body td {
-      border: 1px solid var(--border); padding: 0.3rem 0.5rem; text-align: left; vertical-align: top;
-    }
-    .msg-body thead th { background: var(--bg); font-weight: 700; color: var(--navy); }
-    .msg-body tbody tr:nth-child(even) { background: #f8fafc; }
-
     /* citation chip inside replies */
     .cite {
       display: inline-flex; align-items: center; gap: 0.25rem;
@@ -406,6 +361,13 @@
     .typing span:nth-child(3) { animation-delay: .4s; }
     @keyframes blink { 0%,80%,100% { opacity: .25; } 40% { opacity: 1; } }
 
+    .chat-dock {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
+      padding: 1rem 1.25rem 1.4rem;
+      background: linear-gradient(180deg, rgba(248,250,252,0), var(--bg) 38%);
+    }
+    #chat-composer { max-width: 760px; margin: 0 auto; }
+
     /* ================================================================== */
     /* ROOM shell                                                          */
     /* ================================================================== */
@@ -414,7 +376,7 @@
 
     .room-head {
       background: var(--navy); color: #fff;
-      padding: 1.05rem 2rem 1.05rem 4.6rem;
+      padding: 1.05rem 2rem 1.05rem 5.75rem; /* clear the fixed rail (right edge ≈4.75rem) */
       display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;
       border-bottom: 3px solid var(--navy-3);
     }
@@ -487,29 +449,6 @@
     .prop-party { font-size: 0.75rem; color: var(--slate); }
     .prop-text { font-size: 0.92rem; color: #1e293b; line-height: 1.5; }
     .prop-source { font-size: 0.75rem; color: var(--slate-2); margin-top: 0.3rem; font-family: "SFMono-Regular", Consolas, monospace; }
-
-    /* Source citation — tucked behind an icon; reveals on hover/click */
-    .cite-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 19px; height: 19px; border-radius: 5px; flex-shrink: 0; padding: 0;
-      border: 1px solid var(--border); background: #f1f5f9; color: var(--slate);
-      cursor: pointer; transition: background .15s, color .15s, border-color .15s;
-    }
-    .cite-btn:hover, .cite-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
-    .cite-btn:focus-visible { outline: 2px solid var(--navy-3); outline-offset: 1px; }
-    .cite-pop {
-      position: fixed; z-index: 60; min-width: 190px; max-width: 300px;
-      background: var(--navy); color: #fff; border-radius: 9px;
-      padding: 0.65rem 0.75rem; box-shadow: var(--shadow-lg);
-      opacity: 0; visibility: hidden; transform: translateY(-4px);
-      transition: opacity .14s, transform .14s, visibility .14s; pointer-events: none;
-    }
-    .cite-pop.show { opacity: 1; visibility: visible; transform: none; }
-    .cite-pop-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-a); margin-bottom: 0.35rem; }
-    .cite-pop-row { font-size: 0.78rem; line-height: 1.5; font-family: "SFMono-Regular", Consolas, monospace; word-break: break-word; }
-    .cite-pop-row .k { color: var(--slate-2); }
-    .cite-pop-quote { font-size: 0.75rem; font-style: italic; color: #cbd5e1; margin-top: 0.45rem; padding-top: 0.45rem; border-top: 1px solid rgba(255,255,255,.16); line-height: 1.45; }
-    .cite-pop-empty { font-size: 0.78rem; color: var(--slate-2); font-style: italic; }
     .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; flex-shrink: 0; }
     .status-badge { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.25rem 0.65rem; border-radius: 999px; }
     .status-badge.supported  { background: var(--supported-bg);  color: var(--supported);  border: 1px solid var(--supported-border); }
@@ -570,6 +509,350 @@
     .skeleton { background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 800px 100%; animation: shimmer 1.4s infinite; border-radius: 4px; }
     .skel-card { height: 80px; border-radius: var(--radius); margin-bottom: 0.75rem; }
 
+    /* ---- Argumentation ---- */
+    .arg-intro { font-size: 0.86rem; color: var(--slate); margin-bottom: 1.4rem; max-width: 720px; line-height: 1.55; }
+    .arg-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .arg-col-head { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    .arg-col.claimant .arg-col-head { color: var(--navy-3); }
+    .arg-col.defendant .arg-col-head { color: var(--undermined); }
+    .arg-node { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 0.7rem 0.85rem; margin-bottom: 0.6rem; border-left: 4px solid var(--missing); cursor: pointer; transition: box-shadow .15s, transform .12s; }
+    .arg-node:hover { box-shadow: var(--shadow-md); transform: translateX(2px); }
+    .arg-node.status-supported  { border-left-color: var(--supported); }
+    .arg-node.status-contested  { border-left-color: var(--contested); }
+    .arg-node.status-undermined { border-left-color: var(--undermined); }
+    .arg-node.status-MISSING    { border-left-color: var(--missing); }
+    .arg-node .id { font-size: 0.7rem; font-weight: 700; color: var(--slate-2); font-family: "SFMono-Regular", Consolas, monospace; }
+    .arg-node .t { font-size: 0.85rem; color: #1e293b; line-height: 1.45; margin-top: 0.2rem; }
+    .arg-node .clash { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.45rem; font-size: 0.72rem; font-weight: 600; color: var(--undermined); }
+    .arg-node .clash.none { color: var(--slate-2); font-weight: 500; }
+
+    .placeholder-room {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 56vh; text-align: center; gap: 0.6rem;
+    }
+    .placeholder-badge {
+      font-size: 0.7rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--contested); background: var(--contested-bg); border: 1px solid var(--contested-border);
+      border-radius: 999px; padding: 0.3rem 0.85rem;
+    }
+    .placeholder-room h2 { font-size: 1.5rem; font-weight: 800; color: var(--navy); letter-spacing: -0.02em; }
+    .placeholder-room p { color: var(--slate); max-width: 460px; }
+    .placeholder-spine { display: flex; align-items: center; gap: 0; margin-top: 1.4rem; opacity: .55; }
+    .placeholder-spine .node { width: 14px; height: 14px; border-radius: 50%; background: var(--slate-2); }
+    .placeholder-spine .line { width: 60px; height: 2px; background: var(--border); }
+
+    @media (max-width: 760px) {
+      .cards { grid-template-columns: 1fr; }
+      .hero-title { font-size: 2.3rem; }
+      .arg-cols { grid-template-columns: 1fr; }
+      .room-head { padding-left: 5.75rem; }
+    }
+
+    /* ================================================================== */
+    /* Figma "Claims & Defenses" restyle — scoped to the Propositions room */
+    /* ================================================================== */
+    #room-propositions {
+      /* muted, earthy status palette (overrides global tokens in-scope) */
+      --supported:  #3f9d6d; --supported-bg:  #eef6f0; --supported-border:  #c8e3d3;
+      --contested:  #d9942b; --contested-bg:  #fbf3e2; --contested-border:  #efd9af;
+      --undermined: #cf4a45; --undermined-bg: #fbeceb; --undermined-border: #f1c8c5;
+      --missing:    #908d82; --missing-bg:    #f3f1ea; --missing-border:    #ddd9cc;
+      --border:     #ddd9cc;
+      --ink:        #1c1b18;
+      --paper-2:    #f7f5ee;
+      --radius-sm:  3px;
+      --mono: "SFMono-Regular", "JetBrains Mono", "Roboto Mono", Consolas, "Liberation Mono", Menlo, monospace;
+      background: #f1efe7; /* paper / cream canvas */
+    }
+
+    /* Click-any-row hint (mono motif) */
+    #room-propositions .row-hint {
+      font-family: var(--mono);
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--slate-2); margin: -0.2rem 0 0.7rem;
+    }
+
+    /* Card: coloured TOP border per status (replaces the left accent) */
+    #room-propositions .prop-card {
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--border);
+    }
+    #room-propositions .prop-card.status-supported  { border-top-color: var(--supported);  border-left: 1px solid var(--border); }
+    #room-propositions .prop-card.status-contested  { border-top-color: var(--contested);  border-left: 1px solid var(--border); }
+    #room-propositions .prop-card.status-undermined { border-top-color: var(--undermined); border-left: 1px solid var(--border); }
+    #room-propositions .prop-card.status-MISSING    { border-top-color: var(--missing);    border-left: 1px solid var(--border); }
+    #room-propositions .card-header { gap: 1rem; }
+    #room-propositions .card-right  { gap: 0.55rem; }
+
+    /* CLAIM / DEFENSE black pill */
+    #room-propositions .kind-pill {
+      display: inline-flex; align-items: center; gap: 0.32rem;
+      background: var(--ink); color: #fff;
+      font-family: var(--mono); font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.2rem 0.5rem; border-radius: 3px;
+    }
+    #room-propositions .kind-pill svg { width: 11px; height: 11px; }
+    #room-propositions .prop-type-badge { font-family: var(--mono); background: var(--paper-2); border: 1px solid var(--border); color: var(--slate); }
+    #room-propositions .prop-id { font-family: var(--mono); }
+    #room-propositions .prop-text { font-size: 0.95rem; font-weight: 600; color: var(--ink); line-height: 1.45; }
+
+    /* Score box (right side) */
+    #room-propositions .score-box {
+      flex-shrink: 0; width: 86px; min-height: 62px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border-radius: 4px; color: #fff; line-height: 1; padding: 0.45rem 0.4rem; align-self: flex-start;
+    }
+    #room-propositions .score-box .num { font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em; }
+    #room-propositions .score-box .lbl { font-family: var(--mono); font-size: 0.56rem; font-weight: 700; letter-spacing: 0.1em; margin-top: 0.3rem; }
+    #room-propositions .score-box.supported  { background: var(--supported); }
+    #room-propositions .score-box.contested  { background: var(--contested); }
+    #room-propositions .score-box.undermined { background: var(--undermined); }
+    #room-propositions .score-box.MISSING    { background: var(--missing); }
+
+    /* Evidence Map (tiles + segmented bar + S/U/N/M legend) */
+    #room-propositions .evidence-map { margin-top: 0.85rem; }
+    #room-propositions .map-title { font-family: var(--mono); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--slate-2); margin-bottom: 0.45rem; }
+    #room-propositions .map-tiles { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 0.6rem; }
+    #room-propositions .ev-tile { width: 20px; height: 20px; border-radius: 3px; cursor: default; transition: transform .1s ease; }
+    #room-propositions .ev-tile:hover { transform: scale(1.15); }
+    #room-propositions .ev-tile.supportive { background: var(--supported); }
+    #room-propositions .ev-tile.adverse    { background: var(--undermined); }
+    #room-propositions .ev-tile.neutral    { background: var(--contested); }
+    #room-propositions .ev-tile.missing    { background: transparent; border: 1.5px dashed var(--slate-2); }
+    #room-propositions .map-more { font-size: 0.7rem; color: var(--slate-2); margin-left: 0.15rem; }
+    #room-propositions .map-bar-row { display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; }
+    #room-propositions .seg-bar { flex: 1; min-width: 140px; height: 8px; border-radius: 4px; overflow: hidden; display: flex; background: var(--missing-bg); }
+    #room-propositions .seg { height: 100%; }
+    #room-propositions .seg.s { background: var(--supported); }
+    #room-propositions .seg.n { background: var(--contested); }
+    #room-propositions .seg.u { background: var(--undermined); }
+    #room-propositions .seg.m { background: #d8d4c7; }
+    #room-propositions .map-legend { display: flex; gap: 0.7rem; flex-shrink: 0; }
+    #room-propositions .leg { display: flex; align-items: center; gap: 0.3rem; font-family: var(--mono); font-size: 0.66rem; font-weight: 700; color: var(--slate); }
+    #room-propositions .leg .sw { width: 9px; height: 9px; border-radius: 2px; }
+    #room-propositions .leg .sw.s { background: var(--supported); }
+    #room-propositions .leg .sw.n { background: var(--contested); }
+    #room-propositions .leg .sw.u { background: var(--undermined); }
+    #room-propositions .leg .sw.m { background: #d8d4c7; }
+
+    /* Grouped evidence drawer */
+    #room-propositions .ev-group { border-radius: 5px; padding: 0.65rem 0.8rem; margin-bottom: 0.6rem; }
+    #room-propositions .ev-group:last-child { margin-bottom: 0; }
+    #room-propositions .ev-group.supportive { background: var(--supported-bg); }
+    #room-propositions .ev-group.adverse    { background: var(--undermined-bg); }
+    #room-propositions .ev-group.neutral    { background: var(--missing-bg); }
+    #room-propositions .ev-group-head { display: flex; align-items: center; gap: 0.4rem; font-family: var(--mono); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.4rem; }
+    #room-propositions .ev-group-head .sw { width: 10px; height: 10px; border-radius: 2px; }
+    #room-propositions .ev-group.supportive .ev-group-head { color: var(--supported); }
+    #room-propositions .ev-group.supportive .ev-group-head .sw { background: var(--supported); }
+    #room-propositions .ev-group.adverse .ev-group-head { color: var(--undermined); }
+    #room-propositions .ev-group.adverse .ev-group-head .sw { background: var(--undermined); }
+    #room-propositions .ev-group.neutral .ev-group-head { color: var(--slate); }
+    #room-propositions .ev-group.neutral .ev-group-head .sw { background: var(--missing); }
+    #room-propositions .ev-row { display: flex; gap: 0.55rem; padding: 0.55rem 0; border-top: 1px solid rgba(40,38,30,.07); }
+    #room-propositions .ev-row:first-of-type { border-top: none; padding-top: 0.1rem; }
+    #room-propositions .ev-doc-icon { flex-shrink: 0; color: var(--slate-2); width: 16px; height: 16px; margin-top: 0.1rem; }
+    #room-propositions .ev-row-main { flex: 1; min-width: 0; }
+    #room-propositions .ev-row-title { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
+    #room-propositions .ev-row-sub { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 0.12rem; }
+    #room-propositions .ev-group.supportive .ev-row-sub { color: var(--supported); }
+    #room-propositions .ev-group.adverse .ev-row-sub    { color: var(--undermined); }
+    #room-propositions .ev-group.neutral .ev-row-sub    { color: var(--slate-2); }
+
+    /* Evidence-tile hover tooltip (appended to <body>) */
+    #ev-tooltip {
+      position: fixed; z-index: 1000; pointer-events: none;
+      background: #1c1b18; color: #fff;
+      font-family: "SFMono-Regular", "JetBrains Mono", "Roboto Mono", Consolas, Menlo, monospace;
+      font-size: 0.68rem; letter-spacing: 0.02em; line-height: 1.35;
+      padding: 0.32rem 0.55rem; border-radius: 4px;
+      box-shadow: 0 4px 10px -2px rgba(40,38,30,.4); max-width: 280px;
+      opacity: 0; transform: translateY(3px); transition: opacity .12s ease, transform .12s ease;
+    }
+    #ev-tooltip.show { opacity: 1; transform: translateY(0); }
+    #ev-tooltip .tip-rel { display: inline-block; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-right: 0.4rem; }
+    #ev-tooltip .tip-rel.supportive { color: #7ee0aa; }
+    #ev-tooltip .tip-rel.adverse    { color: #f3a3a0; }
+    #ev-tooltip .tip-rel.neutral    { color: #ecc98a; }
+
+    /* ================================================================== */
+    /* Claims room: timeline sidebar | matrix | evidence side panel        */
+    /* ================================================================== */
+    #room-propositions .room-head .tl-toggle {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
+      color: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      padding: 0.4rem 0.7rem; border-radius: 8px; transition: background .15s, color .15s;
+    }
+    #room-propositions .room-head .tl-toggle:hover { background: rgba(255,255,255,.18); }
+    #room-propositions .room-head .tl-toggle.active { background: #fff; color: var(--ink); border-color: #fff; }
+
+    #room-propositions .claims-layout { display: flex; align-items: flex-start; gap: 1.25rem; }
+    #room-propositions .claims-main { flex: 1 1 auto; min-width: 0; }
+
+    /* Left timeline column — in-flow, expands the layout left (no overlay) */
+    #room-propositions .timeline-sidebar {
+      flex: 0 0 0; width: 0; overflow: hidden; opacity: 0; padding: 0;
+      position: sticky; top: 1rem; align-self: flex-start;
+      max-height: calc(100vh - 2rem); overflow-y: auto;
+      background: var(--white); border: 1px solid var(--border); border-top: 4px solid var(--ink);
+      border-radius: 6px;
+      transition: flex-basis .25s ease, width .25s ease, opacity .2s ease, padding .25s ease;
+    }
+    #room-propositions .timeline-sidebar.open { flex: 0 0 260px; width: 260px; opacity: 1; padding: 1rem 1.1rem; }
+    #room-propositions .tl-close { background: none; border: none; font-size: 1.3rem; line-height: 1; color: var(--slate); cursor: pointer; padding: 0 0.2rem; }
+    #room-propositions .tl-close:hover { color: var(--ink); }
+    #room-propositions .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-family: var(--mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); margin-bottom: 0.55rem; white-space: nowrap; }
+    #room-propositions .tl-tag { font-size: 0.54rem; color: var(--contested); background: var(--contested-bg); border: 1px solid var(--contested-border); border-radius: 999px; padding: 0.05rem 0.4rem; letter-spacing: 0.08em; }
+    #room-propositions .tl-note { font-size: 0.76rem; color: var(--slate); line-height: 1.5; margin-bottom: 1rem; }
+    #room-propositions .tl-spine { list-style: none; position: relative; padding-left: 1rem; }
+    #room-propositions .tl-spine::before { content: ""; position: absolute; left: 4px; top: 5px; bottom: 5px; width: 2px; background: var(--border); }
+    #room-propositions .tl-spine li { position: relative; margin-bottom: 0.85rem; }
+    #room-propositions .tl-spine li:last-child { margin-bottom: 0; }
+    #room-propositions .tl-dot { position: absolute; left: -1rem; top: 3px; width: 9px; height: 9px; border-radius: 50%; background: var(--slate-2); border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--border); }
+    #room-propositions .tl-item { font-size: 0.8rem; color: var(--ink); font-weight: 600; }
+    #room-propositions .tl-item small { display: block; font-family: var(--mono); font-size: 0.58rem; font-weight: 500; color: var(--slate-2); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.1rem; }
+
+    /* Card selection states (no more inline drawer) */
+    #room-propositions .prop-card.selected { box-shadow: 0 0 0 2px var(--ink), var(--shadow-md); }
+    #room-propositions .prop-card.flash { box-shadow: 0 0 0 3px var(--contested); }
+    #room-propositions .expand-icon { transition: transform .15s, color .15s; }
+    #room-propositions .prop-card.selected .expand-icon { transform: translateX(2px); color: var(--ink); }
+
+    /* Evidence side panel — sticky column to the RIGHT of the claims list */
+    #room-propositions .evidence-panel {
+      flex: 0 0 0; width: 0; overflow: hidden;
+      position: sticky; top: 1rem; align-self: flex-start;
+      max-height: calc(100vh - 2rem); overflow-y: auto;
+      background: var(--white); border: 1px solid var(--border); border-top: 4px solid var(--ink); border-radius: 6px;
+      transition: flex-basis .25s ease, width .25s ease;
+    }
+    #room-propositions .evidence-panel.open { flex: 0 0 372px; width: 372px; }
+    #room-propositions .ep-content { padding: 1rem 1.1rem 1.25rem; }
+    #room-propositions .ep-top { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.7rem; }
+    #room-propositions .ep-score { font-family: var(--mono); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; color: #fff; padding: 0.22rem 0.5rem; border-radius: 3px; }
+    #room-propositions .ep-score.supported  { background: var(--supported); }
+    #room-propositions .ep-score.contested  { background: var(--contested); }
+    #room-propositions .ep-score.undermined { background: var(--undermined); }
+    #room-propositions .ep-score.MISSING    { background: var(--missing); }
+    #room-propositions .ep-close { margin-left: auto; background: none; border: none; font-size: 1.45rem; line-height: 1; color: var(--slate); cursor: pointer; padding: 0 0.2rem; }
+    #room-propositions .ep-close:hover { color: var(--ink); }
+    #room-propositions .ep-title { font-size: 0.95rem; font-weight: 700; color: var(--ink); line-height: 1.4; margin-bottom: 0.3rem; }
+    #room-propositions .ep-content .prop-source { margin-bottom: 0.2rem; }
+
+    /* Keep panels side-by-side on desktop; only stack on small/mobile widths
+       where three columns genuinely can't fit. Prevents the panels from
+       "jumping" to the top/bottom when the window is resized. */
+    @media (max-width: 900px) {
+      #room-propositions .claims-layout { flex-wrap: wrap; }
+      #room-propositions .timeline-sidebar,
+      #room-propositions .evidence-panel { position: static; max-height: none; }
+      #room-propositions .timeline-sidebar.open,
+      #room-propositions .evidence-panel.open { flex-basis: 100%; width: 100%; }
+      #room-propositions .claims-main { flex-basis: 100%; min-width: 0; }
+    }
+
+    /* ================================================================== */
+    /* HERO overhaul — matches the Claims paper/ink/mono aesthetic          */
+    /* ================================================================== */
+    #hero {
+      position: relative;
+      background:
+        radial-gradient(1100px 520px at 50% -10%, #f6f2e6 0%, rgba(246,242,230,0) 60%),
+        var(--paper);
+    }
+    /* Second Chair brand lockup, top-left of the front page */
+    .hero-logo {
+      position: absolute; top: 1.6rem; left: 1.9rem; z-index: 2;
+      display: flex; align-items: center; gap: 0.7rem;
+    }
+    .hero-logo .sc-mark { height: 46px; width: auto; display: block; }
+    .hero-logo .sc-word {
+      display: flex; flex-direction: column;
+      font-family: var(--mono); font-size: 0.95rem; font-weight: 700;
+      letter-spacing: 0.32em; text-transform: uppercase;
+      color: var(--ink); line-height: 1.12;
+    }
+    @media (max-width: 760px) {
+      .hero-logo { top: 1rem; left: 1rem; gap: 0.5rem; }
+      .hero-logo .sc-mark { height: 36px; }
+      .hero-logo .sc-word { font-size: 0.8rem; letter-spacing: 0.26em; }
+    }
+    #hero .hero-eyebrow { font-family: var(--mono); color: var(--slate-2); letter-spacing: 0.2em; }
+    #hero .hero-eyebrow b { color: var(--ink); }
+    #hero .hero-title { color: var(--ink); }
+    #hero .hero-title .grad {
+      background: none; -webkit-background-clip: border-box; background-clip: border-box;
+      color: #3f9d6d; -webkit-text-fill-color: #3f9d6d;
+    }
+    #hero .context-row { background: var(--white); border-color: var(--border); color: var(--slate); font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.03em; box-shadow: var(--shadow); }
+    #hero .context-row .eye { background: radial-gradient(circle at 30% 30%, #5cb98a, #3f9d6d); box-shadow: 0 0 0 4px rgba(63,157,109,.18); }
+    #hero .context-row b { color: var(--ink); }
+    #hero .context-row::after { background: linear-gradient(110deg, transparent 30%, rgba(63,157,109,.18) 50%, transparent 70%); }
+    #hero .opt-card { background: var(--white); border: 1px solid var(--border); border-top: 4px solid var(--ink); border-radius: 6px; }
+    #hero .opt-card::before { display: none; }
+    #hero .opt-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--border); border-top-color: #3f9d6d; }
+    #hero .opt-ico { background: var(--paper-2); color: var(--ink); border: 1px solid var(--border); border-radius: 6px; }
+    #hero .opt-name { color: var(--ink); }
+    #hero .opt-stat { font-family: var(--mono); color: var(--ink); }
+    #hero .opt-stat .muted { color: var(--slate-2); }
+    #hero .composer { border-color: var(--border); border-radius: 10px; }
+    #hero .composer:focus-within { border-color: var(--ink); box-shadow: 0 0 0 4px rgba(28,27,24,.08); }
+    #hero .send-btn { background: var(--ink); border-radius: 8px; }
+    #hero .send-btn:hover { filter: brightness(1.4); }
+    #hero .starter { background: var(--white); border-color: var(--border); color: var(--slate); }
+    #hero .starter:hover { border-color: var(--ink); background: var(--paper-2); color: var(--ink); }
+
+    /* ================================================================== */
+    /* Claims room: full-width matrix + paper/ink/mono header              */
+    /* ================================================================== */
+    /* Full-width body so the matrix fills the space under the header
+       (was centered at 1280px, leaving a big empty band on wide screens).
+       Left padding clears the fixed rail and aligns with the header title. */
+    #room-propositions .room-body {
+      max-width: none;
+      margin: 0;
+      padding: 0.7rem 2rem 4rem 5.75rem;
+    }
+    #room-propositions .tabs { margin-bottom: 1rem; }
+    #room-propositions .filters-bar { margin-bottom: 0.85rem; }
+
+    /* Header restyled to the paper / ink / mono aesthetic */
+    #room-propositions .room-head {
+      background: var(--paper);
+      color: var(--ink);
+      border-bottom: 3px solid var(--ink);
+    }
+    #room-propositions .room-head h1 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+    #room-propositions .room-head .sub {
+      font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate-2); margin-top: 0.2rem;
+    }
+    #room-propositions .room-head .tl-toggle {
+      background: var(--white); border: 1px solid var(--border); color: var(--ink);
+    }
+    #room-propositions .room-head .tl-toggle:hover { background: var(--paper-2); }
+    #room-propositions .room-head .tl-toggle.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+    /* Stat pills + readiness restyled for the light header */
+    #room-propositions .room-head .stat-pill { background: var(--white); border: 1px solid var(--border); }
+    #room-propositions .room-head .stat-pill .count { color: var(--ink); }
+    #room-propositions .room-head .stat-pill .lbl { color: var(--slate); font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.04em; text-transform: uppercase; }
+    #room-propositions .room-head .readiness-mini .score { color: var(--ink); }
+    #room-propositions .room-head .readiness-bar { background: var(--border); }
+    #room-propositions .room-head .readiness-fill { background: linear-gradient(90deg, #3f9d6d, #5cb98a); }
+
+    /* Recoverable Damages: same paper/ink/mono header + cream canvas */
+    #room-damages { background: var(--paper); }
+    #room-damages .room-head { background: var(--paper); color: var(--ink); border-bottom: 3px solid var(--ink); }
+    #room-damages .room-head h1 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+    #room-damages .room-head .sub {
+      font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate-2); margin-top: 0.2rem;
+    }
+    #room-damages .placeholder-room h2 { color: var(--ink); }
     /* ---- Argumentation ---- */
     .arg-intro { font-size: 0.86rem; color: var(--slate); margin-bottom: 1.4rem; max-width: 720px; line-height: 1.55; }
     .arg-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
@@ -928,29 +1211,25 @@
 <!-- ============================== RAIL ============================== -->
 <nav id="rail">
   <div class="rail-brand" id="rail-home" title="Home">PM</div>
-  <button class="rail-btn" data-room="timeline">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-    <span class="tip">Timeline</span>
-  </button>
   <button class="rail-btn" data-room="propositions">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg>
-    <span class="tip">Propositions</span>
+    <span class="tip">Claims &amp; Evidential Foundations</span>
+  </button>
+  <button class="rail-btn" data-room="damages">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    <span class="tip">Recoverable Damages</span>
   </button>
   <button class="rail-btn" data-room="argumentation">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.7 7.6 11 15.6M16.3 7.6 13 15.6"/></svg>
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 9h10M7 12h6M8 17l-3 3v-3"/></svg>
     <span class="tip">Argumentation</span>
   </button>
   <button class="rail-btn" data-room="graph">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="9" r="2"/><circle cx="9" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M6.8 6.7 17 8.6M7.3 7.6 8.6 16M10.8 17.3 15.4 17.5M17.6 16.1 18.5 11"/></svg>
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="9" cy="18" r="2.5"/><path d="M8.2 7.2l7.6 1M8.6 8.4l.8 7.2"/></svg>
     <span class="tip">Case Graph</span>
   </button>
   <button class="rail-btn" data-room="builder">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 11h7v9h-7zM4 14h7v6H4z"/></svg>
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-5 7 5v12"/><rect x="9.5" y="13" width="5" height="8"/></svg>
     <span class="tip">Case Builder</span>
-  </button>
-  <button class="rail-btn" data-room="quantum">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19V9M9 19V5M14 19v-7M19 19V8"/></svg>
-    <span class="tip">Quantum</span>
   </button>
 </nav>
 
@@ -980,67 +1259,75 @@
 </aside>
 
 <!-- Shared source-citation popover (positioned by JS near the clicked icon) -->
-<div id="cite-pop" class="cite-pop" role="tooltip"></div>
 
 <!-- ============================== HERO ============================= -->
 <section id="hero" class="view active">
+
+  <!-- Second Chair logo (top-left) -->
+  <div class="hero-logo" aria-label="Second Chair">
+    <svg class="sc-mark" viewBox="0 0 48 58" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="scGrad" x1="2" y1="2" x2="46" y2="56" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#5cb98a"/>
+          <stop offset="1" stop-color="#2f7d56"/>
+        </linearGradient>
+      </defs>
+      <g stroke="url(#scGrad)" stroke-width="3">
+        <rect x="3"  y="4"  width="16" height="34"/>
+        <rect x="14" y="11" width="16" height="34"/>
+        <rect x="25" y="18" width="16" height="34"/>
+        <path d="M3 24 H19"/>
+        <path d="M14 31 H30"/>
+        <path d="M25 38 H41"/>
+      </g>
+    </svg>
+    <span class="sc-word"><span>Second</span><span>Chair</span></span>
+  </div>
+
   <div class="hero-inner">
-    <div class="hero-intro">
-    <div class="hero-eyebrow">Proof Matrix · <b>Second Chair</b></div>
     <h1 class="hero-title">What do you want to know<br><span class="grad">about this case?</span></h1>
 
     <div class="context-row" id="context-row">
       <span class="eye"></span>
       Second Chair sees
-      <b id="ctx-props">…</b> propositions <span class="sep">·</span>
+      <b id="ctx-props">…</b> claims <span class="sep">·</span>
       the bundle <span class="sep">·</span>
       <b id="ctx-eu">8</b> EU sources <span class="sep">·</span>
       <b id="ctx-ready">…</b> trial readiness
     </div>
 
     <div class="cards" id="cards">
-      <button class="opt-card" data-room="timeline">
-        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
-        <div class="opt-name">Timeline</div>
-        <div class="opt-desc">Chronology of the dispute.</div>
-        <div class="opt-stat" id="stat-timeline"><span class="muted">placeholder</span></div>
-      </button>
       <button class="opt-card" data-room="propositions">
         <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></span>
-        <div class="opt-name">Propositions</div>
-        <div class="opt-desc">The pleaded allegations &amp; denials, evidence-coded.</div>
+        <div class="opt-name">Claims &amp; Evidential Foundations</div>
+        <div class="opt-desc">What's claimed — the pleaded allegations &amp; denials, evidence-coded.</div>
         <div class="opt-stat" id="stat-propositions"><span class="muted">loading…</span></div>
       </button>
+      <button class="opt-card" data-room="damages">
+        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+        <div class="opt-name">Recoverable Damages</div>
+        <div class="opt-desc">Heads of loss and quantum — compare valuation methodologies.</div>
+        <div class="opt-stat" id="stat-damages"><span class="muted">quantum</span></div>
+      </button>
       <button class="opt-card" data-room="argumentation">
-        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.7 7.6 11 15.6M16.3 7.6 13 15.6"/></svg></span>
+        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 9h10M7 12h6"/></svg></span>
         <div class="opt-name">Argumentation</div>
-        <div class="opt-desc">Allegation vs defence, clash by clash.</div>
-        <div class="opt-stat" id="stat-argumentation"><span class="muted">loading…</span></div>
+        <div class="opt-desc">Allegation vs defence, side by side — plus AI-drafted arguments.</div>
+        <div class="opt-stat" id="stat-argumentation"><span class="muted">case theory</span></div>
       </button>
       <button class="opt-card" data-room="graph">
-        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="9" r="2"/><circle cx="9" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M6.8 6.7 17 8.6M7.3 7.6 8.6 16M10.8 17.3 15.4 17.5M17.6 16.1 18.5 11"/></svg></span>
+        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="9" cy="18" r="2.5"/></svg></span>
         <div class="opt-name">Case Graph</div>
-        <div class="opt-desc">Pleadings wired to the evidence that proves or breaks them.</div>
-        <div class="opt-stat" id="stat-graph"><span class="muted">loading…</span></div>
+        <div class="opt-desc">Pleadings and evidence as a network — weak points and clusters.</div>
+        <div class="opt-stat" id="stat-graph"><span class="muted">evidence map</span></div>
       </button>
       <button class="opt-card" data-room="builder">
-        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 11h7v9h-7zM4 14h7v6H4z"/></svg></span>
+        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-5 7 5v12"/></svg></span>
         <div class="opt-name">Case Builder</div>
-        <div class="opt-desc">Drag propositions into a strategy, stress-test it, export the plan.</div>
-        <div class="opt-stat" id="stat-builder"><span class="muted">build &amp; stress-test</span></div>
-      </button>
-      <button class="opt-card" data-room="quantum">
-        <span class="opt-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19V9M9 19V5M14 19v-7M19 19V8"/></svg></span>
-        <div class="opt-name">Quantum</div>
-        <div class="opt-desc">Compare damages valuation methods, side by side, linked to the proof.</div>
-        <div class="opt-stat" id="stat-quantum"><span class="muted">damages dashboard</span></div>
+        <div class="opt-desc">Assemble a strategy, stress-test it, export the plan.</div>
+        <div class="opt-stat" id="stat-builder"><span class="muted">strategy</span></div>
       </button>
     </div>
-    </div><!-- /.hero-intro -->
-
-    <!-- Conversation thread: hidden on the landing, fills the screen once the
-         chatbox expands into chat mode (see #hero.chatting CSS). -->
-    <div id="hero-thread" class="hero-thread"></div>
 
     <div class="composer" id="hero-composer">
       <textarea id="hero-input" rows="1" placeholder="Ask Second Chair about this case…" aria-label="Ask Second Chair"></textarea>
@@ -1066,23 +1353,17 @@
   </div>
 </section>
 
-<!-- ========================= ROOM: TIMELINE ======================== -->
-<section id="room-timeline" class="view room">
-  <div class="room-head">
-    <div><h1>Timeline</h1><div class="sub">Chronology of the dispute</div></div>
+<!-- ============================== CHAT ============================= -->
+<section id="chatview" class="view">
+  <div class="chat-wrap">
+    <div id="thread"></div>
   </div>
-  <div class="room-body">
-    <div class="placeholder-room">
-      <span class="placeholder-badge">Placeholder</span>
-      <h2>Timeline coming soon</h2>
-      <p>This is a <strong>Placeholder</strong>. The case chronology — pleadings,
-         witness statements and evidence plotted by date — will live here.</p>
-      <div class="placeholder-spine">
-        <span class="node"></span><span class="line"></span>
-        <span class="node"></span><span class="line"></span>
-        <span class="node"></span><span class="line"></span>
-        <span class="node"></span>
-      </div>
+  <div class="chat-dock">
+    <div class="composer" id="chat-composer">
+      <textarea id="chat-input" rows="1" placeholder="Ask Second Chair…" aria-label="Ask Second Chair"></textarea>
+      <button class="send-btn" id="chat-send" aria-label="Send">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
     </div>
   </div>
 </section>
@@ -1090,7 +1371,11 @@
 <!-- ======================= ROOM: PROPOSITIONS ====================== -->
 <section id="room-propositions" class="view room">
   <div class="room-head">
-    <div><h1>Propositions</h1><div class="sub">Pleading-to-proof matrix</div></div>
+    <button class="tl-toggle" id="tl-toggle" title="Toggle timeline" aria-pressed="false">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span>Timeline</span>
+    </button>
+    <div><h1>Claims &amp; Evidential Foundations</h1><div class="sub">Pleading-to-proof matrix</div></div>
     <div class="spacer"></div>
     <div class="stat-pill"><span class="dot" style="background:#16a34a"></span><span class="count" id="count-supported">0</span><span class="lbl">Supported</span></div>
     <div class="stat-pill"><span class="dot" style="background:#d97706"></span><span class="count" id="count-contested">0</span><span class="lbl">Contested</span></div>
@@ -1102,6 +1387,26 @@
     </div>
   </div>
   <div class="room-body">
+   <div class="claims-layout">
+
+    <!-- Left: timeline sidebar (toggled) -->
+    <aside class="timeline-sidebar" id="timeline-sidebar">
+      <div class="tl-head">
+        <span>Timeline <span class="tl-tag">Placeholder</span></span>
+        <button class="tl-close" id="tl-close" aria-label="Close timeline">&times;</button>
+      </div>
+      <p class="tl-note">The case chronology — pleadings, witness statements and
+         evidence plotted by date — will live here.</p>
+      <ol class="tl-spine">
+        <li><span class="tl-dot"></span><div class="tl-item">Contract signed<small>placeholder date</small></div></li>
+        <li><span class="tl-dot"></span><div class="tl-item">Alleged breach<small>placeholder date</small></div></li>
+        <li><span class="tl-dot"></span><div class="tl-item">Proceedings issued<small>placeholder date</small></div></li>
+        <li><span class="tl-dot"></span><div class="tl-item">Witness statements<small>placeholder date</small></div></li>
+      </ol>
+    </aside>
+
+    <!-- Centre: the matrix -->
+    <div class="claims-main">
     <div id="loading-state">
       <div class="skeleton skel-card"></div><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div>
     </div>
@@ -1116,10 +1421,11 @@
       </nav>
 
       <div id="tab-matrix">
+        <div class="row-hint">Click any row for evidence breakdown</div>
         <div class="filters-bar">
           <div class="search-wrap">
             <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="search-input" class="search-input" placeholder="Search propositions..." />
+            <input type="text" id="search-input" class="search-input" placeholder="Search claims..." />
           </div>
           <div class="filter-group" id="status-filters">
             <button class="filter-btn active" data-status="all">All</button>
@@ -1134,7 +1440,7 @@
       </div>
 
       <div id="tab-risk" style="display:none">
-        <div class="risk-intro">Showing only <strong>Missing</strong> and <strong>Undermined</strong> propositions, sorted by risk — the areas needing further witness, expert or documentary evidence.</div>
+        <div class="risk-intro">Showing only <strong>Missing</strong> and <strong>Undermined</strong> claims, sorted by risk — the areas needing further witness, expert or documentary evidence.</div>
         <div class="filters-bar">
           <div class="search-wrap">
             <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1158,7 +1464,58 @@
         </div>
       </section>
     </div>
+    </div><!-- /claims-main -->
+
+    <!-- Right: evidence breakdown side panel -->
+    <aside class="evidence-panel" id="evidence-panel">
+      <div class="ep-empty" id="evidence-panel-empty">
+        <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p>Select a claim or defence to see its evidence breakdown.</p>
+      </div>
+      <div class="ep-content" id="evidence-panel-content" style="display:none"></div>
+    </aside>
+
+   </div><!-- /claims-layout -->
   </div>
+</section>
+
+<!-- ========================= ROOM: DAMAGES ========================= -->
+<section id="room-damages" class="view room">
+  <div class="room-head">
+    <div><h1>Recoverable Damages</h1><div class="sub">Compare damages valuation methodologies before commissioning the full report</div></div>
+    <div class="spacer"></div>
+    <button class="gc-btn" id="quantum-refresh" title="Regenerate from the case">↻ Regenerate</button>
+    <button class="gc-btn" id="quantum-report" style="color:#fff;background:var(--navy-3);border-color:var(--navy-3)">Request full report</button>
+  </div>
+  <div class="room-body">
+    <div class="q-casebar" id="q-casebar">
+      <div class="q-case-main"><div class="q-case-name" id="q-case-name">—</div><div class="q-case-type" id="q-case-type"></div></div>
+      <div class="q-case-metrics" id="q-case-metrics"></div>
+    </div>
+    <div id="q-loading"><div class="skeleton skel-card" style="height:140px"></div><div class="skeleton skel-card" style="height:140px"></div></div>
+    <div class="q-grid" id="q-grid"></div>
+
+    <div class="q-rec" id="q-rec" style="display:none">
+      <div class="q-rec-label">Recommended approach</div>
+      <div class="q-rec-body">
+        <div><div class="q-rec-method" id="q-rec-method"></div><div class="q-rec-rationale" id="q-rec-rationale"></div></div>
+        <div class="q-rec-range"><div class="q-rec-range-label">Realistic range</div><div class="q-rec-range-val" id="q-rec-range"></div></div>
+      </div>
+    </div>
+
+    <p class="q-disclaimer" id="q-disclaimer" style="display:none">
+      <strong>Preliminary analysis only.</strong> These figures are AI-generated estimates produced from the pleaded
+      case to aid triage — they are not a quantum expert's opinion and must not be relied on as a final valuation.
+      Commission a full expert report before relying on any figure.
+    </p>
+  </div>
+
+  <!-- drill-down drawer -->
+  <div class="q-drawer-backdrop" id="q-drawer-backdrop"></div>
+  <aside class="q-drawer" id="q-drawer">
+    <button class="q-drawer-close" id="q-drawer-close" aria-label="Close">×</button>
+    <div id="q-drawer-body"></div>
+  </aside>
 </section>
 
 <!-- ======================= ROOM: ARGUMENTATION ===================== -->
@@ -1307,45 +1664,6 @@
   </div>
 </section>
 
-<!-- ========================= ROOM: QUANTUM ========================= -->
-<section id="room-quantum" class="view room">
-  <div class="room-head">
-    <div><h1>Quantum Assessment</h1><div class="sub">Compare damages valuation methodologies before commissioning the full report</div></div>
-    <div class="spacer"></div>
-    <button class="gc-btn" id="quantum-refresh" title="Regenerate from the case">↻ Regenerate</button>
-    <button class="gc-btn" id="quantum-report" style="color:#fff;background:var(--navy-3);border-color:var(--navy-3)">Request full report</button>
-  </div>
-  <div class="room-body">
-    <div class="q-casebar" id="q-casebar">
-      <div class="q-case-main"><div class="q-case-name" id="q-case-name">—</div><div class="q-case-type" id="q-case-type"></div></div>
-      <div class="q-case-metrics" id="q-case-metrics"></div>
-    </div>
-    <div id="q-loading"><div class="skeleton skel-card" style="height:140px"></div><div class="skeleton skel-card" style="height:140px"></div></div>
-    <div class="q-grid" id="q-grid"></div>
-
-    <div class="q-rec" id="q-rec" style="display:none">
-      <div class="q-rec-label">Recommended approach</div>
-      <div class="q-rec-body">
-        <div><div class="q-rec-method" id="q-rec-method"></div><div class="q-rec-rationale" id="q-rec-rationale"></div></div>
-        <div class="q-rec-range"><div class="q-rec-range-label">Realistic range</div><div class="q-rec-range-val" id="q-rec-range"></div></div>
-      </div>
-    </div>
-
-    <p class="q-disclaimer" id="q-disclaimer" style="display:none">
-      <strong>Preliminary analysis only.</strong> These figures are AI-generated estimates produced from the pleaded
-      case to aid triage — they are not a quantum expert's opinion and must not be relied on as a final valuation.
-      Commission a full expert report before relying on any figure.
-    </p>
-  </div>
-
-  <!-- drill-down drawer -->
-  <div class="q-drawer-backdrop" id="q-drawer-backdrop"></div>
-  <aside class="q-drawer" id="q-drawer">
-    <button class="q-drawer-close" id="q-drawer-close" aria-label="Close">×</button>
-    <div id="q-drawer-body"></div>
-  </aside>
-</section>
-
 <script>
 (function () {
   "use strict";
@@ -1356,7 +1674,6 @@
   let _byId = {};            // prop id -> { status, row }
   let _matrixLoaded = false;
   let _summaryLoaded = false;
-  let _argRendered = false;
   let _activeStatus = "all";
   let _searchQuery = "";
   let _riskSearch = "";
@@ -1364,26 +1681,23 @@
   let _sending = false;
   let _currentView = "hero";
 
-  const ROOMS = ["timeline", "propositions", "argumentation", "graph", "builder", "quantum"];
+  const ROOMS = ["propositions", "argumentation", "graph", "builder", "damages"];
 
   // ------------------------------------------------------------------ routing
   function go(name) {
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     const map = {
-      hero: "hero",
-      timeline: "room-timeline", propositions: "room-propositions",
-      argumentation: "room-argumentation", graph: "room-graph",
-      builder: "room-builder", quantum: "room-quantum",
+      hero: "hero", chat: "chatview",
+      propositions: "room-propositions", damages: "room-damages",
+      argumentation: "room-argumentation", graph: "room-graph", builder: "room-builder",
     };
     $(map[name]).classList.add("active");
     _currentView = name;
 
     const inApp = name !== "hero";
-    const heroChatting = $("hero").classList.contains("chatting");
-    $("rail").classList.toggle("show", inApp || heroChatting);
+    $("rail").classList.toggle("show", inApp);
     const inRoom = ROOMS.includes(name);
     $("orb").classList.toggle("show", inRoom);
-    // Case tray toggle: available in every room (drag propositions onto it).
     $("case-toggle").classList.toggle("show", inRoom);
     if (!inRoom) closeTray();
 
@@ -1394,29 +1708,28 @@
     if (name === "argumentation") { renderArgumentation(); ensureArguments(); }
     if (name === "graph") ensureGraph();
     if (name === "builder") ensureBuilder();
-    if (name === "quantum") ensureQuantum();
+    if (name === "damages") ensureQuantum();
 
     window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
   }
 
-  // Expand the hero composer in place into the chat surface (the chatbox
-  // "extends to the bottom of the screen"); no separate chat view.
-  function enterChat() {
-    if (_currentView !== "hero") go("hero");
-    $("hero").classList.add("chatting");
-    $("rail").classList.add("show");
-    $("orb").classList.remove("show");
-    $("hero-input").focus();
+  // Timeline drawer (within the Claims room) — off-canvas left overlay
+  function setTimeline(open) {
+    $("timeline-sidebar").classList.toggle("open", open);
+    $("tl-toggle").classList.toggle("active", open);
+    $("tl-toggle").setAttribute("aria-pressed", String(open));
   }
-  function exitChat() { $("hero").classList.remove("chatting"); }
+  $("tl-toggle").addEventListener("click", () =>
+    setTimeline(!$("timeline-sidebar").classList.contains("open")));
+  $("tl-close").addEventListener("click", () => setTimeline(false));
 
   // rail + orb + cards wiring
   document.querySelectorAll(".rail-btn").forEach(b =>
     b.addEventListener("click", () => go(b.dataset.room)));
   document.querySelectorAll(".opt-card").forEach(c =>
     c.addEventListener("click", () => go(c.dataset.room)));
-  $("orb").addEventListener("click", () => enterChat());
-  $("rail-home").addEventListener("click", () => { exitChat(); go("hero"); });
+  $("orb").addEventListener("click", () => go("chat"));
+  $("rail-home").addEventListener("click", () => go("hero"));
 
   // ------------------------------------------------------------------ composer
   function wireComposer(inputId, sendId) {
@@ -1436,6 +1749,7 @@
     });
   }
   wireComposer("hero-input", "hero-send");
+  wireComposer("chat-input", "chat-send");
 
   document.querySelectorAll(".starter").forEach(s =>
     s.addEventListener("click", () => sendMessage(s.dataset.q)));
@@ -1443,7 +1757,7 @@
   // ------------------------------------------------------------------ chat
   async function sendMessage(text) {
     if (_sending) return;
-    enterChat();
+    if (_currentView !== "chat") go("chat");
     appendMessage("user", text);
     _chat.push({ role: "user", content: text });
 
@@ -1465,7 +1779,7 @@
       appendMessage("sc", "Second Chair is unreachable. Is the server running on port 8001?", "offline");
     } finally {
       _sending = false;
-      $("hero-input").focus();
+      $("chat-input").focus();
     }
   }
 
@@ -1501,7 +1815,7 @@
 
     wrap.appendChild(av);
     wrap.appendChild(col);
-    $("hero-thread").appendChild(wrap);
+    $("thread").appendChild(wrap);
     wrap.scrollIntoView({ behavior: "smooth", block: "end" });
     return wrap;
   }
@@ -1513,120 +1827,21 @@
       '<div class="msg-avatar">SC</div>' +
       '<div><div class="msg-name">Second Chair</div>' +
       '<div class="msg-body"><span class="typing"><span></span><span></span><span></span></span></div></div>';
-    $("hero-thread").appendChild(wrap);
+    $("thread").appendChild(wrap);
     wrap.scrollIntoView({ behavior: "smooth", block: "end" });
     return wrap;
   }
 
-  // Render a Second Chair reply: markdown -> HTML, then turn [P0003] tokens
-  // into colour-coded, clickable citation chips.
+  // turn [P0003] tokens into colour-coded, clickable chips
   function renderWithCitations(container, text) {
-    container.innerHTML = mdToHtml(text);
-    decorateCitations(container);
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  }
-
-  // Inline markdown on already-escaped text: code, links, bold, italic.
-  function mdInline(s) {
-    const codes = [];
-    s = s.replace(/`([^`]+)`/g, (_, c) => { codes.push(c); return "@@" + (codes.length - 1) + "@@"; });
-    s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,
-      (_, t, u) => `<a href="${u}" target="_blank" rel="noopener">${t}</a>`);
-    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-    s = s.replace(/__([^_]+)__/g, "<strong>$1</strong>");
-    s = s.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-    s = s.replace(/@@(\d+)@@/g, (_, i) => `<code>${codes[+i]}</code>`);
-    return s;
-  }
-
-  // Minimal, self-contained block markdown -> HTML (no external dependency).
-  // Handles headings, fenced code, GFM tables, lists, blockquotes, hr, paragraphs.
-  function mdToHtml(md) {
-    const lines = String(md).replace(/\r\n?/g, "\n").split("\n");
-    const isSep = l => /^\s*\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)+\|?\s*$/.test(l);
-    const row = l => l.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
-    const isBlock = (l, n) =>
-      /^(#{1,6})\s/.test(l) || /^\s*([-*+]|\d+\.)\s/.test(l) || /^```/.test(l) ||
-      /^\s*>/.test(l) || /^\s*([-*_])\1\1+\s*$/.test(l) || (l.includes("|") && isSep(n || ""));
-    let html = "", i = 0;
-    while (i < lines.length) {
-      const line = lines[i];
-      if (!line.trim()) { i++; continue; }
-
-      const fence = line.match(/^```/);
-      if (fence) {
-        i++; const buf = [];
-        while (i < lines.length && !/^```/.test(lines[i])) buf.push(lines[i++]);
-        i++;
-        html += `<pre><code>${escapeHtml(buf.join("\n"))}</code></pre>`; continue;
-      }
-      const h = line.match(/^(#{1,6})\s+(.*)$/);
-      if (h) { const l = h[1].length; html += `<h${l}>${mdInline(escapeHtml(h[2].trim()))}</h${l}>`; i++; continue; }
-      if (/^\s*([-*_])\1\1+\s*$/.test(line)) { html += "<hr>"; i++; continue; }
-
-      if (line.includes("|") && isSep(lines[i + 1] || "")) {
-        const head = row(line); i += 2; let body = "";
-        while (i < lines.length && lines[i].includes("|") && lines[i].trim()) {
-          const c = row(lines[i]);
-          body += "<tr>" + head.map((_, k) => `<td>${mdInline(escapeHtml(c[k] || ""))}</td>`).join("") + "</tr>";
-          i++;
-        }
-        html += `<table><thead><tr>${head.map(x => `<th>${mdInline(escapeHtml(x))}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>`;
-        continue;
-      }
-      if (/^\s*>/.test(line)) {
-        const buf = [];
-        while (i < lines.length && /^\s*>/.test(lines[i])) buf.push(lines[i++].replace(/^\s*>\s?/, ""));
-        html += `<blockquote>${mdInline(escapeHtml(buf.join(" ")))}</blockquote>`; continue;
-      }
-      if (/^\s*[-*+]\s+/.test(line)) {
-        let items = "";
-        while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i]))
-          items += `<li>${mdInline(escapeHtml(lines[i++].replace(/^\s*[-*+]\s+/, "")))}</li>`;
-        html += `<ul>${items}</ul>`; continue;
-      }
-      if (/^\s*\d+\.\s+/.test(line)) {
-        let items = "";
-        while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i]))
-          items += `<li>${mdInline(escapeHtml(lines[i++].replace(/^\s*\d+\.\s+/, "")))}</li>`;
-        html += `<ol>${items}</ol>`; continue;
-      }
-      const buf = [];
-      while (i < lines.length && lines[i].trim() && !isBlock(lines[i], lines[i + 1])) buf.push(lines[i++]);
-      html += `<p>${mdInline(escapeHtml(buf.join("\n"))).replace(/\n/g, "<br>")}</p>`;
-    }
-    return html;
-  }
-
-  // Walk text nodes and swap [P0003] tokens for citation chips (skip code/links).
-  function decorateCitations(root) {
-    const reTest = /\[P\d{3,5}\]/;
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-      acceptNode(n) {
-        for (let p = n.parentNode; p && p !== root; p = p.parentNode)
-          if (p.nodeName === "CODE" || p.nodeName === "PRE" || p.nodeName === "A")
-            return NodeFilter.FILTER_REJECT;
-        return reTest.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
-      }
-    });
-    const targets = [];
-    for (let n = walker.nextNode(); n; n = walker.nextNode()) targets.push(n);
     const re = /\[(P\d{3,5})\]/g;
-    for (const tn of targets) {
-      const text = tn.nodeValue; const frag = document.createDocumentFragment();
-      let last = 0, m; re.lastIndex = 0;
-      while ((m = re.exec(text)) !== null) {
-        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
-        frag.appendChild(makeCite(m[1]));
-        last = re.lastIndex;
-      }
-      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
-      tn.parentNode.replaceChild(frag, tn);
+    let last = 0, m;
+    while ((m = re.exec(text)) !== null) {
+      if (m.index > last) container.appendChild(document.createTextNode(text.slice(last, m.index)));
+      container.appendChild(makeCite(m[1]));
+      last = re.lastIndex;
     }
+    if (last < text.length) container.appendChild(document.createTextNode(text.slice(last)));
   }
 
   function makeCite(pid) {
@@ -1645,42 +1860,27 @@
 
   function openProposition(pid) {
     go("propositions");
+    const entry = _byId[pid];
     setTimeout(() => {
+      if (entry && entry.row) openEvidencePanel(entry.row);
       const card = document.querySelector('.prop-card[data-prop-id="' + pid + '"]');
       if (card) {
-        card.classList.add("open", "flash");
         card.scrollIntoView({ behavior: "smooth", block: "center" });
+        card.classList.add("flash");
         setTimeout(() => card.classList.remove("flash"), 1600);
       }
     }, 120);
   }
 
   // ------------------------------------------------------------------ matrix load
-  // ---- client-side cache (localStorage), best-effort ----
-  const LS_MATRIX = "pm:matrix:v1";
-  function lsGet(key) {
-    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : null; }
-    catch (_) { return null; }
-  }
-  function lsSet(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) { /* quota/unavailable */ }
-  }
-
   async function loadMatrix() {
-    // Stale-while-revalidate: paint instantly from the cached matrix, then
-    // fetch fresh and update. Also keeps the UI usable if the server is down.
-    const cached = lsGet(LS_MATRIX);
-    if (cached && cached.ok && !_matrixLoaded) {
-      try { applyData(cached); } catch (_) { /* fall through to network */ }
-    }
     try {
       const resp = await fetch("api/matrix");
       const data = await resp.json();
-      if (!data.ok) { if (!cached) showError(data.error || "Unknown error."); return; }
-      lsSet(LS_MATRIX, data);
+      if (!data.ok) { showError(data.error || "Unknown error."); return; }
       applyData(data);
     } catch (e) {
-      if (!cached) showError("Could not reach the server. Is case_ui/app.py running on port 8001?");
+      showError("Could not reach the server. Is case_ui/app.py running on port 8001?");
     }
   }
 
@@ -1706,23 +1906,16 @@
     $("content").style.display = "block";
 
     // hero context + card stats
-    const all = matrix.filter(r => r.proposition.party === "Claimant");
-    const den = matrix.filter(r => r.proposition.type === "denial");
     $("ctx-props").textContent  = matrix.length;
     $("ctx-ready").textContent  = summary.trial_readiness + "%";
-    $("stat-propositions").innerHTML = matrix.length + " <span class='muted'>props ·</span> " + summary.trial_readiness + "%";
-    const clashes = matrix.filter(r => (r.proposition.responds_to || (r.proposition.type === "denial"))).length;
-    $("stat-argumentation").innerHTML =
-      matrix.filter(r => r.proposition.type === "allegation").length + " <span class='muted'>v</span> " + den.length +
-      " <span class='muted'>· " + den.length + " denials</span>";
-    $("stat-graph").innerHTML = matrix.length + " <span class='muted'>nodes ·</span> evidence map";
+    $("stat-propositions").innerHTML = matrix.length + " <span class='muted'>claims ·</span> " + summary.trial_readiness + "% <span class='muted'>ready</span>";
     const ctx = $("context-row");
     ctx.classList.add("scan");
     setTimeout(() => ctx.classList.remove("scan"), 1200);
 
     renderMatrix();
     renderRisk();
-    loadCase();   // matrix is ready, so the tray can render saved propositions
+    loadCase();   // matrix ready -> tray can render saved props
   }
 
   function showError(msg) {
@@ -1751,7 +1944,7 @@
 
   function renderMatrix() {
     const rows = filteredMatrix();
-    $("matrix-result-count").textContent = rows.length + " of " + _matrix.length + " propositions";
+    $("matrix-result-count").textContent = rows.length + " of " + _matrix.length + " claims";
     const list = $("matrix-list");
     list.innerHTML = "";
     if (rows.length === 0) { list.innerHTML = '<p style="color:var(--slate-2);font-size:.87rem;padding:.5rem 0">No propositions match this filter.</p>'; return; }
@@ -1776,81 +1969,240 @@
 
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ""; }
 
-  // ------------------------------------------------------------------ source citations
-  // A proposition's source is tucked behind a small icon to avoid clutter; the
-  // full citation (doc, page, paragraph + pleaded quote) reveals on hover/click.
-  const _citePop = $("cite-pop");
-  let _citePinned = null;  // button whose popover is click-pinned open, if any
+  // ---- Figma restyle: score box + evidence map + grouped drawer ----
 
-  function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+  // Status → score-box label + colour class (kept in lock-step with status).
+  const STATUS_BAND = {
+    supported:  { label: "STRONG",   cls: "supported"  },
+    contested:  { label: "MODERATE", cls: "contested"  },
+    undermined: { label: "WEAK",     cls: "undermined" },
+    MISSING:    { label: "MISSING",  cls: "MISSING"    },
+  };
 
-  function buildCiteButton(source, quote, quoteOk) {
-    const s = source || {};
-    const hasLoc = s.doc_id || s.page || s.paragraph;
-    if (!hasLoc && !quote) return null;  // nothing to cite
+  const SCALES_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M12 3v18M7 21h10M5 7h14M5 7l-2.5 6a3 3 0 0 0 5 0L5 7zm14 0l-2.5 6a3 3 0 0 0 5 0L19 7zM12 3l7 4M12 3L5 7"/></svg>';
+  const DOC_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
 
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "cite-btn";
-    btn.title = "View source";
-    btn.setAttribute("aria-label", "View source citation");
-    // quote/document icon
-    btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h6"/></svg>';
-
-    const parts = ['<div class="cite-pop-label">Source</div>'];
-    const rows = [];
-    if (s.doc_id) rows.push('<div class="cite-pop-row">' + esc(s.doc_id) + '</div>');
-    const loc = [s.page ? "Page " + esc(s.page) : null, s.paragraph ? "¶ " + esc(s.paragraph) : null].filter(Boolean).join("  ·  ");
-    if (loc) rows.push('<div class="cite-pop-row"><span class="k"></span>' + loc + '</div>');
-    if (!rows.length) rows.push('<div class="cite-pop-empty">No document reference recorded.</div>');
-    parts.push(rows.join(""));
-    if (quote) parts.push('<div class="cite-pop-quote">“' + esc(quote) + '”' + (quoteOk ? '' : ' <span class="quote-warn">[unverified]</span>') + '</div>');
-    btn._citeHTML = parts.join("");
-
-    btn.addEventListener("mouseenter", () => { if (!_citePinned) showCite(btn, false); });
-    btn.addEventListener("mouseleave", () => hideCite(false));
-    btn.addEventListener("focus", () => { if (!_citePinned) showCite(btn, false); });
-    btn.addEventListener("blur", () => hideCite(false));
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();  // don't toggle the card open/closed
-      if (_citePinned === btn) { hideCite(true); }
-      else { hideCite(true); showCite(btn, true); }
+  // Weighted support share (0–100): supportive vs adverse confidence.
+  function scoreForRow(row) {
+    let sup = 0, adv = 0;
+    (row.links || []).forEach(l => {
+      if (l.relation === "supportive") sup += (l.confidence || 0);
+      else if (l.relation === "adverse") adv += (l.confidence || 0);
     });
-    return btn;
+    if (sup + adv === 0) return 0;
+    return Math.round(100 * sup / (sup + adv));
   }
 
-  function showCite(btn, pin) {
-    _citePop.innerHTML = btn._citeHTML;
-    const r = btn.getBoundingClientRect();
-    const pw = _citePop.offsetWidth, ph = _citePop.offsetHeight;
-    let left = Math.max(8, Math.min(r.left, window.innerWidth - 8 - pw));
-    let top = r.bottom + 6;
-    if (top + ph > window.innerHeight - 8) top = Math.max(8, r.top - 6 - ph);  // flip above
-    _citePop.style.left = left + "px";
-    _citePop.style.top = top + "px";
-    _citePop.classList.add("show");
-    if (pin) { _citePinned = btn; btn.classList.add("active"); }
+  function relCounts(row) {
+    const c = { supportive: 0, adverse: 0, neutral: 0 };
+    (row.links || []).forEach(l => { if (c[l.relation] != null) c[l.relation]++; });
+    return c;
   }
 
-  function hideCite(force) {
-    if (_citePinned && !force) return;  // keep a pinned popover open
-    if (_citePinned) _citePinned.classList.remove("active");
-    _citePinned = null;
-    _citePop.classList.remove("show");
+  function evidenceTitle(link) {
+    const s = link.evidence_source || {};
+    return link.witness || link.evidence_id || s.doc_id || "Evidence";
   }
 
-  // A click elsewhere or any scroll dismisses a pinned citation.
-  document.addEventListener("click", (e) => {
-    if (_citePinned && !e.target.closest(".cite-btn")) hideCite(true);
-  });
-  window.addEventListener("scroll", () => hideCite(true), true);
+  // Shared hover tooltip for evidence-map tiles.
+  let _tipEl = null;
+  function getTip() {
+    if (!_tipEl) { _tipEl = document.createElement("div"); _tipEl.id = "ev-tooltip"; document.body.appendChild(_tipEl); }
+    return _tipEl;
+  }
+  function positionTip(e) {
+    const el = getTip(), pad = 12, r = el.getBoundingClientRect();
+    let x = e.clientX + pad, y = e.clientY + pad;
+    if (x + r.width > window.innerWidth - 8) x = e.clientX - r.width - pad;
+    if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - pad;
+    el.style.left = Math.max(8, x) + "px";
+    el.style.top  = Math.max(8, y) + "px";
+  }
+  function showTileTip(e) {
+    const el = getTip(), rel = this.dataset.rel || "";
+    el.innerHTML = '<span class="tip-rel ' + rel + '">' + (rel === "adverse" ? "Undermining" : cap(rel)) + "</span>";
+    el.appendChild(document.createTextNode(this.dataset.tip || ""));
+    el.classList.add("show");
+    positionTip(e);
+  }
+  function hideTileTip() { if (_tipEl) _tipEl.classList.remove("show"); }
+
+  function buildEvidenceMap(row) {
+    const links = row.links || [], c = relCounts(row);
+    const S = c.supportive, U = c.adverse, N = c.neutral;
+    const M = links.length === 0 ? 1 : 0;
+
+    const wrap = document.createElement("div"); wrap.className = "evidence-map";
+    const title = document.createElement("div"); title.className = "map-title"; title.textContent = "Evidence Map";
+    wrap.appendChild(title);
+
+    const tiles = document.createElement("div"); tiles.className = "map-tiles";
+    if (links.length === 0) {
+      for (let i = 0; i < 3; i++) { const t = document.createElement("span"); t.className = "ev-tile missing"; tiles.appendChild(t); }
+    } else {
+      const order = { supportive: 0, neutral: 1, adverse: 2 };
+      const sorted = links.slice().sort((a, b) => (order[a.relation] ?? 3) - (order[b.relation] ?? 3));
+      const CAP = 16;
+      sorted.slice(0, CAP).forEach(l => {
+        const t = document.createElement("span");
+        t.className = "ev-tile " + l.relation;
+        t.dataset.tip = evidenceTitle(l);
+        t.dataset.rel = l.relation;
+        t.addEventListener("mouseenter", showTileTip);
+        t.addEventListener("mousemove", positionTip);
+        t.addEventListener("mouseleave", hideTileTip);
+        tiles.appendChild(t);
+      });
+      if (sorted.length > CAP) { const more = document.createElement("span"); more.className = "map-more"; more.textContent = "+" + (sorted.length - CAP); tiles.appendChild(more); }
+    }
+    wrap.appendChild(tiles);
+
+    const total = S + N + U + M || 1;
+    const barRow = document.createElement("div"); barRow.className = "map-bar-row";
+    const bar = document.createElement("div"); bar.className = "seg-bar";
+    [["s", S], ["n", N], ["u", U], ["m", M]].forEach(([cls, v]) => {
+      if (v > 0) { const seg = document.createElement("div"); seg.className = "seg " + cls; seg.style.width = (100 * v / total) + "%"; bar.appendChild(seg); }
+    });
+    const legend = document.createElement("div"); legend.className = "map-legend";
+    [["s", "S", S], ["u", "U", U], ["n", "N", N], ["m", "M", M]].forEach(([cls, lab, v]) => {
+      const leg = document.createElement("span"); leg.className = "leg";
+      const sw = document.createElement("span"); sw.className = "sw " + cls;
+      leg.appendChild(sw); leg.appendChild(document.createTextNode(lab + " " + v));
+      legend.appendChild(leg);
+    });
+    barRow.appendChild(bar); barRow.appendChild(legend);
+    wrap.appendChild(barRow);
+    return wrap;
+  }
+
+  // Grouped Supporting / Undermining / Neutral sections (used by the side panel).
+  function buildEvidenceGroups(row) {
+    const inner = document.createElement("div"); inner.className = "evidence-inner";
+    const links = row.links || [];
+    if (links.length === 0) {
+      const empty = document.createElement("p"); empty.className = "evidence-empty";
+      empty.textContent = "No evidence links — this claim has no supportive or adverse material in the bundle.";
+      inner.appendChild(empty);
+    } else {
+      [
+        { key: "supportive", label: "Supporting" },
+        { key: "adverse",    label: "Undermining" },
+        { key: "neutral",    label: "Neutral / Context" },
+      ].forEach(g => {
+        const items = links.filter(l => l.relation === g.key);
+        if (items.length === 0) return;
+        const sec = document.createElement("div"); sec.className = "ev-group " + g.key;
+        const head = document.createElement("div"); head.className = "ev-group-head";
+        const sw = document.createElement("span"); sw.className = "sw";
+        head.appendChild(sw); head.appendChild(document.createTextNode(g.label + " — " + items.length));
+        sec.appendChild(head);
+        items.forEach(l => sec.appendChild(buildEvidenceRow(l)));
+        inner.appendChild(sec);
+      });
+    }
+    return inner;
+  }
+
+  // ---- Right-hand evidence side panel ----
+  let _activeCardId = null;
+
+  function openEvidencePanel(row) {
+    const p = row.proposition, status = row.status;
+    const band = STATUS_BAND[status] || STATUS_BAND.MISSING;
+    const panel = $("evidence-panel");
+    const content = $("evidence-panel-content");
+
+    content.innerHTML = "";
+
+    const top = document.createElement("div"); top.className = "ep-top";
+    const kind = document.createElement("span"); kind.className = "kind-pill";
+    kind.innerHTML = SCALES_SVG + (p.type === "denial" ? "Defense" : "Claim");
+    const score = document.createElement("span"); score.className = "ep-score " + band.cls;
+    score.textContent = scoreForRow(row) + " " + band.label;
+    const close = document.createElement("button"); close.className = "ep-close"; close.setAttribute("aria-label", "Close"); close.innerHTML = "&times;";
+    close.addEventListener("click", closeEvidencePanel);
+    top.appendChild(kind); top.appendChild(score); top.appendChild(close);
+    content.appendChild(top);
+
+    const title = document.createElement("p"); title.className = "ep-title"; title.textContent = p.text;
+    content.appendChild(title);
+
+    if (p.source) {
+      const s = p.source;
+      const src = document.createElement("div"); src.className = "prop-source";
+      src.textContent = [s.doc_id, s.page ? "p" + s.page : null, s.paragraph ? "¶" + s.paragraph : null].filter(Boolean).join("  ");
+      if (src.textContent) content.appendChild(src);
+    }
+
+    const mapTitle = document.createElement("div"); mapTitle.className = "map-title"; mapTitle.style.marginTop = "0.9rem";
+    mapTitle.textContent = "Evidence Map";
+    const map = buildEvidenceMap(row); map.querySelector(".map-title").remove();
+    content.appendChild(mapTitle); content.appendChild(map);
+
+    content.appendChild(buildEvidenceGroups(row));
+
+    $("evidence-panel-empty").style.display = "none";
+    content.style.display = "block";
+    panel.classList.add("open");
+
+    // highlight the active card
+    document.querySelectorAll(".prop-card.selected").forEach(c => c.classList.remove("selected"));
+    const card = document.querySelector('.prop-card[data-prop-id="' + p.id + '"]');
+    if (card) card.classList.add("selected");
+    _activeCardId = p.id;
+  }
+
+  function closeEvidencePanel() {
+    $("evidence-panel").classList.remove("open");
+    $("evidence-panel-content").style.display = "none";
+    $("evidence-panel-empty").style.display = "";
+    document.querySelectorAll(".prop-card.selected").forEach(c => c.classList.remove("selected"));
+    _activeCardId = null;
+  }
+
+  function buildEvidenceRow(link) {
+    const row = document.createElement("div"); row.className = "ev-row";
+    const icon = document.createElement("span"); icon.className = "ev-doc-icon"; icon.innerHTML = DOC_SVG;
+    row.appendChild(icon);
+
+    const main = document.createElement("div"); main.className = "ev-row-main";
+    const title = document.createElement("div"); title.className = "ev-row-title";
+    title.textContent = link.witness || link.evidence_id || "Evidence";
+    main.appendChild(title);
+
+    const s = link.evidence_source || {};
+    const sub = document.createElement("div"); sub.className = "ev-row-sub";
+    sub.textContent = [link.evidence_id, s.doc_id, s.page ? "p" + s.page : null, s.paragraph ? "¶" + s.paragraph : null].filter(Boolean).join("  ");
+    main.appendChild(sub);
+
+    const confWrap = document.createElement("div"); confWrap.className = "conf-bar-wrap"; confWrap.style.margin = "0.35rem 0";
+    const bar = document.createElement("div"); bar.className = "conf-bar";
+    const fill = document.createElement("div"); fill.className = "conf-fill " + link.relation;
+    fill.style.width = Math.round((link.confidence || 0) * 100) + "%"; bar.appendChild(fill);
+    const confNum = document.createElement("span"); confNum.className = "conf-num"; confNum.textContent = Math.round((link.confidence || 0) * 100) + "%";
+    confWrap.appendChild(bar); confWrap.appendChild(confNum);
+    main.appendChild(confWrap);
+
+    if (link.rationale) { const r = document.createElement("p"); r.className = "ev-rationale"; r.textContent = link.rationale; main.appendChild(r); }
+    if (link.quote) {
+      const q = document.createElement("div"); q.className = "ev-quote"; q.textContent = "“" + link.quote + "”";
+      if (!link.quote_ok) { const w = document.createElement("span"); w.className = "quote-warn"; w.textContent = "  [unverified quote]"; q.appendChild(w); }
+      main.appendChild(q);
+    }
+    row.appendChild(main);
+    return row;
+  }
 
   function buildCard(row) {
     const p = row.proposition, status = row.status;
+    const band = STATUS_BAND[status] || STATUS_BAND.MISSING;
     const card = document.createElement("div");
     card.className = "prop-card status-" + status;
     card.dataset.propId = p.id;
-    // draggable into the Case tray (and the Case Builder dropzone)
     card.draggable = true;
     card.addEventListener("dragstart", e => {
       e.dataTransfer.setData("text/plain", p.id);
@@ -1866,76 +2218,42 @@
 
     const meta = document.createElement("div"); meta.className = "prop-meta";
     const topRow = document.createElement("div"); topRow.className = "prop-top-row";
+
+    const kind = document.createElement("span"); kind.className = "kind-pill";
+    kind.innerHTML = SCALES_SVG + (p.type === "denial" ? "Defense" : "Claim");
+    topRow.appendChild(kind);
+
     const idEl = document.createElement("span"); idEl.className = "prop-id"; idEl.textContent = p.id;
     const typeEl = document.createElement("span"); typeEl.className = "prop-type-badge"; typeEl.textContent = p.type;
     topRow.appendChild(idEl); topRow.appendChild(typeEl);
     if (p.party) { const pa = document.createElement("span"); pa.className = "prop-party"; pa.textContent = p.party; topRow.appendChild(pa); }
-    const cite = buildCiteButton(p.source, p.quote, p.quote_ok);
-    if (cite) topRow.appendChild(cite);
 
     const textEl = document.createElement("p"); textEl.className = "prop-text"; textEl.textContent = p.text;
+    const srcEl = document.createElement("div"); srcEl.className = "prop-source";
+    if (p.source) { const s = p.source; srcEl.textContent = [s.doc_id, s.page ? "p" + s.page : null, s.paragraph ? "¶" + s.paragraph : null].filter(Boolean).join("  "); }
 
     meta.appendChild(topRow); meta.appendChild(textEl);
+    if (srcEl.textContent) meta.appendChild(srcEl);
+    meta.appendChild(buildEvidenceMap(row));
 
     const right = document.createElement("div"); right.className = "card-right";
-    const badge = document.createElement("span"); badge.className = "status-badge " + status;
-    badge.textContent = status === "MISSING" ? "Missing" : cap(status);
+    const scoreBox = document.createElement("div"); scoreBox.className = "score-box " + band.cls;
+    const num = document.createElement("span"); num.className = "num"; num.textContent = scoreForRow(row);
+    const lbl = document.createElement("span"); lbl.className = "lbl"; lbl.textContent = band.label;
+    scoreBox.appendChild(num); scoreBox.appendChild(lbl);
     const arrow = document.createElement("svg");
     arrow.setAttribute("width", "16"); arrow.setAttribute("height", "16"); arrow.setAttribute("fill", "none");
     arrow.setAttribute("stroke", "currentColor"); arrow.setAttribute("stroke-width", "2"); arrow.setAttribute("viewBox", "0 0 24 24");
-    arrow.className = "expand-icon"; arrow.innerHTML = '<polyline points="6 9 12 15 18 9"/>';
-    right.appendChild(badge); right.appendChild(arrow);
+    arrow.className = "expand-icon"; arrow.innerHTML = '<polyline points="9 6 15 12 9 18"/>';
+    right.appendChild(scoreBox); right.appendChild(arrow);
 
     header.appendChild(meta); header.appendChild(right);
+    card.appendChild(header);
 
-    const drawer = document.createElement("div"); drawer.className = "evidence-drawer";
-    const inner = document.createElement("div"); inner.className = "evidence-inner";
-    const heading = document.createElement("div"); heading.className = "evidence-heading";
-    const linkCount = row.links ? row.links.length : 0;
-    heading.textContent = "Evidence links (" + linkCount + " retrieved, " + row.n_candidates + " candidates)";
-    inner.appendChild(heading);
-    if (!row.links || row.links.length === 0) {
-      const empty = document.createElement("p"); empty.className = "evidence-empty";
-      empty.textContent = "No evidence links — this proposition has no supportive or adverse material in the bundle.";
-      inner.appendChild(empty);
-    } else {
-      const evList = document.createElement("div"); evList.className = "evidence-list";
-      row.links.forEach(link => evList.appendChild(buildEvidenceItem(link)));
-      inner.appendChild(evList);
-    }
-    drawer.appendChild(inner);
-    card.appendChild(header); card.appendChild(drawer);
-
-    function toggle() { card.classList.toggle("open"); }
-    header.addEventListener("click", toggle);
-    header.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+    function open() { openEvidencePanel(row); }
+    header.addEventListener("click", open);
+    header.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
     return card;
-  }
-
-  function buildEvidenceItem(link) {
-    const item = document.createElement("div"); item.className = "evidence-item rel-" + link.relation;
-    const topRow = document.createElement("div"); topRow.className = "ev-top-row";
-    const relBadge = document.createElement("span"); relBadge.className = "rel-badge " + link.relation; relBadge.textContent = cap(link.relation);
-    const confWrap = document.createElement("div"); confWrap.className = "conf-bar-wrap";
-    const bar = document.createElement("div"); bar.className = "conf-bar";
-    const fill = document.createElement("div"); fill.className = "conf-fill " + link.relation;
-    fill.style.width = Math.round((link.confidence || 0) * 100) + "%"; bar.appendChild(fill);
-    const confNum = document.createElement("span"); confNum.className = "conf-num"; confNum.textContent = Math.round((link.confidence || 0) * 100) + "%";
-    confWrap.appendChild(bar); confWrap.appendChild(confNum);
-    topRow.appendChild(relBadge); topRow.appendChild(confWrap);
-    if (link.witness) { const w = document.createElement("span"); w.className = "ev-witness"; w.textContent = link.witness; topRow.appendChild(w); }
-
-    const s = link.evidence_source || {};
-    const citation = [link.evidence_id, s.doc_id, s.page ? "p" + s.page : null, s.paragraph ? "¶" + s.paragraph : null].filter(Boolean).join("  ");
-    const citEl = document.createElement("div"); citEl.className = "ev-citation"; citEl.textContent = citation;
-    item.appendChild(topRow); item.appendChild(citEl);
-    if (link.rationale) { const r = document.createElement("p"); r.className = "ev-rationale"; r.textContent = link.rationale; item.appendChild(r); }
-    if (link.quote) {
-      const q = document.createElement("div"); q.className = "ev-quote"; q.textContent = "“" + link.quote + "”";
-      if (!link.quote_ok) { const w = document.createElement("span"); w.className = "quote-warn"; w.textContent = "  [unverified quote]"; q.appendChild(w); }
-      item.appendChild(q);
-    }
-    return item;
   }
 
   // tabs / filters / search
@@ -1953,6 +2271,36 @@
   }));
   $("search-input").addEventListener("input", e => { _searchQuery = e.target.value; renderMatrix(); });
   $("risk-search-input").addEventListener("input", e => { _riskSearch = e.target.value; renderRisk(); });
+
+  // ------------------------------------------------------------------ summary (lazy, in Propositions)
+  async function ensureSummary() {
+    if (_summaryLoaded) return;
+    _summaryLoaded = true;
+    try {
+      const resp = await fetch("api/summary");
+      const data = await resp.json();
+      if (!data.ok) return;
+      $("case-summary-headline").textContent = data.headline || "";
+      const body = $("case-summary-body"); body.innerHTML = "";
+      (data.paragraphs || []).forEach(t => { const p = document.createElement("p"); p.textContent = t; body.appendChild(p); });
+      const wrap = $("case-summary-sources"), list = $("case-summary-sources-list");
+      list.innerHTML = "";
+      const sources = data.sources || [];
+      if (sources.length) {
+        sources.forEach(s => {
+          const li = document.createElement("li");
+          if (s.work) { const a = document.createElement("a"); a.href = s.work; a.target = "_blank"; a.rel = "noopener"; a.textContent = s.title; li.appendChild(a); }
+          else li.textContent = s.title;
+          if (s.celex) { const c = document.createElement("span"); c.className = "celex"; c.textContent = "CELEX " + s.celex; li.appendChild(c); }
+          list.appendChild(li);
+        });
+        wrap.style.display = "block";
+      } else wrap.style.display = "none";
+      $("case-summary").style.display = "block";
+    } catch (_) { _summaryLoaded = false; }
+  }
+
+  let _argRendered = false;
 
   // ------------------------------------------------------------------ argumentation
   function renderArgumentation() {
@@ -2504,33 +2852,6 @@
 
   window.addEventListener("resize", () => { if (G && _currentView === "graph") graphResize(); });
 
-  // ------------------------------------------------------------------ summary (lazy, in Propositions)
-  async function ensureSummary() {
-    if (_summaryLoaded) return;
-    _summaryLoaded = true;
-    try {
-      const resp = await fetch("api/summary");
-      const data = await resp.json();
-      if (!data.ok) return;
-      $("case-summary-headline").textContent = data.headline || "";
-      const body = $("case-summary-body"); body.innerHTML = "";
-      (data.paragraphs || []).forEach(t => { const p = document.createElement("p"); p.textContent = t; body.appendChild(p); });
-      const wrap = $("case-summary-sources"), list = $("case-summary-sources-list");
-      list.innerHTML = "";
-      const sources = data.sources || [];
-      if (sources.length) {
-        sources.forEach(s => {
-          const li = document.createElement("li");
-          if (s.work) { const a = document.createElement("a"); a.href = s.work; a.target = "_blank"; a.rel = "noopener"; a.textContent = s.title; li.appendChild(a); }
-          else li.textContent = s.title;
-          if (s.celex) { const c = document.createElement("span"); c.className = "celex"; c.textContent = "CELEX " + s.celex; li.appendChild(c); }
-          list.appendChild(li);
-        });
-        wrap.style.display = "block";
-      } else wrap.style.display = "none";
-      $("case-summary").style.display = "block";
-    } catch (_) { _summaryLoaded = false; }
-  }
 
   // ------------------------------------------------------------------ AI arguments
   let _argsLoaded = false, _argsData = [];
@@ -3065,6 +3386,7 @@
     w.document.write(doc); w.document.close();
     setTimeout(() => w.print(), 350);
   }
+
 
   // ------------------------------------------------------------------ boot
   loadMatrix();
