@@ -63,6 +63,10 @@
     /* ================================================================== */
     .view { display: none; }
     .view.active { display: block; }
+    /* #hero sets display:flex by id, which outranks .view's display toggle —
+       this keeps it hidden unless it is the active view (so rooms don't stack
+       below it and require scrolling). */
+    #hero:not(.active) { display: none; }
 
     /* ================================================================== */
     /* HERO launcher                                                       */
@@ -1269,7 +1273,7 @@
 
   function renderMatrix() {
     const rows = filteredMatrix();
-    $("matrix-result-count").textContent = rows.length + " of " + _matrix.length + " propositions";
+    $("matrix-result-count").textContent = rows.length + " of " + _matrix.length + " claims";
     const list = $("matrix-list");
     list.innerHTML = "";
     if (rows.length === 0) { list.innerHTML = '<p style="color:var(--slate-2);font-size:.87rem;padding:.5rem 0">No propositions match this filter.</p>'; return; }
