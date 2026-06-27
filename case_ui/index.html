@@ -817,6 +817,16 @@
     #room-propositions .room-head .readiness-mini .score { color: var(--ink); }
     #room-propositions .room-head .readiness-bar { background: var(--border); }
     #room-propositions .room-head .readiness-fill { background: linear-gradient(90deg, #3f9d6d, #5cb98a); }
+
+    /* Recoverable Damages: same paper/ink/mono header + cream canvas */
+    #room-damages { background: var(--paper); }
+    #room-damages .room-head { background: var(--paper); color: var(--ink); border-bottom: 3px solid var(--ink); }
+    #room-damages .room-head h1 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+    #room-damages .room-head .sub {
+      font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate-2); margin-top: 0.2rem;
+    }
+    #room-damages .placeholder-room h2 { color: var(--ink); }
   </style>
 </head>
 <body>
