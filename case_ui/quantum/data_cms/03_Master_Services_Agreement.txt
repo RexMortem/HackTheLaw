@@ -1,0 +1,36 @@
+MASTER SERVICES AGREEMENT
+relating to the supply and implementation of a retail inventory and EPOS platform
+Date:	14 March 2024
+Parties:	
+(1)  MERIDIAN RETAIL GROUP PLC (company no. 03992145) of Meridian House, 40 Kingsway, London WC2B 6EX ("the Customer"); and
+(2)  TECHFLOW SOLUTIONS LIMITED (company no. 07781230) of Optimum Park, 12 Brindley Way, Reading RG1 8DF ("the Supplier").
+1.  Definitions and scope
+1.1  The Supplier shall design, build, configure, test and implement the cloud-based inventory management and EPOS platform ("the Platform") in accordance with the Statement of Work set out at Schedule 1 (the "SOW").
+1.2  The Supplier shall perform the Services with reasonable skill and care and in accordance with good industry practice.
+2.  Charges
+2.1  The total charges for the Services are £2,400,000 (excluding VAT), payable against the milestones set out in the SOW and as may be varied by agreement in writing.
+3.  Timetable and change control
+3.1  The Supplier shall use reasonable endeavours to achieve the target go-live date stated in the SOW. The parties acknowledge that the implementation timetable is a planning estimate and may be adjusted through the change control procedure.
+3.2  Any change to the scope, deliverables or timetable shall be agreed in writing by both parties by means of a signed Change Order. A signed Change Order varies this Agreement to the extent stated in it.
+14.  Limitation of liability
+14.1  Subject to clause 14.3, the Supplier shall not be liable to the Customer, whether in contract, tort (including negligence) or otherwise, for any loss of profit, loss of revenue, loss of anticipated savings, or any indirect or consequential loss.
+14.2  Subject to clause 14.3, the Supplier’s total aggregate liability arising under or in connection with this Agreement shall not exceed the total charges actually paid by the Customer under this Agreement in the twelve months preceding the event giving rise to the claim.
+14.3  Nothing in this Agreement limits liability for death or personal injury caused by negligence, for fraud, or for any other liability that cannot lawfully be excluded.
+22.  Entire agreement
+22.1  This Agreement, together with its Schedules, constitutes the entire agreement between the parties and supersedes all prior representations, statements or agreements, whether written or oral. 
+22.2  Each party acknowledges that it has not relied on, and shall have no remedy in respect of, any representation or statement not expressly set out in this Agreement (save in the case of fraud).
+25.  Governing law and jurisdiction
+25.1  This Agreement is governed by the law of England and Wales, and the parties submit to the exclusive jurisdiction of the courts of England and Wales.
+
+Signed for and on behalf of
+MERIDIAN RETAIL GROUP PLC
+
+....................................
+Name: Priya Nair
+Title: Head of Procurement
+Signed for and on behalf of
+TECHFLOW SOLUTIONS LIMITED
+
+....................................
+Name: Gregory Manton
+Title: Commercial Director

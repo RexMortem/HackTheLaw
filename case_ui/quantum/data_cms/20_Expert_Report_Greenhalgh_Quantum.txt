@@ -1,0 +1,34 @@
+Claim No. HT-2025-000231
+Expert evidence (CPR Part 35)  |  Forensic Accounting / Quantum  |  24 April 2026
+Claim No. HT-2025-000231
+IN THE HIGH COURT OF JUSTICE
+BUSINESS AND PROPERTY COURTS OF ENGLAND AND WALES
+TECHNOLOGY AND CONSTRUCTION COURT (KBD)
+
+B E T W E E N :
+MERIDIAN RETAIL GROUP PLC
+Claimant
+- and -
+TECHFLOW SOLUTIONS LIMITED
+Defendant
+
+REPORT OF FIONA GREENHALGH FCA
+Independent Forensic Accountant
+1.  Introduction and instructions
+1.	I am Fiona Greenhalgh, a Fellow of the Institute of Chartered Accountants in England and Wales, and a partner in a forensic accounting practice. I am instructed by Caldwell Pryce LLP to give my independent opinion on the quantum of the Claimant’s pleaded losses, namely wasted expenditure of £1,800,000 and loss of profit of £4,200,000.
+2.  Wasted expenditure
+2.	The pleaded wasted expenditure of £1,800,000 is consistent with the Claimant’s accounting records and the sums invoiced and paid under the Master Services Agreement. I have no reason to challenge this element on a wasted-expenditure basis.
+3.  Loss of profit
+3.	I have analysed the Claimant’s management accounts, EPOS sales data and prior-year comparatives for the November–December 2024 period. In my opinion the pleaded loss of profit of £4,200,000 is substantially overstated.
+4.	On the most supportable basis, the incremental lost gross profit capable of being attributed to the Platform’s defects is of the order of £1,300,000, not £4,200,000.
+5.	A material part of the Q4 sales shortfall is, in my opinion, attributable to causes unconnected with the Platform. In particular: (a) the flooding of the Claimant’s Lutterworth distribution centre in early December 2024, which disrupted stock to approximately 40 stores for around ten days; and (b) a sector-wide downturn in retail trading in the relevant quarter, evident in the Claimant’s own like-for-like data from October 2024 (i.e. before go-live). I estimate that approximately £1,500,000 of the claimed decline is attributable to these non-Platform factors, with the balance unsupported on the material I have seen.
+4.  Contractual limitation (matter for the Court)
+6.	I note, as a matter for the Court rather than for me, that clause 14 of the Master Services Agreement appears to exclude liability for loss of profit and to cap the Supplier’s liability at the charges paid (approximately £1,800,000). If that clause is effective, it would significantly affect the recoverability of the loss-of-profit claim regardless of my quantification.
+5.  Summary of opinion
+7.	In summary: the wasted expenditure of £1,800,000 is supportable; the pleaded loss of profit of £4,200,000 is substantially overstated, with a supportable figure of around £1,300,000 before considering causation and the contractual limitation, and a significant part of the Q4 shortfall attributable to the distribution-centre flood and the wider market.
+
+Expert’s declaration
+I understand that my duty is to help the court on matters within my expertise, and that this duty overrides any obligation to those instructing or paying me. I have complied with that duty and will continue to do so. I believe that the facts I have stated in this report are true and that the opinions I have expressed are correct.
+
+Signed:	Fiona Greenhalgh FCA
+Dated:	24 April 2026

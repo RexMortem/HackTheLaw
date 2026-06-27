@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crucible — Quantum (Damages)</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121821; --line:#1f2937; --ink:#e6edf3; --dim:#8b98a9;
+    --cost:#2dd4bf; --value:#f59e0b; --cut:#ef4444; --cap:#60a5fa; --good:#34d399;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:32px}
+  h1{font-size:20px;margin:0 0 2px} .sub{color:var(--dim);margin:0 0 24px}
+  .wrap{max-width:1040px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:20px}
+  @media(max-width:840px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:0 0 14px}
+  /* waterfall */
+  .step{margin:0 0 12px}
+  .step .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .step .lab{font-weight:600} .step .amt{font-variant-numeric:tabular-nums;font-weight:700}
+  .step .note{color:var(--dim);font-size:12.5px}
+  .bar{height:10px;border-radius:6px;background:#0a0e13;overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:6px}
+  .neg .amt{color:var(--cut)} .final .amt{color:var(--good);font-size:18px}
+  /* heads / clauses */
+  .item{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .item:last-child{border-bottom:0}
+  .item .l{min-width:0} .item .name{font-weight:600}
+  .item .cite{color:var(--dim);font-size:12px;margin-top:2px}
+  .doclink{color:#9cc7ff;text-decoration:none;border-bottom:1px solid rgba(156,199,255,.45)}
+  .doclink:hover{color:#c9e0ff;border-bottom-color:#c9e0ff}
+  .tag{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+  .v{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+  .muted{opacity:.5}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#0a0e13;border:1px solid var(--line);color:var(--dim);margin-left:6px}
+  .scenario-intro{color:var(--dim);font-size:12.5px;margin:-4px 0 10px}
+  .scenario-legend{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+  .scenario-key{display:inline-flex;align-items:center;gap:6px;color:var(--dim);font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:3px 8px;background:#0a0e13}
+  .scenario-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .scenario-dot.high{background:var(--good)}
+  .scenario-dot.low{background:var(--cut)}
+  .scenario-dot.neutral{background:var(--ink)}
+  .scenario-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .scenario-row:last-child{border-bottom:0}
+  .scenario-label{font-weight:650}
+  .scenario-explain{color:var(--dim);font-size:12.5px;margin-top:2px;line-height:1.38}
+  .scenario-amount{font-variant-numeric:tabular-nums;font-weight:750;white-space:nowrap;text-align:right}
+  .hl{color:var(--good)} .lo{color:var(--cut)}
+  .err{color:var(--cut);padding:14px;border:1px solid var(--cut);border-radius:10px}
+  .foot{color:var(--dim);font-size:12px;margin-top:18px}
+  code{background:#0a0e13;border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="pageTitle">Quantum — Recoverable Damages</h1>
+  <p class="sub" id="case">loading…</p>
+  <div id="root"></div>
+  <p class="foot">
+    Pure calculator — no API key, no model call. Four methods → causation →
+    legal constraints (contract → enforceability). Every £ figure is cited to the
+    bundle; probabilities are tunable legal-judgement inputs in
+    <code>quantum/case_meridian.py</code>.
+  </p>
+</div>
+<script>
+const gbp = n => (n<0?"-":"")+"£"+Math.abs(n).toLocaleString("en-GB");
+const esc = s => (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const sourceDocs = {
+  GREENHALGH: "20_Expert_Report_Greenhalgh_Quantum.txt",
+  PoC: "02_Particulars_of_Claim.txt",
+  MSA: "03_Master_Services_Agreement.txt"
+};
+function sourceHref(docId){
+  const file = sourceDocs[docId];
+  if(!file) return "";
+  return (location.protocol==="file:" ? "../data_cms/" : "/data_cms/") + file;
+}
+function refLink(ref){
+  const docId = String(ref||"").split(/\s+/)[0];
+  const href = sourceHref(docId);
+  if(!href) return esc(ref);
+  return `<a class="doclink" href="${href}" download target="_blank" rel="noopener" title="Download source document">${esc(ref)}</a>`;
+}
+function displayCaseName(fullCase){
+  const cleaned = String(fullCase||"").replace(/\s*\[[^\]]+\]\s*$/,"").trim();
+  return cleaned || "Quantum";
+}
+const fallbackData = {
+  "case": "Meridian Retail Group plc v TechFlow Solutions Ltd [HT-2025-000231]",
+  "headline": 3100000,
+  "expected_recoverable": 2242000.0,
+  "scenarios": {
+    "headline_uncapped": 3100000,
+    "cap_and_exclusion_hold": 1800000.0,
+    "exclusion_struck_cap_holds": 1800000,
+    "fraud_proven": 3100000
+  },
+  "heads": [
+    {"name":"Wasted expenditure","basis":"cost","value":{"amount":1800000,"grounded":true,"ref":"GREENHALGH ¶2"}},
+    {"name":"Loss of profit","basis":"value","value":{"amount":4200000,"grounded":true,"ref":"PoC ¶15"}},
+    {"name":"Comparable-market loss","basis":"market","value":{"amount":0,"grounded":false,"ref":"(assumption)"}},
+    {"name":"DCF of lost cash flows","basis":"dcf","value":{"amount":0,"grounded":false,"ref":"(assumption)"}}
+  ],
+  "clauses": [
+    {"clause_id":"14.1","excludes_loss_of_profit":true,"caps_total":false,"cap_value":null,"source":{"ref":"MSA ¶14.1"}},
+    {"clause_id":"14.2","excludes_loss_of_profit":false,"caps_total":true,"cap_value":1800000,"source":{"ref":"MSA ¶14.2"}}
+  ],
+  "enforceability": [
+    {"clause_id":"14.1","p_upheld":0.6},
+    {"clause_id":"14.2","p_upheld":0.7}
+  ],
+  "fraud": {"p_proven":0.25,"source":{"ref":"PoC ¶7"}},
+  "waterfall": [
+    {"label":"Pleaded (cost + value)","amount":6000000,"note":"As claimed in the Particulars."},
+    {"label":"Less causation","amount":-2900000,"note":"Loss not attributable to the defendant."},
+    {"label":"Supportable (pre-legal)","amount":3100000,"note":"Size of the harm, before recoverability."},
+    {"label":"If exclusion + cap hold","amount":1800000.0,"note":"Loss of profit excluded; total capped."},
+    {"label":"If fraud proven (carve-out)","amount":3100000,"note":"Limitation falls away — full supportable loss."},
+    {"label":"Expected recoverable (weighted)","amount":2242000.0,"note":"Probability-weighted across the legal scenario tree."}
+  ]
+};
+
+function waterfall(steps){
+  const max = Math.max(...steps.map(s=>Math.abs(s.amount)),1);
+  const colorFor = (lab)=> /fraud/i.test(lab)?"var(--good)":
+        /exclusion \+ cap|cap hold/i.test(lab)?"var(--cap)":
+        /causation/i.test(lab)?"var(--cut)":"var(--value)";
+  const plain = {
+    "Pleaded (cost + value)": ["Claim starts at", "The amount pleaded before testing causation or contract limits."],
+    "Less causation": ["Less loss not caused by TechFlow", "The expert removes losses caused by other factors."],
+    "Supportable (pre-legal)": ["Supportable loss before contract limits", "What remains after the causation cut."],
+    "If exclusion + cap hold": ["If both contract limits apply", "Profit loss is excluded and the total is capped."],
+    "If fraud proven (carve-out)": ["If fraud is proven", "The contract limits fall away."],
+    "Expected recoverable (weighted)": ["Weighted expected recovery", "A weighted average of the possible court outcomes below."]
+  };
+  return steps.map((s,i)=>{
+    const neg = s.amount<0, final = i===steps.length-1;
+    const w = Math.max(2, Math.abs(s.amount)/max*100);
+    const label = (plain[s.label]||[s.label,s.note])[0];
+    const note = (plain[s.label]||[s.label,s.note])[1];
+    return `<div class="step ${neg?'neg':''} ${final?'final':''}">
+      <div class="row"><span class="lab">${esc(label)}</span><span class="amt">${gbp(s.amount)}</span></div>
+      <div class="bar"><i style="width:${w}%;background:${final?'var(--good)':colorFor(s.label)}"></i></div>
+      <div class="note">${esc(note)}</div></div>`;
+  }).join("");
+}
+function heads(hs){
+  return hs.map(h=>{
+    const g = h.value.grounded;
+    return `<div class="item ${g?'':'muted'}">
+      <div class="l"><div class="name">${esc(h.name)} <span class="pill">${h.basis}</span></div>
+      <div class="cite">${g?refLink(h.value.ref):'ungrounded — excluded from headline'}</div></div>
+      <div class="v">${gbp(h.value.amount)}</div></div>`;
+  }).join("");
+}
+function clauses(cs,enf,fraud){
+  const p = id => (enf.find(e=>e.clause_id===id)||{}).p_upheld;
+  let h = cs.map(c=>{
+    const bits=[]; if(c.excludes_loss_of_profit) bits.push("excludes loss of profit");
+    if(c.caps_total) bits.push("caps at "+gbp(c.cap_value));
+    const pu=p(c.clause_id);
+    return `<div class="item"><div class="l"><div class="name">Clause ${esc(c.clause_id)}</div>
+      <div class="cite">${esc(bits.join(" · "))} — ${refLink(c.source.ref)}</div></div>
+      <div class="v">${pu==null?'':'P(upheld) '+Math.round(pu*100)+'%'}</div></div>`;
+  }).join("");
+  if(fraud) h+=`<div class="item"><div class="l"><div class="name">Clause 14.3 — fraud carve-out</div>
+    <div class="cite">removes exclusion AND cap — ${refLink(fraud.source.ref)}</div></div>
+    <div class="v">P(proven) ${Math.round(fraud.p_proven*100)}%</div></div>`;
+  return h;
+}
+function scenarios(s){
+  const rows=[
+    ["No contract limits apply", "The court awards the full supportable loss after the causation cut.", s.headline_uncapped, ""],
+    ["Both contract limits apply", "Profit loss is excluded, and the award is capped at the charges paid.", s.cap_and_exclusion_hold, "lo"],
+    ["Only the cap applies", "Profit loss is allowed in principle, but the total still cannot exceed the cap.", s.exclusion_struck_cap_holds, ""],
+    ["Fraud is proven", "The exclusion and cap fall away, so the full supportable loss is back in play.", s.fraud_proven, "hl"],
+  ];
+  return `<div class="scenario-intro">These are the main possible court outcomes, not extra claims.</div>
+    <div class="scenario-legend" aria-label="Colour key">
+      <span class="scenario-key"><i class="scenario-dot high"></i>higher recovery</span>
+      <span class="scenario-key"><i class="scenario-dot low"></i>lower recovery</span>
+      <span class="scenario-key"><i class="scenario-dot neutral"></i>standard path</span>
+    </div>`
+    + rows.map(([k,why,v,c])=>`<div class="scenario-row">
+      <div><div class="scenario-label">${esc(k)}</div><div class="scenario-explain">${esc(why)}</div></div>
+      <div class="scenario-amount ${c}">${gbp(v)}</div></div>`).join("");
+}
+
+function render(d){
+  const caseName = displayCaseName(d.case);
+  document.getElementById("pageTitle").textContent = `${caseName} — Recoverable Damages`;
+  document.title = `${caseName} — Quantum`;
+  document.getElementById("case").textContent = d.case;
+  document.getElementById("root").innerHTML = `
+    <div class="grid">
+      <div class="card"><h2>Recoverability waterfall</h2>${waterfall(d.waterfall)}
+        <div class="row" style="display:flex;justify-content:space-between;margin-top:6px">
+          <span style="color:var(--dim)">vs pleaded ~£6,000,000</span>
+          <span class="amt hl" style="font-weight:700">Expected: ${gbp(d.expected_recoverable)}</span></div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:20px"><h2>Heads of loss (4 methods)</h2>${heads(d.heads)}</div>
+        <div class="card" style="margin-bottom:20px"><h2>Legal constraints</h2>${clauses(d.clauses,d.enforceability,d.fraud)}</div>
+        <div class="card"><h2>Possible court awards</h2>${scenarios(d.scenarios)}</div>
+      </div>
+    </div>`;
+}
+
+fetch("/api/quantum")
+  .then(r=>r.ok ? r.json() : Promise.reject(new Error(r.statusText)))
+  .then(render)
+  .catch(()=>render(fallbackData));
+</script>
+</body>
+</html>
