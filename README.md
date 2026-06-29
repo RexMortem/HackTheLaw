@@ -8,12 +8,14 @@ labels it **supported**,
 matrix with an AI case summary, grounding-guard citation checks, and a built-in
 litigation assistant you can chat with.
 
-**Live demo:** https://proof-matrix-rexmortem.onrender.com/
+**Live demo (idle period, reduced features):** https://proof-matrix-rexmortem.onrender.com/
 
 > ⚠️ The demo is on Render's free tier, so it sleeps when idle and may be
 > intermittently unavailable. The first request can take ~30-60s to wake the
 > service (and writes don't persist across restarts). If it's down, run it
 > locally with the steps below.
+>
+> ALSO: AI API key will not be used, so the chatbot will not function.
 
 ---
 
