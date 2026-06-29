@@ -157,6 +157,12 @@
       max-width: 620px;
       margin: 0 auto 1.6rem;
     }
+    /* The lone 5th card (Case Builder) spans both columns and centres. */
+    .opt-card[data-room="builder"] {
+      grid-column: 1 / -1;
+      justify-self: center;
+      width: calc(50% - 0.5rem);
+    }
     .opt-card {
       position: relative;
       text-align: left;
@@ -523,6 +529,21 @@
     .ev-quote .gg-badge { margin-left: 0.4rem; }
 
     .risk-intro { background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius); padding: 0.75rem 1rem; font-size: 0.85rem; color: #7f1d1d; margin-bottom: 1.25rem; line-height: 1.55; }
+    /* Contradicted-evidence callout (Risk & Gaps) */
+    .contradicted-box { border: 1px solid var(--undermined-border); background: var(--undermined-bg); border-radius: var(--radius); padding: 0.85rem 1rem; margin-bottom: 1.25rem; }
+    .contradicted-box.none { border-color: var(--supported-border); background: var(--supported-bg); }
+    .cb-head { display: flex; align-items: center; gap: 0.5rem; font-size: 0.86rem; font-weight: 800; color: var(--undermined); }
+    .contradicted-box.none .cb-head { color: var(--supported); }
+    .cb-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--undermined); flex-shrink: 0; }
+    .cb-dot.ok { background: var(--supported); }
+    .cb-sub { font-size: 0.8rem; color: #7f1d1d; margin: 0.35rem 0 0.6rem; line-height: 1.5; }
+    .contradicted-box.none .cb-sub { color: #14532d; margin-bottom: 0; }
+    .cb-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .cb-item { display: flex; align-items: center; gap: 0.6rem; width: 100%; text-align: left; cursor: pointer; background: var(--white); border: 1px solid var(--undermined-border); border-radius: 6px; padding: 0.45rem 0.6rem; }
+    .cb-item:hover { filter: brightness(0.99); box-shadow: var(--shadow); }
+    .cb-id { font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.74rem; font-weight: 700; color: var(--undermined); flex-shrink: 0; }
+    .cb-text { flex: 1; font-size: 0.82rem; color: #334155; line-height: 1.4; }
+    .cb-count { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; color: var(--undermined); background: var(--undermined-bg); border: 1px solid var(--undermined-border); border-radius: 999px; padding: 0.05rem 0.5rem; }
 
     /* Case summary card */
     .case-summary { margin-top: 2.5rem; padding: 1.5rem 1.75rem; background: var(--white); border: 1px solid var(--border); border-top: 3px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow); }
@@ -579,6 +600,7 @@
 
     @media (max-width: 760px) {
       .cards { grid-template-columns: 1fr; }
+      .opt-card[data-room="builder"] { width: auto; }   /* full width on mobile */
       .hero-title { font-size: 2.3rem; }
       .arg-cols { grid-template-columns: 1fr; }
       .room-head { padding-left: 5.75rem; }
@@ -1014,6 +1036,10 @@
     .graph-panel h3 { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--slate); margin-bottom: 0.6rem; }
     .gp-stat-row { display: flex; justify-content: space-between; font-size: 0.82rem; color: #334155; padding: 0.18rem 0; }
     .gp-stat-row .v { font-weight: 700; font-family: "SFMono-Regular", Consolas, monospace; }
+    .cyc-item { border-left: 3px solid var(--undermined); background: var(--undermined-bg); border-radius: 6px; padding: 0.45rem 0.6rem; margin-bottom: 0.5rem; cursor: pointer; }
+    .cyc-item:hover { filter: brightness(0.98); }
+    .cyc-loop { font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.78rem; font-weight: 700; color: var(--undermined); }
+    .cyc-texts { font-size: 0.74rem; color: var(--slate); margin-top: 0.25rem; line-height: 1.4; }
     .lb-item { display: flex; align-items: center; gap: 0.55rem; padding: 0.4rem 0; border-top: 1px solid var(--border); cursor: pointer; }
     .lb-item:first-of-type { border-top: none; }
     .lb-item:hover { background: var(--bg); }
@@ -1578,6 +1604,7 @@
 
       <div id="tab-risk" style="display:none">
         <div class="risk-intro">Showing only <strong>Missing</strong> and <strong>Undermined</strong> claims, sorted by risk — the areas needing further witness, expert or documentary evidence.</div>
+        <div id="risk-contradicted" class="contradicted-box"></div>
         <div class="filters-bar">
           <div class="search-wrap">
             <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1735,6 +1762,10 @@
         <div class="graph-panel">
           <h3>Issue clusters</h3>
           <div id="g-clusters"><p class="gp-detail-empty">Switch “Colour” to <em>Issue cluster</em> to group propositions that share witnesses.</p></div>
+        </div>
+        <div class="graph-panel">
+          <h3>Circular reasoning</h3>
+          <div id="g-circular"><p class="gp-detail-empty">No potential circular reasoning.</p></div>
         </div>
       </aside>
     </div>
@@ -2217,7 +2248,36 @@
     return risky;
   }
 
+  function renderContradicted() {
+    const box = $("risk-contradicted");
+    if (!box) return;
+    const undermined = _matrix.filter(r => r.status === "undermined");
+    if (!undermined.length) {
+      box.className = "contradicted-box none";
+      box.innerHTML = '<div class="cb-head"><span class="cb-dot ok"></span>No contradicted evidence</div>'
+        + '<p class="cb-sub">No pleaded claim is directly contradicted by adverse evidence in the bundle.</p>';
+      return;
+    }
+    box.className = "contradicted-box";
+    let html = '<div class="cb-head"><span class="cb-dot"></span>Contradicted evidence (' + undermined.length + ')</div>'
+      + '<p class="cb-sub">These claims have adverse evidence directly against them — the evidence undermines the pleaded case. Address or distinguish it before trial or settlement.</p>'
+      + '<div class="cb-list">';
+    undermined.forEach(r => {
+      const p = r.proposition || {};
+      const adv = (r.links || []).filter(l => l.relation === "adverse").length;
+      const t = (p.text || "").length > 110 ? (p.text.slice(0, 110) + "…") : (p.text || "");
+      html += '<button class="cb-item" data-pid="' + esc(p.id) + '">'
+        + '<span class="cb-id">' + esc(p.id) + '</span>'
+        + '<span class="cb-text">' + esc(t) + '</span>'
+        + '<span class="cb-count">' + adv + ' adverse</span></button>';
+    });
+    box.innerHTML = html + '</div>';
+    box.querySelectorAll(".cb-item").forEach(el =>
+      el.addEventListener("click", () => openProposition(el.dataset.pid)));
+  }
+
   function renderRisk() {
+    renderContradicted();
     const rows = filteredRisk();
     $("risk-result-count").textContent = rows.length + " risk item" + (rows.length === 1 ? "" : "s");
     const list = $("risk-list");
@@ -2630,6 +2690,7 @@
     renderLoadBearing();
     renderSPOF();
     renderClusters();
+    renderCircular();
     wireGraphControls();
     buildGraphModel();
     graphResize();
@@ -3105,6 +3166,25 @@
         + '<div class="lb-bar"><div class="lb-fill" style="width:' + Math.round(d.degree / max * 100) + '%"></div></div></div>'
         + '<span class="lb-deg">' + d.degree + '</span>';
       row.addEventListener("click", () => { if (G.byId[d.id]) selectNode(d.id); });
+      box.appendChild(row);
+    });
+  }
+
+  function renderCircular() {
+    const list = G.stats.circular_reasoning || [];
+    const box = $("g-circular");
+    if (!list.length) {
+      box.innerHTML = '<p class="gp-detail-empty">No potential circular reasoning.</p>';
+      return;
+    }
+    box.innerHTML = "";
+    list.forEach(c => {
+      const ids = c.members || [];
+      const loop = ids.concat(ids.length ? [ids[0]] : []).join(" → ");  // P1 -> P2 -> P1
+      const row = document.createElement("div"); row.className = "cyc-item";
+      row.innerHTML = '<div class="cyc-loop">' + esc(loop) + '</div>'
+        + '<div class="cyc-texts">' + (c.texts || []).map(esc).join(" · ") + '</div>';
+      row.addEventListener("click", () => { if (ids[0] && G.byId[ids[0]]) selectNode(ids[0]); });
       box.appendChild(row);
     });
   }

@@ -1,5 +1,9 @@
 {
   "title": "",
   "theory": "",
-  "propositions": []
+  "propositions": [
+    "P0001",
+    "P0003"
+  ],
+  "saved_at": "2026-06-28T09:35:14.618556+00:00"
 }

@@ -18,6 +18,7 @@ import hashlib
 import json
 import os
 import pathlib
+import random
 import re
 import sys
 import time
@@ -542,6 +543,89 @@ def _offline_navigate(user_msg: str) -> str | None:
         if any(k in t for k in kws):
             return view
     return None
+
+
+# ---------------------------------------------------------------------------
+# Default-question cache: pre-generated answers for the starter chips, served
+# with a simulated "thinking" delay so they feel live and cost no tokens.
+# Generate with: python case_ui/gen_chat_cache.py. Keyed by (matrix signature,
+# question) so a cached answer is only used while the case is unchanged.
+# ---------------------------------------------------------------------------
+DEFAULT_QUESTIONS = [
+    "Where is this case weakest?",
+    "Which allegations have no supporting evidence?",
+    "Summarise the Defence's strongest points.",
+    "Summarise the case",
+]
+CHAT_CACHE_DIR = DATA_DIR / "chat_cache"
+_FAKE_DELAY_RANGE = (3.0, 4.0)   # seconds — simulate generation for cached hits
+
+
+def _norm_q(q: str) -> str:
+    return re.sub(r"\s+", " ", (q or "").strip().lower()).rstrip(" ?.!")
+
+
+_DEFAULT_Q_SET = {_norm_q(q) for q in DEFAULT_QUESTIONS}
+
+
+def _is_default_question(q: str) -> bool:
+    return _norm_q(q) in _DEFAULT_Q_SET
+
+
+def _chat_cache_path(signature: str, question: str) -> pathlib.Path:
+    key = hashlib.sha256(
+        f"{signature}|{_norm_q(question)}".encode("utf-8")).hexdigest()[:16]
+    return CHAT_CACHE_DIR / f"{key}.json"
+
+
+def _chat_cache_get(signature: str, question: str) -> dict | None:
+    path = _chat_cache_path(signature, question)
+    if path.exists():
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return None
+    return None
+
+
+def _chat_cache_put(signature: str, question: str, record: dict) -> None:
+    CHAT_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    _chat_cache_path(signature, question).write_text(
+        json.dumps(record, ensure_ascii=False), encoding="utf-8")
+
+
+def _chat_system_prompt(matrix: list) -> str:
+    """The 'Second Chair' system prompt (shared by the sync and streaming chat)."""
+    stats = _build_summary(matrix)["stats"] if matrix else {"counts": {}}
+    c = stats.get("counts", {})
+    return (
+        "You are 'Second Chair', an AI litigation associate embedded in a "
+        "Proof Matrix tool for a UK commercial dispute. You have memorised the "
+        "pleaded propositions below (allegations and denials) and their "
+        "evidential status from the proof matrix. Answer the lawyer's questions "
+        "about the case, grounded strictly in this data. When you reference a "
+        "proposition, cite it inline in square brackets exactly like [P0003]. "
+        "Be concise, neutral and practical. When the lawyer asks to go to / "
+        "open / show another screen (e.g. 'go to the financial overview'), use "
+        "the navigate tool to switch the view.\n\n"
+        f"PLEADED PROPOSITIONS:\n{_case_digest(matrix)}\n\n"
+        f"PROOF-MATRIX TOTALS: {c.get('supported', 0)} supported, "
+        f"{c.get('contested', 0)} contested, {c.get('undermined', 0)} undermined, "
+        f"{c.get('MISSING', 0)} missing; trial readiness "
+        f"{stats.get('trial_readiness', '?')}%."
+    )
+
+
+def _chat_api_messages(messages: list) -> list:
+    return [{"role": m["role"], "content": m["content"]} for m in messages
+            if m.get("role") in ("user", "assistant") and m.get("content")]
+
+
+def _chunk_text(s: str):
+    """Yield word+trailing-whitespace tokens; concatenating reproduces s. Used to
+    'type' cached answers chunk by chunk over the stream."""
+    for tok in re.findall(r"\S+\s*", s or ""):
+        yield tok
 
 
 def _chat_reply(messages: list, matrix: list) -> tuple[str, str, str | None]:
@@ -1118,6 +1202,8 @@ class Handler(BaseHTTPRequestHandler):
             self._api_goals_post()
         elif path == "/api/chat":
             self._api_chat()
+        elif path == "/api/chat/stream":
+            self._api_chat_stream()
         elif path == "/api/case":
             self._api_case_post()
         elif path == "/api/additions":
@@ -1391,6 +1477,98 @@ class Handler(BaseHTTPRequestHandler):
                           f"({len(rec.get('links', []))} link(s))")
         self._json_response(200, json.dumps({"ok": True, "id": rec["id"], "record": rec}))
 
+    def _api_chat_stream(self):
+        """POST /api/chat/stream — same as /api/chat but streams the answer token
+        by token as Server-Sent Events, so text appears as Claude generates it.
+
+        Events: {"delta": "..."} for text chunks, then a final
+        {"done": true, "source": "claude"|"cached"|"offline", "navigate": ...}.
+        """
+        length = int(self.headers.get("Content-Length", 0))
+        raw = self.rfile.read(length) if length else b""
+        try:
+            messages = json.loads(raw.decode("utf-8")).get("messages")
+            assert isinstance(messages, list) and messages
+        except Exception:
+            self._json_response(400, json.dumps({"ok": False, "error": "bad request"}))
+            return
+
+        matrix, _err = _load_matrix()
+        last_user = next((m.get("content", "") for m in reversed(messages)
+                          if m.get("role") == "user"), "")
+
+        # SSE headers. HTTP/1.0 + close means the client reads until the stream ends.
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "close")
+        self._cors_headers()
+        self.end_headers()
+
+        def sse(obj):
+            self.wfile.write(f"data: {json.dumps(obj, ensure_ascii=False)}\n\n".encode("utf-8"))
+            self.wfile.flush()
+
+        t0 = time.monotonic()
+        try:
+            # Default starter question → stream the cached answer with a typing feel.
+            cached = (_chat_cache_get(_matrix_signature(matrix or []), last_user)
+                      if _is_default_question(last_user) else None)
+            if cached:
+                for tok in _chunk_text(cached.get("reply", "")):
+                    sse({"delta": tok})
+                    time.sleep(0.012)
+                sse({"done": True, "source": "cached", "navigate": cached.get("navigate")})
+                _log("chat", f"stream: cached answer in {time.monotonic() - t0:.1f}s")
+                return
+
+            if _llm_in_cooldown():
+                sse({"delta": _offline_chat_reply(last_user, matrix)})
+                sse({"done": True, "source": "offline",
+                     "navigate": _offline_navigate(last_user)})
+                return
+
+            import caselib  # lazy: anthropic SDK + .env
+            client = caselib.get_client().with_options(max_retries=0)
+            navigate = None
+            _log("chat", f"stream: -> LLM model={caselib.MODEL} matrix={len(matrix)} rows")
+            with client.messages.stream(
+                model=caselib.MODEL,
+                max_tokens=4000,
+                thinking={"type": "adaptive"},
+                tools=[NAVIGATE_TOOL],
+                system=[{"type": "text", "text": _chat_system_prompt(matrix),
+                         "cache_control": {"type": "ephemeral"}}],
+                messages=_chat_api_messages(messages),
+            ) as stream:
+                emitted = False
+                for text in stream.text_stream:
+                    if text:
+                        emitted = True
+                        sse({"delta": text})
+                final = stream.get_final_message()
+            for b in final.content:
+                if getattr(b, "type", None) == "tool_use" and getattr(b, "name", "") == "navigate":
+                    navigate = (b.input or {}).get("view")
+            if not emitted:
+                # Model returned no text (e.g. a navigation-only turn, or all
+                # budget spent on thinking). Give the user something to read.
+                sse({"delta": f"Taking you to the {_NAV_VIEWS.get(navigate, navigate)}."
+                     if navigate else _offline_chat_reply(last_user, matrix)})
+            sse({"done": True, "source": "claude", "navigate": navigate})
+            _log("chat", f"stream: claude done in {time.monotonic() - t0:.1f}s navigate={navigate}")
+        except _DISCONNECT_ERRORS:
+            return  # client closed the tab mid-stream
+        except Exception as exc:
+            _log("chat", f"stream failed: {type(exc).__name__}: {exc}")
+            _llm_mark_down()
+            try:
+                sse({"delta": _offline_chat_reply(last_user, matrix)})
+                sse({"done": True, "source": "offline",
+                     "navigate": _offline_navigate(last_user)})
+            except Exception:
+                pass
+
     def _api_chat(self):
         """POST /api/chat — converse with 'Second Chair', grounded in the matrix.
 
@@ -1417,6 +1595,20 @@ class Handler(BaseHTTPRequestHandler):
         matrix, _err = _load_matrix()
         _log("chat", f"POST /api/chat received: {len(messages)} message(s)")
         t0 = time.monotonic()
+        # Default starter questions: serve a pre-generated cached answer after a
+        # simulated "thinking" delay, so it feels live and costs no tokens.
+        last_user = next((m.get("content", "") for m in reversed(messages)
+                          if m.get("role") == "user"), "")
+        cached = (_chat_cache_get(_matrix_signature(matrix or []), last_user)
+                  if _is_default_question(last_user) else None)
+        if cached:
+            time.sleep(random.uniform(*_FAKE_DELAY_RANGE))
+            _log("chat", f"POST /api/chat served from cache in "
+                         f"{time.monotonic() - t0:.1f}s (simulated delay)")
+            self._json_response(200, json.dumps({
+                "ok": True, "reply": cached.get("reply", ""),
+                "source": "cached", "navigate": cached.get("navigate")}))
+            return
         reply, source, navigate = _chat_reply(messages, matrix or [])
         _log("chat", f"POST /api/chat done in {time.monotonic() - t0:.1f}s -> "
                      f"source={source} navigate={navigate}")
